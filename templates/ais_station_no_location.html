@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AIS Decoder</title>
+</head>
+<body>
+<h1>{{ station.mmsi }}</h1>
+<table>
+<tr>
+<th>Name</th><td>{{ station.name }}</td>
+</tr>
+<tr>
+<th>MMSI</th><td>{{ station.mmsi }}</td>
+</tr>
+<tr>
+<th>Type</th><td>{{ station.type }}</td>
+</tr>
+<tr>
+<th>Subtype</th><td>{{ station.subtype }}</td>
+</tr>
+<tr>
+<th>Flag</th><td>{{ station.flag }}</td>
+</tr>
+</table>
+<p  />
+<a href="/{{ station.mmsi }}.kml">download kml</a>
+<h1>Messages Recieved</h1>
+<table>
+{% for key, value in station.sentmsgs.items() %}
+<tr>
+<th>{{ key }}</th>
+<td>{{ value }}</td>
+</tr>
+{% endfor %}
+</table>
+<p  />
+<h1>Other Details</h1>
+<table>
+{% for key, value in station.details.items() %}
+<tr>
+<th>{{ key }}</th>
+<td>{{ value }}</td>
+</tr>
+{% endfor %}
+</table>
+<p  />
+<h1>Last Position Reported</h1>
+Unknown
+</body>
+</html>

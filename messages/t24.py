@@ -1,0 +1,78 @@
+import binary
+
+import messages.aismessage
+
+
+class Type24StaticDataReport(messages.aismessage.AISMessage):
+    """
+    Used by AIS class B equipment to provide information about the ship.
+    Type 5 messages are similar but for class A equipment.
+
+    Note:
+        this message is split into 2 subtypes (A & B) identified by the part no
+
+    Attributes:
+            partno(int): if zero message is type A, if 1 the message is type B
+            name(str): the name of the ship
+            shiptype(str): the type of ship - lookup from self.shiptypes
+            vendorid(str): identifies equipment manufacturer
+            unitmodelcode(int): identifies the specific model
+            serialno(int): identifies the actual unit
+            callsign(str): VHF marine radio callsign
+            length(int): length of the vessel in Metres
+            width(int): width of the vessel in Metres
+    """
+
+    def __init__(self, msgbinary):
+        super().__init__(msgbinary)
+        self.partno = binary.decode_sixbit_integer(msgbinary, 38, 40)
+        if self.partno == 0:
+            self.name = binary.decode_sixbit_ascii(msgbinary, 40, 160).rstrip()
+        elif self.partno == 1:
+            self.shiptype = self.shiptypes[binary.decode_sixbit_integer(
+                msgbinary, 40, 48)]
+            self.vendorid = binary.decode_sixbit_ascii(msgbinary, 48, 66)
+            self.unitmodelcode = binary.decode_sixbit_integer(
+                msgbinary, 66, 70)
+            self.serialno = binary.decode_sixbit_integer(msgbinary, 70, 90)
+            self.callsign = binary.decode_sixbit_ascii(
+                msgbinary, 90, 132).rstrip()
+            tobow = binary.decode_sixbit_integer(msgbinary, 240, 249)
+            tostern = binary.decode_sixbit_integer(msgbinary, 249, 258)
+            toport = binary.decode_sixbit_integer(msgbinary, 258, 264)
+            tostarboard = binary.decode_sixbit_integer(msgbinary, 264, 270)
+            self.length = tobow + tostern
+            self.width = toport + tostarboard
+
+    def __str__(self):
+        """
+        describes the message object
+
+        Returns:
+            strtext(str): string containing information about the message
+        """
+        if self.partno == 0:
+            strtext = 'Static Data Report - MMSI: {}, Name: {}'.format(
+                self.mmsi, self.name)
+        elif self.partno == 1:
+            strtext = ('Static Data Report- MMSI: {}, Ship Type: {},'
+                       ' Callsign: {}, Length: {},'
+                       ' Width: {}').format(self.mmsi, self.shiptype,
+                                            self.callsign, self.length,
+                                            self.width)
+        return strtext
+
+    def get_details(self):
+        """
+        get the most pertinent details of the message as a dictionary
+
+        Returns:
+            details(dict): most relevant information of this message
+        """
+        details = {}
+        if self.partno == 1:
+            details['Callsign'] = self.callsign
+            details['Ship Type'] = self.shiptype
+            details['Width (m)'] = self.width
+            details['Length (m)'] = self.length
+        return details

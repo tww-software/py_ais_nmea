@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AIS Decoder</title>
+<script src="{{ url_for('static', filename='W3/w3.js') }}"></script>
+</head>
+<body>
+<h1>Read from capture file</h1>
+<a href='/'>return to home</a>
+<form action="" method="post" enctype="multipart/form-data">
+<input type="file" name="file">
+<button type="submit" value="upload">upload</button>
+</form>
+<p>
+<a href="/stats">Stats</a>
+<br  />
+<a href="/map">Leaflet Map</a>
+</p>
+<p>
+<input oninput="w3.filterHTML('#shiptable', '.item', this.value)" placeholder="Search for key word..">
+</p>
+<a href="/temp.csv">CSV</a>
+<a href="/temp.json">JSON</a>
+<a href="/temp.geojson">GEOJSON</a>
+<a href="/temp.kml">KML</a>
+<p>
+<table id="shiptable">
+{% for line in foutput %}
+{% if loop.first %}
+<tr>
+{% for header in line %}
+<th>{{ header }}</th>
+{% endfor %}
+</tr>
+{% else %}
+<tr class="item">
+{% for item in line %}
+{% if loop.first %}
+<td><a href="/aisstation/{{ item }}">{{ item }}</a></td>
+{% else %}
+<td>{{ item }}</td>
+{% endif %}
+{% endfor %}
+</tr>
+{% endif %}
+{% endfor %}
+</table>
+</p>
+</body>
+</html>

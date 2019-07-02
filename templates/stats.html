@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AIS Decoder</title>
+</head>
+<body>
+<h1>Stats</h1>
+<h2>Times</h2>
+<table>
+<tr>
+<th>Started</th><td>{{ stats.Times.Started }}</td>
+</tr>
+<tr>
+<th>Finished</th><td>{{ stats.Times.Finished }}</td>
+</tr>
+</table>
+<h2>NMEA</h2>
+<table>
+<tr>
+<th>Total NMEA Sentences</th><td>{{ stats.TotalNMEASentences }}</td>
+</tr>
+<tr>
+<th>Multipart Messages Reassembled</th><td>{{ stats.MultipartMessagesReassembled }}</td>
+</tr>
+<tr><th>Messages recieved on channels</th></tr>
+{% for key, value in stats.MessagesRXonchannel.items() %}
+<tr>
+<th>{{ key }}</th>
+<td>{{ value }}</td>
+</tr>
+{% endfor %}
+</table>
+<h2>AIS Message Types</h2>
+<table>
+{% for key, value in stats.Messages.items() %}
+<tr>
+<th>{{ key }}</th>
+<td>{{ value }}</td>
+</tr>
+{% endfor %}
+</table>
+</body>
+</html>

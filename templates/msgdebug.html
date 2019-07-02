@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AIS Decoder</title>
+<script src="{{ url_for('static', filename='W3/w3.js') }}"></script>
+</head>
+<body>
+<h1>Debug Messages from capture file</h1>
+<a href='/'>return to home</a>
+<form action="" method="post" enctype="multipart/form-data">
+<input type="file" name="file">
+<button type="submit" value="upload">upload</button>
+</form>
+<p>
+{{ nmeastats }}
+<br  />
+{{ aisstats }}
+<br  />
+</p>
+<p>
+<input oninput="w3.filterHTML('#msgtable', '.item', this.value)" placeholder="Search for key word..">
+</p>
+<p>
+<table id="msgtable">
+{% for line in allmessages %}
+{% if loop.first %}
+<tr>
+{% for header in line %}
+<th>{{ header }}</th>
+{% endfor %}
+</tr>
+{% else %}
+<tr class="item">
+{% for item in line %}
+<td>{{ item }}</td>
+{% endfor %}
+</tr>
+{% endif %}
+{% endfor %}
+</table>
+</p>
+</body>
+</html>
