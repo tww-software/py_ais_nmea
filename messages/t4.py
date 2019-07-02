@@ -30,7 +30,7 @@ class Type4BaseStationReport(messages.aismessage.AISMessage):
         hour = binary.decode_sixbit_integer(msgbinary, 61, 66)
         minute = binary.decode_sixbit_integer(msgbinary, 66, 72)
         second = binary.decode_sixbit_integer(msgbinary, 72, 78)
-        self.timestamp = '{}/{}/{} - {:02d}:{:02d}:{:02d}'.format(
+        self.timestamp = '{}{:02d}{:02d}_{:02d}{:02d}{:02d}'.format(
             year, month, day, hour, minute, second)
         self.posfixaccuracy = self.accuracy[binary.decode_sixbit_integer(
             msgbinary, 78, 79)]
@@ -69,6 +69,7 @@ class Type4BaseStationReport(messages.aismessage.AISMessage):
         details['RAIM in use'] = self.raim
         details['Last Timestamp'] = self.timestamp
         details['EPFD Fix type'] = self.epfdfixtype
+        details['SOTDMA State'] = self.sotdmastate
         return details
 
     def get_position_data(self):

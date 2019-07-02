@@ -124,7 +124,7 @@ class NMEAtracker():
         self.multiparts = collections.defaultdict(dict)
         self.sentencecount = 0
         self.reassembled = 0
-        self.channelcounter = collections.defaultdict(int)
+        self.channelcounter = collections.Counter()
 
     def __str__(self):
         strtext = ('NMEA 0183 sentence Tracker - {} sentences processed,'

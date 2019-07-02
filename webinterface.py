@@ -14,8 +14,11 @@ from flask import Flask, render_template, request, send_file
 ICONS = icons.ICONS
 
 STATIONS = {}
+POSITIONLOG = {}
 STATS = {}
 ALLMESSAGES = []
+FLAGS = {}
+SHIPTYPES = {}
 app = Flask(__name__)
 
 @app.route('/')
@@ -35,8 +38,61 @@ def map():
     geojsonfeatures = STATIONS['geojson']
     centrelat = STATIONS['centremap']['Latitude']
     centrelon = STATIONS['centremap']['Longitude']
-    return render_template('leafletmap2.html', geojsonfeatures=geojsonfeatures,
-                           centrelat=centrelat, centrelon=centrelon)
+    return render_template('leafletmap3.html', geojsonfeatures=geojsonfeatures,
+                           centrelat=centrelat, centrelon=centrelon,
+                           icons=ICONS)
+
+
+@app.route('/countrymap/<country>')
+def country_map(country):
+    """
+    show only vessels of a certain flag on the map
+    """
+    countrymmsis = FLAGS[country]
+    countrystntracker = ais.AISTracker()
+    for mmsi in countrymmsis:
+        countrystntracker.stations[mmsi] = STATIONS[mmsi]
+    geojsonparser = countrystntracker.create_geojson_map()
+    geojsonfeatures = geojsonparser.main["features"]
+    centremap = countrystntracker.get_centre_of_map()
+    centrelat = centremap['Latitude']
+    centrelon = centremap['Longitude']
+    return render_template('leafletmap3.html', geojsonfeatures=geojsonfeatures,
+                           centrelat=centrelat, centrelon=centrelon,
+                           icons=ICONS)
+
+
+@app.route('/shipmap/<shiptype>')
+def ship_map(shiptype):
+    """
+    show only vessels of a certain ship type on the map
+    """
+    shiptypemmsis = SHIPTYPES[shiptype]
+    shiptypestntracker = ais.AISTracker()
+    for mmsi in shiptypemmsis:
+        shiptypestntracker.stations[mmsi] = STATIONS[mmsi]
+    geojsonparser = shiptypestntracker.create_geojson_map()
+    geojsonfeatures = geojsonparser.main["features"]
+    centremap = shiptypestntracker.get_centre_of_map()
+    centrelat = centremap['Latitude']
+    centrelon = centremap['Longitude']
+    return render_template('leafletmap3.html', geojsonfeatures=geojsonfeatures,
+                           centrelat=centrelat, centrelon=centrelon,
+                           icons=ICONS)
+
+
+@app.route('/positionhistory')
+def position_history():
+    return render_template('historylog.html', positionlog=POSITIONLOG)
+
+@app.route('/historymap/<timestamp>')
+def history_map(timestamp):
+    centrelat = POSITIONLOG[timestamp]['mapcentre']['Latitude']
+    centrelon = POSITIONLOG[timestamp]['mapcentre']['Longitude']
+    geojsonfeatures = POSITIONLOG[timestamp]['geojson']
+    return render_template('leafletmap3.html', geojsonfeatures=geojsonfeatures,
+                           centrelat=centrelat, centrelon=centrelon,
+                           icons=ICONS)
 
 @app.route('/read_capture_file', methods=['GET', 'POST'])
 def read_capture_file():
@@ -61,8 +117,6 @@ def read_capture_file():
                                'data', 'temp.kmz')
     if request.method == 'GET':
         foutput = []
-        nmeastats = ''
-        aisstats = ''
     elif request.method == 'POST':
         if request.files['file']:
             aistracker = ais.AISTracker()
@@ -85,6 +139,8 @@ def read_capture_file():
                     continue
             STATIONS.update(aistracker.stations)
             stnstats = aistracker.all_station_info(verbose=False)
+            FLAGS.update(stnstats['Flags'])
+            SHIPTYPES.update(stnstats['Subtypes'])
             STATS['Messages'] = stnstats['Stats']['Message Stats']
             STATS['Times'] = stnstats['Times']
             STATS['TotalNMEASentences'] = nmeatracker.sentencecount
@@ -100,6 +156,8 @@ def read_capture_file():
             geojsonparser = aistracker.create_geojson_map(tempgeojsonpath)
             STATIONS['geojson'] = geojsonparser.main["features"]
             STATIONS['centremap'] = aistracker.get_centre_of_map()
+            poslogs = aistracker.position_log()
+            POSITIONLOG.update(poslogs)
     return render_template('readcapturefile.html', foutput=foutput)
 
 @app.route('/msgdebug_capture_file')
@@ -115,13 +173,13 @@ def stats():
 
 @app.route('/aisstation/<mmsi>')
 def station_details(mmsi):
-    station = STATIONS[int(mmsi)].__dict__
+    station = STATIONS[mmsi].__dict__
     tempkmlpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                'data', mmsi + '.kmz')
     singlestntracker = ais.AISTracker()
-    singlestntracker.stations[mmsi] = STATIONS[int(mmsi)]
+    singlestntracker.stations[mmsi] = STATIONS[mmsi]
     singlestntracker.create_kml_map(tempkmlpath)
-    lastpos = STATIONS[int(mmsi)].get_latest_position()
+    lastpos = STATIONS[mmsi].get_latest_position()
     if lastpos != 'Unknown':
         geojsonparser = singlestntracker.create_geojson_map()
         geojsonfeatures = geojsonparser.main["features"]

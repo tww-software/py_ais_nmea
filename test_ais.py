@@ -210,7 +210,7 @@ class AISStationTests(unittest.TestCase):
     levels
     """
     def setUp(self):
-        self.aisteststn = ais.AISStation(123456789)
+        self.aisteststn = ais.AISStation('123456789')
 
     def test_no_position_information(self):
         """
@@ -253,7 +253,7 @@ class AISStationTestsRealData(unittest.TestCase):
     """
 
     def setUp(self):
-        self.aisteststn = ais.AISStation(235070199)
+        self.aisteststn = ais.AISStation('235070199')
 
     def test_identify_flag(self):
         """
@@ -473,6 +473,25 @@ class Type8BinaryMessageTests(unittest.TestCase):
         msg = messages.t8.Type8BinaryBroadcastMessage(msgbinary)
         self.assertEqual(msg.msgsubtype, 'Meteorological and Hydrological Data')
 
+
+class Type6BinaryMessageTests(unittest.TestCase):
+    """
+    test being able to distinquish between different types of Type 6 messages
+    """
+
+    def test_navigation_aid_monitoring_UK(self):
+        payload = '6>jHC700V:C0>da6TPAvP00'
+        msgbinary = binary.ais_sentence_payload_binary(payload)
+        msg = messages.t6.Type6BinaryMessage(msgbinary)
+        self.assertEqual(msg.msgsubtype, 'Aid to Navigation monitoring UK')
+
+    def test_navigation_aid_monitoring_ROI(self):
+        payload = '6>jHC7D0V:C0?``00000P00i'
+        msgbinary = binary.ais_sentence_payload_binary(payload)
+        msg = messages.t6.Type6BinaryMessage(msgbinary)
+        self.assertEqual(msg.msgsubtype, 'Aid to Navigation monitoring ROI')
+
+
 class AISTrackerTimingTests(unittest.TestCase):
     """
     test how the aistracker class handles times from timestamps both
@@ -504,8 +523,8 @@ class AISTrackerTimingTests(unittest.TestCase):
         base station reports that have been recieved.
         """
         expected = {
-            "Started": "2018/9/9 - 14:07:14",
-            "Finished": "2018/9/9 - 14:20:06"}
+            "Started": "20180909_140714",
+            "Finished": "20180909_142006"}
         timings = [
             '402=aeQv:Df7>whRv`NPsHg005hL',
             '402=a`1v:Df:@Oi>SjNu0si02H9i',
@@ -526,16 +545,12 @@ class AISTrackerTimingTests(unittest.TestCase):
             'E>jHC=c6:W2h22R`@1:WdP00000Opa@a?KTP010888e?N0',
             '13P;Ruhvh0wjA=NNSjD:C500880L']
         times = []
-        expectedtimes = []
         for data in payloads:
             currenttime = datetime.datetime.now()
             times.append(currenttime)
             self.aistracker.process_message(
                 data, timestamp=currenttime)
-        expectedtimes.append(self.aistracker.stations[234983000].lastseen)
-        expectedtimes.append(self.aistracker.stations[992351030].lastseen)
-        expectedtimes.append(self.aistracker.stations[235070199].lastseen)
-        self.assertEqual(times, expectedtimes)
+        self.assertEqual(times, self.aistracker.timings)
 
 
 class GeoJSONTests(unittest.TestCase):
@@ -556,7 +571,7 @@ class GeoJSONTests(unittest.TestCase):
                           'geometry': {'type': 'Point',
                                        'coordinates': [-3.3356966666666668,
                                                        53.90606666666667]},
-                          'properties': {'MMSI': 123456789,
+                          'properties': {'MMSI': '123456789',
                                          'Type': 'not specified',
                                          'Flag': 'unknown'}},
                          {'type': 'Feature',
@@ -567,8 +582,8 @@ class GeoJSONTests(unittest.TestCase):
                                                         53.90793333333333],
                                                        [-3.3356966666666668,
                                                         53.90606666666667]]},
-                          'properties': {'MMSI': 123456789}}]}
-        mmsi = 123456789
+                          'properties': {'MMSI': '123456789'}}]}
+        mmsi = '123456789'
         positions = [
             [-4.328763333333334, 53.864983333333335],
             [-3.6327133333333332, 53.90793333333333],

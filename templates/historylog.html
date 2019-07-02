@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AIS Decoder</title>
+</head>
+<body>
+<h2>Times</h2>
+<table>
+<tr>
+<th>Timestamp (yyyymmdd_hhmmss)</th>
+<th>Stations Seen</th>
+</tr>
+{% for key, value in positionlog.items() %}
+<tr>
+<td><a href="/historymap/{{ key }}">{{ key }}</a></td>
+<td>{{ value.stations }}</td>
+</tr>
+{% endfor %}
+</table>
+</body>
+</html>

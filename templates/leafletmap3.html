@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Leaflet</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
+    <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
+  <style>
+    html, body {height: 100%;}
+    #mapid{height: 100%;}
+  </style>
+</head>
+<body>
+<div id="mapid"></div>
+<script>
+
+	var mymap = L.map('mapid').setView([{{ centrelat }}, {{ centrelon }}], 9);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(mymap);
+L.tileLayer('http://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openseamap.org/copyright">OpenSeaMap</a> contributors'
+}).addTo(mymap);
+L.control.scale().addTo(mymap);
+
+
+function getIcon(feature) {
+    var shipIcon = new L.Icon({
+     iconSize: [65, 65],
+     iconAnchor: [13, 27],
+     popupAnchor:  [1, -24],
+     iconUrl: '/static/icons/' + feature.properties.Icon
+    });
+    return shipIcon;
+    };
+
+function onEachFeature(feature, layer) {
+    // does this feature have a properties?
+    if (feature.properties) {
+        var popupstr = '';
+        for (var p in feature.properties) {
+                popupstr += p + ' - ' + feature.properties[p]+ '<br  />';
+        }
+        layer.bindPopup(popupstr);
+    }
+};
+
+
+function pointToLayer(feature, latlng) {
+    return L.marker(latlng, {icon: getIcon(feature)});
+		};
+
+
+geojsonFeature = {{ geojsonfeatures|tojson|safe }};
+
+L.geoJSON(geojsonFeature, {pointToLayer: pointToLayer, onEachFeature: onEachFeature}).addTo(mymap);
+
+</script>
+</body>
+</html>

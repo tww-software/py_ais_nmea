@@ -88,18 +88,20 @@ class KMLOutputParser():
         description = ''.join(descriptionlist)
         return description
 
-    def create_kml_header(self):
+    def create_kml_header(self, kmz=True):
         """
         Write the first part of the KML output file.
         This only needs to be called once at the start of the kml file.
         """
         self.kmldoc.append(self.kmlheader)
-        for icontype in icons.ICONS:
-            iconkml = self.styletemplate % (icontype,
+        if kmz:
+            for icontype in icons.ICONS:
+                iconkml = self.styletemplate % (icontype,
                                                 icons.ICONS[icontype])
-            self.kmldoc.append(iconkml)
+                self.kmldoc.append(iconkml)
 
-    def add_kml_placemark(self, placemarkname, description, lon, lat, style):
+    def add_kml_placemark(self, placemarkname, description, lon, lat, style,
+                          kmz=True):
         """
         Write a placemark to the KML file (a pin on the map!)
 
@@ -111,6 +113,8 @@ class KMLOutputParser():
             style(str): icon to use
         """
         coords = lon + ',' + lat + ',0'
+        if not kmz:
+            style = ''
         placemark = self.placemarktemplate % (placemarkname, description,
                                               lon, lat, style, coords)
         self.kmldoc.append(placemark)

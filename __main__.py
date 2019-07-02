@@ -42,7 +42,8 @@ def cli_arg_parser():
     outputformats.add_argument('-j', action='store_true', help='json output')
     outputformats.add_argument('-g', action='store_true',
                                help='geojson output')
-    outputformats.add_argument('-k', action='store_true', help='kml output')
+    outputformats.add_argument('--kmz', action='store_true', help='kmz output')
+    outputformats.add_argument('--kml', action='store_true', help='kml output')
     outputformats.add_argument('-c', action='store_true', help='csv output')
     outputformats.add_argument('-d', action='store_true',
         help=('read AIS traffic from a capture file then decode'
@@ -74,9 +75,10 @@ def read_from_network(outpath, host='localhost', port=10110):
                 if payload:
                     fout.write(ascii)
                     nowts = datetime.datetime.utcnow()
-                    aistracker.process_message(payload, nowts)
-                    subprocess.run('clear')
-                    aistracker.print_table()
+                    msg = aistracker.process_message(payload, nowts)
+                    #subprocess.run('clear')
+                    #aistracker.print_table()
+                    print(msg.__str__())
             except nmea.NMEAInvalidSentence as err:
                 AISLOGGER.debug(str(err))
                 continue
@@ -97,7 +99,7 @@ def read_from_network(outpath, host='localhost', port=10110):
 
 def read_from_file(filepath, outpath, debug=False, jsonverbose=False,
                    jsonoutput=True, geojsonoutput=True, csvoutput=True,
-                   kmloutput=True):
+                   kmloutput=False, kmzoutput=True):
     """
     read AIS NMEA sentences from a text file and save to various output formats
 
@@ -162,8 +164,11 @@ def read_from_file(filepath, outpath, debug=False, jsonverbose=False,
         csvdata = aistracker.create_csv_data()
         ais.write_csv_file(csvdata, outpath + '.csv')
     if kmloutput:
+        AISLOGGER.debug('saving KML output to %s.kml', outpath)
+        aistracker.create_kml_map(outpath + '.kml', kmzoutput=False)
+    if kmzoutput:
         AISLOGGER.debug('saving KML output to %s.kmz', outpath)
-        aistracker.create_kml_map(outpath + '.kmz')
+        aistracker.create_kml_map(outpath + '.kmz', kmzoutput=True)
     if debug:
         AISLOGGER.info('all decoded AIS messages saved to - %s',
                        outpath + '-messages.csv')
@@ -184,7 +189,7 @@ def main():
         read_from_file(CLIARGS.inputfile, CLIARGS.outputfile, CLIARGS.d,
                        jsonverbose=CLIARGS.v, jsonoutput=CLIARGS.j,
                        geojsonoutput=CLIARGS.g, csvoutput=CLIARGS.c,
-                       kmloutput=CLIARGS.k)
+                       kmloutput=CLIARGS.kml, kmzoutput=CLIARGS.kmz)
     elif CLIARGS.subcommand == 'net':
         read_from_network(CLIARGS.outputfile)
     else:
