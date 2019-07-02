@@ -51,9 +51,10 @@ class Type9StandardSARAircraftPositionReport(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('SAR Aircraft Position Report - MMSI: {}, Altitude(m): {}, '
+        strtext = ('{} - MMSI: {}, Altitude(m): {}, '
                    'Ground Speed(knots): {},'
-                   'Location: {},{}').format(self.mmsi, self.altitude,
+                   'Location: {},{}').format(self.description, self.mmsi,
+                                             self.altitude,
                                              self.speedoverground,
                                              self.latitude,
                                              self.longitude)

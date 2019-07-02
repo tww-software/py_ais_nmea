@@ -104,8 +104,9 @@ class Type21AidToNavigation(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('Navigation Aid - MMSI: {}, Name: {}, Type: {}, '
-                   'Location: {},{}').format(self.mmsi, self.name,
+        strtext = ('{} - MMSI: {}, Name: {}, Type: {}, '
+                   'Location: {},{}').format(self.description, self.mmsi,
+                                             self.name,
                                              self.aidtype, self.latitude,
                                              self.longitude)
         return strtext

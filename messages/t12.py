@@ -22,9 +22,9 @@ class Type12AddressedSafetyMessage(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('Addressed Safety Message - from MMSI: {}, to MMSI: {}, '
-                   'Message: {}').format(self.mmsi, self.destinationmmsi,
-                                         self.msgtext)
+        strtext = ('{} - from MMSI: {}, to MMSI: {}, '
+                   'Message: {}').format(self.description, self.mmsi,
+                                         self.destinationmmsi, self.msgtext)
         return strtext
 
     def get_details(self):

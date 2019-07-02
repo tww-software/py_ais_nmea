@@ -61,9 +61,10 @@ class Type123PositionReportClassA(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('Position Report Class A - MMSI: {}, '
+        strtext = ('{} - MMSI: {}, '
                    ' Location: {},{}, Speed: {}, True Heading: {}, CoG: {}, '
-                   'Navigation Status: {}').format(self.mmsi,
+                   'Navigation Status: {}').format(self.description,
+                                                   self.mmsi,
                                                    self.latitude,
                                                    self.longitude,
                                                    self.speed,

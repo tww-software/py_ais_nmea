@@ -59,5 +59,14 @@
 </tr>
 {% endfor %}
 </table>
+<h2>Flags</h2>
+<table>
+{% for key, value in stats.Flags.items() %}
+<tr>
+<th>{{ key }}</th>
+<td>{{ value }}</td>
+</tr>
+{% endfor %}
+</table>
 </body>
 </html>

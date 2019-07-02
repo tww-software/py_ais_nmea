@@ -15,6 +15,6 @@ class Type17DGNSSBroadcastBinaryMessage(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('DGNSS Broadcast Binary Message - source MMSI: {}'
-                   '').format(self.mmsi)
+        strtext = ('{} - source MMSI: {}'
+                   '').format(self.description, self.mmsi)
         return strtext

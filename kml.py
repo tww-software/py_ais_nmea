@@ -11,6 +11,7 @@ class KMLOutputParser():
     Class to parse KML into an output file.
     """
     def __init__(self, kmlfilepath):
+        self.kmldoc = []
         self.kmlfilepath = kmlfilepath
         self.kmlheader = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
@@ -44,7 +45,7 @@ class KMLOutputParser():
         self.styletemplate = """
 <Style id="%s">
 <IconStyle>
-<scale>3</scale>
+<scale>2.8</scale>
 <Icon>
 <href>icons/%s</href>
 </Icon>
@@ -92,12 +93,11 @@ class KMLOutputParser():
         Write the first part of the KML output file.
         This only needs to be called once at the start of the kml file.
         """
-        with open(self.kmlfilepath, 'w') as kmlout:
-            kmlout.write(self.kmlheader)
-            for icontype in icons.ICONS:
-                iconkml = self.styletemplate % (icontype,
+        self.kmldoc.append(self.kmlheader)
+        for icontype in icons.ICONS:
+            iconkml = self.styletemplate % (icontype,
                                                 icons.ICONS[icontype])
-                kmlout.write(iconkml)
+            self.kmldoc.append(iconkml)
 
     def add_kml_placemark(self, placemarkname, description, lon, lat, style):
         """
@@ -113,8 +113,7 @@ class KMLOutputParser():
         coords = lon + ',' + lat + ',0'
         placemark = self.placemarktemplate % (placemarkname, description,
                                               lon, lat, style, coords)
-        with open(self.kmlfilepath, 'a') as kmlout:
-            kmlout.write(placemark)
+        self.kmldoc.append(placemark)
 
     def open_folder(self, foldername):
         """
@@ -124,16 +123,14 @@ class KMLOutputParser():
             foldername(str): the name of the folder
         """
         openfolderstr = "<Folder>\n<name>{}</name>".format(foldername)
-        with open(self.kmlfilepath, 'a') as kmlout:
-            kmlout.write(openfolderstr)
+        self.kmldoc.append(openfolderstr)
 
     def close_folder(self):
         """
         close the currently open folder
         """
         closefolderstr = "</Folder>"
-        with open(self.kmlfilepath, 'a') as kmlout:
-            kmlout.write(closefolderstr)
+        self.kmldoc.append(closefolderstr)
 
     def add_kml_placemark_linestring(self, placemarkname, coords):
         """
@@ -150,8 +147,7 @@ class KMLOutputParser():
             newcoordslist.append(coordsline)
         placemark = self.lineplacemarktemplate % (placemarkname,
                                                   '\n'.join(newcoordslist))
-        with open(self.kmlfilepath, 'a') as kmlout:
-            kmlout.write(placemark)
+        self.kmldoc.append(placemark)
 
     def close_kml_file(self):
         """
@@ -160,8 +156,15 @@ class KMLOutputParser():
         to ensure the tags are closed properly.
         """
         endtags = "\n</Document></kml>"
-        with open(self.kmlfilepath, 'a') as kmlout:
-            kmlout.write(endtags)
+        self.kmldoc.append(endtags)
+
+    def write_kml_doc_file(self):
+        """
+        write the tags to the kml doc.kml file
+        """
+        with open(self.kmlfilepath, 'w') as kmlout:
+            for kmltags in self.kmldoc:
+                kmlout.write(kmltags)
 
 
 def make_kmz(kmzoutputfilename):

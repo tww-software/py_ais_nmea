@@ -24,5 +24,5 @@ class Type16AssignmentModeCommand(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = 'Assignment Mode Command - source MMSI: {}'.format(self.mmsi)
+        strtext = '{} - source MMSI: {}'.format(self.description, self.mmsi)
         return strtext

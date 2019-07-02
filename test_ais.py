@@ -273,7 +273,7 @@ class AISStationTestsRealData(unittest.TestCase):
         for pos in posreps:
             binarystr = binary.ais_sentence_payload_binary(pos)
             posmsg = messages.t123.Type123PositionReportClassA(binarystr)
-            self.aisteststn.add_station_information(posmsg)
+            self.aisteststn.find_position_information(posmsg)
         self.assertEqual(len(posreps), len(self.aisteststn.posrep))
 
     def test_find_station_name_and_subtype(self):
@@ -455,6 +455,23 @@ class AISTrackerTests(unittest.TestCase):
         self.assertIsInstance(
             msg, messages.t27.Type27LongRangeAISPositionReport)
 
+
+class Type8BinaryMessageTests(unittest.TestCase):
+    """
+    test being able to distinquish between different types of Type 8 messages
+    """
+
+    def test_inland_static_and_voyage_data(self):
+        payload = '83P=pSPj2`8800400PPPM00M5fp0'
+        msgbinary = binary.ais_sentence_payload_binary(payload)
+        msg = messages.t8.Type8BinaryBroadcastMessage(msgbinary)
+        self.assertEqual(msg.msgsubtype, 'Inland Static & Voyage Data')
+
+    def test_meteorological_and_hydrological_data(self):
+        payload = '8>jHC700Gwn;21S`2j2ePPFQDB06EuOwgwl?wnSwe7wvlO1PsAwwnSAEwvh0'
+        msgbinary = binary.ais_sentence_payload_binary(payload)
+        msg = messages.t8.Type8BinaryBroadcastMessage(msgbinary)
+        self.assertEqual(msg.msgsubtype, 'Meteorological and Hydrological Data')
 
 class AISTrackerTimingTests(unittest.TestCase):
     """

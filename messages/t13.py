@@ -15,7 +15,7 @@ class Type13SafetyAcknowlegement(messages.t7.Type7BinaryAcknowlegement):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('Safety Acknowlegement by {} to'
-                   ' message from {}').format(self.mmsi,
+        strtext = ('{} by {} to'
+                   ' message from {}').format(self.description, self.mmsi,
                                               ' '.join(self.senders))
         return strtext

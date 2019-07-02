@@ -15,6 +15,7 @@ ICONS = icons.ICONS
 
 STATIONS = {}
 STATS = {}
+ALLMESSAGES = []
 app = Flask(__name__)
 
 @app.route('/')
@@ -47,6 +48,9 @@ def read_capture_file():
             foutput = request.files['file'].read()
     return render_template('readcapturefile.html', foutput=foutput)
     """
+    headers = ['Message Payload', 'Message Type Number',
+               'Message Description']
+    ALLMESSAGES.append(headers)
     tempcsvpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                'data', 'temp.csv')
     tempjsonpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -70,19 +74,25 @@ def read_capture_file():
                         continue
                     payload = nmeatracker.process_sentence(line)
                     if payload:
+                        msglist = []
+                        msglist.append(payload)
                         msg = aistracker.process_message(payload)
+                        msglist.append(msg.msgtype)
+                        msglist.append(msg.__str__())
+                        ALLMESSAGES.append(msglist)
                 except (IndexError, ais.UnknownMessageType,
                         nmea.NMEACheckSumFailed, nmea.NMEAInvalidSentence):
                     continue
             STATIONS.update(aistracker.stations)
             stnstats = aistracker.all_station_info(verbose=False)
-            STATS['Messages'] = stnstats['Message Stats']
+            STATS['Messages'] = stnstats['Stats']['Message Stats']
             STATS['Times'] = stnstats['Times']
             STATS['TotalNMEASentences'] = nmeatracker.sentencecount
             STATS['MultipartMessagesReassembled'] = nmeatracker.reassembled
             STATS['MessagesRXonchannel'] = nmeatracker.channelcounter
-            STATS['AISStationTypes'] = stnstats['AIS Station Types']
-            STATS['ShipTypes'] = stnstats['Ship Types']
+            STATS['AISStationTypes'] = stnstats['Stats']['AIS Station Types']
+            STATS['ShipTypes'] = stnstats['Stats']['Ship Types']
+            STATS['Flags'] = stnstats['Stats']['Country Flags']
             ais.write_json_file(stnstats, tempjsonpath)
             foutput = aistracker.create_csv_data()
             ais.write_csv_file(foutput, tempcsvpath)
@@ -92,43 +102,12 @@ def read_capture_file():
             STATIONS['centremap'] = aistracker.get_centre_of_map()
     return render_template('readcapturefile.html', foutput=foutput)
 
-@app.route('/msgdebug_capture_file', methods=['GET', 'POST'])
+@app.route('/msgdebug_capture_file')
 def msgdebug_capture_file():
     """
     read a capture file and list all the individual messages
     """
-    headers = ['Message Payload', 'Message Type Number',
-               'Message Description']
-    allmessages = []
-    allmessages.append(headers)
-    if request.method == 'GET':
-        foutput = []
-        nmeastats = ''
-        aisstats = ''
-    elif request.method == 'POST':
-        if request.files['file']:
-            aistracker = ais.AISTracker()
-            nmeatracker = nmea.NMEAtracker()
-            for line in request.files['file']:
-                line = line.decode('utf-8')
-                try:
-                    if line == '\n':
-                        continue
-                    payload = nmeatracker.process_sentence(line)
-                    if payload:
-                        msglist = []
-                        msglist.append(payload)
-                        msg = aistracker.process_message(payload)
-                        msglist.append(msg.msgtype)
-                        msglist.append(msg.__str__())
-                        allmessages.append(msglist)
-                except (IndexError, ais.UnknownMessageType,
-                        nmea.NMEACheckSumFailed, nmea.NMEAInvalidSentence):
-                    continue
-            nmeastats = nmeatracker.__str__()
-            aisstats = aistracker.__str__()
-    return render_template('msgdebug.html', allmessages=allmessages,
-                           nmeastats=nmeastats, aisstats=aisstats)
+    return render_template('msgdebug.html', allmessages=ALLMESSAGES)
 
 @app.route('/stats')
 def stats():

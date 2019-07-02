@@ -110,7 +110,7 @@ class Type8BinaryBroadcastMessage(messages.aismessage.AISMessage):
         """
         Weather Data
         """
-        self.msgsubtype = 'Meteorological and Hyrdrological Data'
+        self.msgsubtype = 'Meteorological and Hydrological Data'
         self.msgdetails['Position Fix Accuracy'] = self.accuracy[
             binary.decode_sixbit_integer(self.msgbinary, 105, 106)]
         self.msgdetails['Day'] = binary.decode_sixbit_integer(
@@ -198,8 +198,9 @@ class Type8BinaryBroadcastMessage(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('Binary Broadcast Message from - MMSI: {}, Sub Type: {} '
-                   'DAC: {}, Function ID: {}').format(self.mmsi,
+        strtext = ('{} from - MMSI: {}, Sub Type: {} '
+                   'DAC: {}, Function ID: {}').format(self.description,
+                                                      self.mmsi,
                                                       self.msgsubtype,
                                                       self.designatedareacode,
                                                       self.functionid)

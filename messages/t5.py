@@ -60,10 +60,11 @@ class Type5StaticAndVoyageData(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('Static and Voyage Data - MMSI: {}, Name: {}, '
+        strtext = ('{} - MMSI: {}, Name: {}, '
                    'Ship Type: {}, Callsign: {}, Length: {}, Width: {},'
                    ' Draught: {}, ETA: {}, Destination: {}'
-                   '').format(self.mmsi, self.name, self.shiptype,
+                   '').format(self.description, self.mmsi,
+                              self.name, self.shiptype,
                               self.callsign, self.length, self.width,
                               self.draught, self.eta, self.destination)
         return strtext

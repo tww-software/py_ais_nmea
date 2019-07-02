@@ -42,5 +42,5 @@ class Type15Interrogation(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = 'Interrogation - source MMSI: {}'.format(self.mmsi)
+        strtext = '{} - source MMSI: {}'.format(self.description, self.mmsi)
         return strtext

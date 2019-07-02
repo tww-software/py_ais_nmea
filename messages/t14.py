@@ -18,8 +18,9 @@ class Type14SafetyBroadcastMessage(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('Broadcast Safety Message - from MMSI: {}, '
-                   'Message: {}').format(self.mmsi, self.msgtext)
+        strtext = ('{} - from MMSI: {}, '
+                   'Message: {}').format(self.description, self.mmsi,
+                                         self.msgtext)
         return strtext
 
     def get_details(self):

@@ -15,7 +15,8 @@ class Type11UTCDateResponse(messages.t4.Type4BaseStationReport):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('UTC Date Reponse - MMSI: {}, Timestamp: {}, '
-                   'Location: {},{}').format(self.mmsi, self.timestamp,
+        strtext = ('{} - MMSI: {}, Timestamp: {}, '
+                   'Location: {},{}').format(self.description, self.mmsi,
+                                             self.timestamp,
                                              self.latitude, self.longitude)
         return strtext

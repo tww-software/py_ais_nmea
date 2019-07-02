@@ -52,12 +52,13 @@ class Type24StaticDataReport(messages.aismessage.AISMessage):
             strtext(str): string containing information about the message
         """
         if self.partno == 0:
-            strtext = 'Static Data Report - MMSI: {}, Name: {}'.format(
-                self.mmsi, self.name)
+            strtext = '{} Type A - MMSI: {}, Name: {}'.format(
+                self.description, self.mmsi, self.name)
         elif self.partno == 1:
-            strtext = ('Static Data Report- MMSI: {}, Ship Type: {},'
+            strtext = ('{} Type B - MMSI: {}, Ship Type: {},'
                        ' Callsign: {}, Length: {},'
-                       ' Width: {}').format(self.mmsi, self.shiptype,
+                       ' Width: {}').format(self.description, self.mmsi,
+                                            self.shiptype,
                                             self.callsign, self.length,
                                             self.width)
         return strtext

@@ -75,8 +75,8 @@ class Type6BinaryMessage(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('Binary Message - {} - MMSI: {}, To: {}, DAC: {}, '
-                   'Function ID: {}').format(self.msgsubtype,
+        strtext = ('{} - {} - MMSI: {}, To: {}, DAC: {}, '
+                   'Function ID: {}').format(self.description, self.msgsubtype,
                                              self.mmsi, self.destinationmmsi,
                                              self.designatedareacode,
                                              self.functionid)

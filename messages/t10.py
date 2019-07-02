@@ -20,6 +20,6 @@ class Type10UTCDateInquiry(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = 'UTC Date Inquiry to {} from {}'.format(self.destinationmmsi,
-                                                          self.mmsi)
+        strtext = '{} to {} from {}'.format(self.description,
+                                            self.destinationmmsi, self.mmsi)
         return strtext

@@ -64,10 +64,11 @@ class Type19ExtendedReportClassB(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('Extended Report Class B - MMSI: {}, Timestamp seconds: {},'
+        strtext = ('{} - MMSI: {}, Timestamp seconds: {},'
                    ' Location: {},{}, Speed: {}, True Heading: {}'
                    'Name: {}, Ship Type: {}, Length: {}, Width: {}'
-                   '').format(self.mmsi, self.timestampsecond,
+                   '').format(self.description, self.mmsi,
+                              self.timestampsecond,
                               self.latitude, self.longitude,
                               self.speed, self.trueheading,
                               self.name, self.shiptype,

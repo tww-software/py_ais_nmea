@@ -76,7 +76,7 @@ def decode_sixbit_integer(binary, start, stop):
 
     Returns:
         decodedint(int): the decoded int
-        'unavailable'(str): if an empty string is entered
+        0(int): if an empty string is entered
     """
     if binary[start:stop] == '':
         #maybe raise a exception here instead of returning 0

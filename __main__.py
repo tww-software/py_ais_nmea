@@ -5,6 +5,7 @@ command line interface for processing AIS traffic
 import argparse
 import datetime
 import logging
+import pprint
 import socket
 import subprocess
 
@@ -27,7 +28,6 @@ def cli_arg_parser():
     desc = 'tool to decode AIS traffic and generate meaningful data'
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-v', action='store_true', help='verbose output')
-
     subparsers = parser.add_subparsers(dest='subcommand')
     netparser = subparsers.add_parser('net',
                                       help=('read AIS traffic from a '
@@ -44,12 +44,9 @@ def cli_arg_parser():
                                help='geojson output')
     outputformats.add_argument('-k', action='store_true', help='kml output')
     outputformats.add_argument('-c', action='store_true', help='csv output')
-    debugparser = subparsers.add_parser(
-        'debug',
+    outputformats.add_argument('-d', action='store_true',
         help=('read AIS traffic from a capture file then decode'
               ' and display all the messages individually'))
-    debugparser.add_argument(help='input file path', dest='inputfile')
-    debugparser.add_argument(help='output file path', dest='outputfile')
     args = parser.parse_args()
     return args
 
@@ -98,14 +95,17 @@ def read_from_network(outpath, host='localhost', port=10110):
                 break
 
 
-def read_from_file(filepath, outpath, jsonverbose=False, jsonoutput=True,
-                   geojsonoutput=True, csvoutput=True, kmloutput=True):
+def read_from_file(filepath, outpath, debug=False, jsonverbose=False,
+                   jsonoutput=True, geojsonoutput=True, csvoutput=True,
+                   kmloutput=True):
     """
     read AIS NMEA sentences from a text file and save to various output formats
 
     Args:
         filepath(str): full path to the input file containing NMEA sentences
         outpath(str): path to save to excluding file extensions
+        debug(bool): create a csv file containing all the individual messages
+                     decoded with the original payloads
         jsonverbose(bool): verbose output in the json file
         jsonoutput(bool): save output to json file
         geojsonoutput(bool): save output to geojson file
@@ -113,6 +113,10 @@ def read_from_file(filepath, outpath, jsonverbose=False, jsonoutput=True,
         kmloutput(bool): save output to kml file
     """
     AISLOGGER.info('reading nmea sentences from - %s', filepath)
+    headers = ['Message Payload', 'Message Type Number', 'MMSI',
+               'Message Description']
+    messagelist = []
+    messagelist.append(headers)
     aistracker = ais.AISTracker()
     nmeatracker = nmea.NMEAtracker()
     with open(filepath, 'r') as infile:
@@ -122,7 +126,14 @@ def read_from_file(filepath, outpath, jsonverbose=False, jsonoutput=True,
                     continue
                 payload = nmeatracker.process_sentence(line)
                 if payload:
-                    aistracker.process_message(payload)
+                    msg = aistracker.process_message(payload)
+                    if debug:
+                        msglist = []
+                        msglist.append(payload)
+                        msglist.append(msg.msgtype)
+                        msglist.append(msg.mmsi)
+                        msglist.append(msg.__str__())
+                        messagelist.append(msglist)
             except nmea.NMEAInvalidSentence as err:
                 AISLOGGER.debug(str(err))
                 continue
@@ -137,13 +148,7 @@ def read_from_file(filepath, outpath, jsonverbose=False, jsonoutput=True,
                 AISLOGGER.debug('no data on line')
                 continue
     stnstats = aistracker.all_station_info(verbose=jsonverbose)
-    statstoprint = ['Message Stats', 'AIS Station Types',
-                    'Ship Types', 'Country Flags']
-    for stats in statstoprint:
-        print(stats)
-        for item in stnstats[stats]:
-            print('{}  =  {}'.format(item, stnstats[stats][item]))
-        print()
+    pprint.pprint(stnstats['Stats'])
     print(aistracker.__str__())
     print(nmeatracker.__str__())
     if jsonoutput:
@@ -159,57 +164,11 @@ def read_from_file(filepath, outpath, jsonverbose=False, jsonoutput=True,
     if kmloutput:
         AISLOGGER.debug('saving KML output to %s.kmz', outpath)
         aistracker.create_kml_map(outpath + '.kmz')
+    if debug:
+        AISLOGGER.info('all decoded AIS messages saved to - %s',
+                       outpath + '-messages.csv')
+        ais.write_csv_file(messagelist, outpath + '-messages.csv')
     AISLOGGER.info('Finished')
-
-
-def message_debug(filepath, outpath):
-    """
-    read AIS NMEA sentences from a text file and save to a csv
-
-    Args:
-        filepath(str): path to the capture file
-        outpath(str): path to output the CSV file to
-    """
-    headers = ['Message Payload', 'Message Type Number',
-               'Message Description']
-    messagelist = []
-    messagelist.append(headers)
-    AISLOGGER.info('reading nmea sentences from - %s', filepath)
-    aistracker = ais.AISTracker()
-    nmeatracker = nmea.NMEAtracker()
-    with open(filepath, 'r') as infile:
-        for line in infile:
-            try:
-                if line == '\n' or line == '\r\n':
-                    continue
-                payload = nmeatracker.process_sentence(line)
-                if payload:
-                    msglist = []
-                    msglist.append(payload)
-                    msg = aistracker.process_message(payload)
-                    msglist.append(msg.msgtype)
-                    msglist.append(msg.__str__())
-                    messagelist.append(msglist)
-            except nmea.NMEAInvalidSentence as err:
-                AISLOGGER.debug(str(err))
-                continue
-            except nmea.NMEACheckSumFailed as err:
-                AISLOGGER.debug(str(err))
-                continue
-            except ais.UnknownMessageType as err:
-                msgbinary = binary.ais_sentence_payload_binary(payload)
-                msg = allmessages.MSGTYPES[0](msgbinary)
-                msglist.append(msg.msgtype)
-                msglist.append(msg.__str__())
-                messagelist.append(msglist)
-                continue
-            except IndexError:
-                AISLOGGER.debug('no data on line')
-                continue
-            except Exception as err:
-                AISLOGGER.exception(line)
-    ais.write_csv_file(messagelist, outpath)
-    AISLOGGER.info('decoded AIS messages saved to - %s', outpath)
 
 
 def main():
@@ -222,12 +181,10 @@ def main():
         logging.basicConfig(level=logging.INFO,
                             handlers=[logging.StreamHandler()])
     if CLIARGS.subcommand == 'file':
-        read_from_file(CLIARGS.inputfile, CLIARGS.outputfile,
+        read_from_file(CLIARGS.inputfile, CLIARGS.outputfile, CLIARGS.d,
                        jsonverbose=CLIARGS.v, jsonoutput=CLIARGS.j,
                        geojsonoutput=CLIARGS.g, csvoutput=CLIARGS.c,
                        kmloutput=CLIARGS.k)
-    elif CLIARGS.subcommand == 'debug':
-        message_debug(CLIARGS.inputfile, CLIARGS.outputfile)
     elif CLIARGS.subcommand == 'net':
         read_from_network(CLIARGS.outputfile)
     else:

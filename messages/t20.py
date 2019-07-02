@@ -36,6 +36,6 @@ class Type20DatalinkManagementMessage(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('Datalink Management - MMSI: {}').format(self.mmsi)
+        strtext = ('{} - MMSI: {}').format(self.description, self.mmsi)
         return strtext
 

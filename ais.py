@@ -56,18 +56,19 @@ class AISStation():
         Returns:
             flag(str): the country the station sails under
         """
-        if (str(self.mmsi).startswith('111') or
-                str(self.mmsi).startswith('970') or
-                str(self.mmsi).startswith('972') or
-                str(self.mmsi).startswith('974')):
-            mid = int(str(self.mmsi)[3:6])
-        elif (str(self.mmsi).startswith('99') or
-              str(self.mmsi).startswith('98')):
-            mid = int(str(self.mmsi)[2:5])
+        mmsistr = str(self.mmsi)
+        if (mmsistr.startswith('111') or
+                mmsistr.startswith('970') or
+                mmsistr.startswith('972') or
+                mmsistr.startswith('974')):
+            mid = mmsistr[3:6]
+        elif (mmsistr.startswith('99') or
+              mmsistr.startswith('98')):
+            mid = mmsistr[2:5]
         else:
-            mid = int(str(self.mmsi)[0:3])
+            mid = mmsistr[0:3]
         try:
-            flag = maritimeidentifiers.MID[int(mid)]
+            flag = maritimeidentifiers.MID[mid]
         except KeyError:
             flag = 'Unknown'
         return flag
@@ -113,7 +114,7 @@ class AISStation():
             if msgobj.partno == 1:
                 self.subtype = msgobj.shiptype
 
-    def add_station_information(self, msgobj):
+    def find_position_information(self, msgobj):
         """
         takes a message object and gets useful information from it
 
@@ -170,7 +171,7 @@ class AISStation():
         message we recieved from it
 
         Note:
-            message types 4,11,15,16,17,20,22 and 23 are only transmitted by
+            message types 4 and 11 are only transmitted by
             Base Stations
             message type 21 is only sent by Navigation Aids
             message types 1,2,3,5 and 27 are only sent by Class A
@@ -180,28 +181,19 @@ class AISStation():
         Args:
             msgobj(messages.aismessage.AISMessage): message object
         """
-        if str(self.mmsi).startswith('99'):
-            self.type = 'Navigation Aid'
-        if str(self.mmsi).startswith('98'):
-            self.type = 'Auxiliary craft associated with a parent ship'
-            return
-        if str(self.mmsi).startswith('970'):
-            self.type = 'AIS SART (Search and Rescue Transmitter)'
-            return
-        if str(self.mmsi).startswith('972'):
-            self.type = 'MOB (Man Overboard) device'
-            return
-        if str(self.mmsi).startswith('974'):
-            self.type = 'EPIRB (Emergency Position Indicating Radio Beacon)'
-            return
+        mmsitypes = {
+            '98': 'Auxiliary craft associated with a parent ship',
+            '970': 'AIS SART (Search and Rescue Transmitter)',
+            '972': 'MOB (Man Overboard) device',
+            '974': 'EPIRB (Emergency Position Indicating Radio Beacon)'}
+        mmsistr = str(self.mmsi)
+        for prefix in mmsitypes:
+            if mmsistr.startswith(prefix):
+                self.type = mmsitypes[prefix]
+                return
         typesdict = {
             allmessages.MSGTYPES[4]: 'Base Station',
             allmessages.MSGTYPES[11]: 'Base Station',
-            allmessages.MSGTYPES[15]: 'Base Station',
-            allmessages.MSGTYPES[16]: 'Base Station',
-            allmessages.MSGTYPES[20]: 'Base Station',
-            allmessages.MSGTYPES[22]: 'Base Station',
-            allmessages.MSGTYPES[23]: 'Base Station',
             allmessages.MSGTYPES[21]: 'Navigation Aid',
             allmessages.MSGTYPES[1]: 'Class A',
             allmessages.MSGTYPES[5]: 'Class A',
@@ -325,7 +317,7 @@ class AISTracker():
         if (self.stations[msgobj.mmsi].subtype == 'Unknown' or
                 self.stations[msgobj.mmsi].name == ''):
             self.stations[msgobj.mmsi].find_station_name_and_subtype(msgobj)
-        self.stations[msgobj.mmsi].add_station_information(msgobj)
+        self.stations[msgobj.mmsi].find_position_information(msgobj)
         if timestamp:
             self.stations[msgobj.mmsi].lastseen = timestamp
         if (isinstance(msgobj, (allmessages.MSGTYPES[4],
@@ -363,7 +355,7 @@ class AISTracker():
         for mmsi in self.stations:
             print(self.stations[mmsi].__str__())
 
-    def all_station_info(self, verbose=False):
+    def all_station_info(self, verbose=False, statsonly=False):
         """
         get all the station information we have in a dictionary
 
@@ -371,12 +363,15 @@ class AISTracker():
             verbose(bool): if true then all positions of vessels that have been
                            recorded will be returned, if false then only the
                            last know position will be returned for each vessel
+            statsonly(bool): if true then only the statistics will be returned
+                             no data for individual stations will be returned
 
         Returns:
             allstations(dict): dictionary of all the information the aistracker
                                currently has on all vessels it has recorded
         """
         allstations = {}
+        allstations['Stats'] = {}
         stntypes = []
         subtypes = []
         flags = []
@@ -393,12 +388,14 @@ class AISTracker():
                 except AttributeError:
                     print('no posrep to delete')
                     continue
-        allstations['Total Unique Stations'] = self.__len__()
-        allstations['Total Messages Processed'] = self.messagesprocessed
-        allstations['Message Stats'] = self.messages
-        allstations['AIS Station Types'] = collections.Counter(stntypes)
-        allstations['Ship Types'] = collections.Counter(subtypes)
-        allstations['Country Flags'] = collections.Counter(flags)
+        allstations['Stats']['Total Unique Stations'] = self.__len__()
+        allstations['Stats']['Total Messages Processed'] = \
+            self.messagesprocessed
+        allstations['Stats']['Message Stats'] = self.messages
+        allstations['Stats']['AIS Station Types'] = \
+            collections.Counter(stntypes)
+        allstations['Stats']['Ship Types'] = collections.Counter(subtypes)
+        allstations['Stats']['Country Flags'] = collections.Counter(flags)
         try:
             allstations['Times'] = {}
             allstations['Times']['Started'] = self.timings[0]
@@ -406,7 +403,10 @@ class AISTracker():
                 len(self.timings) - 1]
         except IndexError:
             allstations['Times'] = 'No time data available.'
-        return allstations
+        if statsonly:
+            return allstations['Stats']
+        else:
+            return allstations
 
     def create_kml_map(self, outputfile):
         """
@@ -435,6 +435,7 @@ class AISTracker():
                                          stntype)
                 kmlmap.close_folder()
         kmlmap.close_kml_file()
+        kmlmap.write_kml_doc_file()
         kml.make_kmz(outputfile)
 
     def create_geojson_map(self, outputfile=None):

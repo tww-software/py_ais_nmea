@@ -42,7 +42,7 @@ class Type7BinaryAcknowlegement(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('Binary Acknowlegement by {} to'
-                   ' message from {}').format(self.mmsi,
+        strtext = ('{} by {} to'
+                   ' message from {}').format(self.description, self.mmsi,
                                               ' '.join(self.senders))
         return strtext

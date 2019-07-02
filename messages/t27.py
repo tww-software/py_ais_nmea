@@ -43,8 +43,9 @@ class Type27LongRangeAISPositionReport(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('Long Range Position Report - MMSI: {}, Location:'
-                   ' {},{}').format(self.mmsi, self.latitude, self.longitude)
+        strtext = ('{} - MMSI: {}, Location:'
+                   ' {},{}').format(self.description, self.mmsi,
+                                    self.latitude, self.longitude)
         return strtext
 
     def get_details(self):
