@@ -30,7 +30,7 @@ class Type21AidToNavigation(messages.aismessage.AISMessage):
         assignedmode(bool): is the nav aid operating in assigned mode
     """
 
-    navaidtypes = {0: 'Default, not specified',
+    navaidtypes = {0: 'Default Nav Aid, not specified',
                    1: 'Reference point',
                    2: 'RACON (radar transponder marking a navigation hazard)',
                    3: 'Fixed structure off shore, such as oil platforms,'

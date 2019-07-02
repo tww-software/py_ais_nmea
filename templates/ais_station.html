@@ -33,6 +33,7 @@ geojsonFeature = {{ geojsonfeatures|tojson|safe }};
 L.geoJSON(geojsonFeature, {onEachFeature: onEachFeature}).addTo(mymap);
 
 </script>
+<img src="{{ url_for('static', filename='icons') }}/{{ icons[station.subtype] }}">
 <table>
 <tr>
 <th>Name</th><td>{{ station.name }}</td>
@@ -51,7 +52,7 @@ L.geoJSON(geojsonFeature, {onEachFeature: onEachFeature}).addTo(mymap);
 </tr>
 </table>
 <p  />
-<a href="/{{ station.mmsi }}.kml">download kml</a>
+<a href="/{{ station.mmsi }}.kmz">download kml</a>
 <h1>Messages Recieved</h1>
 <table>
 {% for key, value in station.sentmsgs.items() %}

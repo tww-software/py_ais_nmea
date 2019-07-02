@@ -2,6 +2,9 @@
 a parser to generate Keyhole Markup Language (KML) for Google Earth
 """
 
+import icons
+import os
+import zipfile
 
 class KMLOutputParser():
     """
@@ -13,73 +16,7 @@ class KMLOutputParser():
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <Document>
 <name>Ships</name>
-<open>1</open>
-<Style id="Base Station">
-<IconStyle>
-<scale>1.5</scale>
-<Icon>
-<href>icons/basestn.png</href>
-</Icon>
-<hotSpot x="20" y="2" xunits="pixels" yunits="pixels"/>
-</IconStyle>
-<ListStyle>
-</ListStyle>
-</Style>
-<Style id="Class B">
-<IconStyle>
-<scale>1.5</scale>
-<Icon>
-<href>icons/classb.png</href>
-</Icon>
-<hotSpot x="0.5" y="0" xunits="fraction" yunits="fraction"/>
-</IconStyle>
-<ListStyle>
-</ListStyle>
-</Style>
-<Style id="SAR Aircraft">
-<IconStyle>
-<scale>1.5</scale>
-<Icon>
-<href>icons/sar.png</href>
-</Icon>
-<hotSpot x="0.5" y="0" xunits="fraction" yunits="fraction"/>
-</IconStyle>
-<ListStyle>
-</ListStyle>
-</Style>
-<Style id="Class A">
-<IconStyle>
-<scale>1.5</scale>
-<Icon>
-<href>icons/classa.png</href>
-</Icon>
-<hotSpot x="0.5" y="0" xunits="fraction" yunits="fraction"/>
-</IconStyle>
-<ListStyle>
-</ListStyle>
-</Style>
-<Style id="Navigation Aid">
-<IconStyle>
-<scale>1.4</scale>
-<Icon>
-<href>icons/navaid.png</href>
-</Icon>
-<hotSpot x="0.5" y="0" xunits="fraction" yunits="fraction"/>
-</IconStyle>
-<ListStyle>
-</ListStyle>
-</Style>
-<Style id="not specified">
-<IconStyle>
-<scale>1.4</scale>
-<Icon>
-<href>icons/unknown.png</href>
-</Icon>
-<hotSpot x="0.5" y="0" xunits="fraction" yunits="fraction"/>
-</IconStyle>
-<ListStyle>
-</ListStyle>
-</Style>"""
+<open>1</open>"""
         self.placemarktemplate = """
 <Placemark>
 <name>%s</name>
@@ -104,6 +41,18 @@ class KMLOutputParser():
 <coordinates>%s</coordinates>
 </LineString>
 </Placemark>"""
+        self.styletemplate = """
+<Style id="%s">
+<IconStyle>
+<scale>3</scale>
+<Icon>
+<href>icons/%s</href>
+</Icon>
+<hotSpot x="20" y="2" xunits="pixels" yunits="pixels"/>
+</IconStyle>
+<ListStyle>
+</ListStyle>
+</Style>"""
 
     @staticmethod
     def format_kml_placemark_description(placemarkdict):
@@ -145,6 +94,10 @@ class KMLOutputParser():
         """
         with open(self.kmlfilepath, 'w') as kmlout:
             kmlout.write(self.kmlheader)
+            for icontype in icons.ICONS:
+                iconkml = self.styletemplate % (icontype,
+                                                icons.ICONS[icontype])
+                kmlout.write(iconkml)
 
     def add_kml_placemark(self, placemarkname, description, lon, lat, style):
         """
@@ -209,3 +162,24 @@ class KMLOutputParser():
         endtags = "\n</Document></kml>"
         with open(self.kmlfilepath, 'a') as kmlout:
             kmlout.write(endtags)
+
+
+def make_kmz(kmzoutputfilename):
+    """
+    make a kmz file out of the doc.kml and symbols directory
+    """
+    docpath = os.path.join(os.path.dirname(kmzoutputfilename), 'doc.kml')
+    iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                             'static', 'icons')
+    with zipfile.ZipFile(kmzoutputfilename,
+                         'w', zipfile.ZIP_DEFLATED, False) as kmz:
+        try:
+            kmz.debug = 3
+            kmz.write(docpath, 'doc.kml')
+            #kmz.write(iconspath)
+            for icon in os.listdir(iconspath):
+                kmz.write(os.path.join(iconspath, icon),
+                          os.path.join('icons', icon))
+        except Exception as err:
+            print('zip error')
+            print(str(err))

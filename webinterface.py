@@ -6,9 +6,12 @@ import os
 
 import ais
 import binary
+import icons
 import nmea
 
 from flask import Flask, render_template, request, send_file
+
+ICONS = icons.ICONS
 
 STATIONS = {}
 STATS = {}
@@ -51,7 +54,7 @@ def read_capture_file():
     tempgeojsonpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                'data', 'temp.geojson')
     tempkmlpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               'data', 'temp.kml')
+                               'data', 'temp.kmz')
     if request.method == 'GET':
         foutput = []
         nmeastats = ''
@@ -78,6 +81,8 @@ def read_capture_file():
             STATS['TotalNMEASentences'] = nmeatracker.sentencecount
             STATS['MultipartMessagesReassembled'] = nmeatracker.reassembled
             STATS['MessagesRXonchannel'] = nmeatracker.channelcounter
+            STATS['AISStationTypes'] = stnstats['AIS Station Types']
+            STATS['ShipTypes'] = stnstats['Ship Types']
             ais.write_json_file(stnstats, tempjsonpath)
             foutput = aistracker.create_csv_data()
             ais.write_csv_file(foutput, tempcsvpath)
@@ -127,13 +132,13 @@ def msgdebug_capture_file():
 
 @app.route('/stats')
 def stats():
-    return render_template('stats.html', stats=STATS)
+    return render_template('stats.html', stats=STATS, icons=ICONS)
 
 @app.route('/aisstation/<mmsi>')
 def station_details(mmsi):
     station = STATIONS[int(mmsi)].__dict__
     tempkmlpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               'data', mmsi + '.kml')
+                               'data', mmsi + '.kmz')
     singlestntracker = ais.AISTracker()
     singlestntracker.stations[mmsi] = STATIONS[int(mmsi)]
     singlestntracker.create_kml_map(tempkmlpath)
@@ -146,16 +151,17 @@ def station_details(mmsi):
         centrelon = centremap['Longitude']
         return render_template('ais_station.html', station=station,
                                lastpos=lastpos,
+                               icons=ICONS,
                                geojsonfeatures=geojsonfeatures,
                                centrelat=centrelat, centrelon=centrelon)
     else:
         return render_template('ais_station_no_location.html', station=station)
 
-@app.route('/<mmsi>.kml')
+@app.route('/<mmsi>.kmz')
 def stn_kml_file(mmsi):
     tempkmlpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               'data', mmsi + '.kml')
-    return send_file(tempkmlpath, mimetype='text/xml')
+                               'data', mmsi + '.kmz')
+    return send_file(tempkmlpath, mimetype='application/zip')
 
 @app.route('/temp.csv')
 def temp_csv_file():
@@ -163,11 +169,11 @@ def temp_csv_file():
                                'data', 'temp.csv')
     return send_file(temppath, mimetype='application/csv')
 
-@app.route('/temp.kml')
+@app.route('/temp.kmz')
 def temp_kml_file():
     temppath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               'data', 'temp.kml')
-    return send_file(temppath, mimetype='text/xml')
+                               'data', 'temp.kmz')
+    return send_file(temppath, mimetype='application/zip')
 
 @app.route('/temp.json')
 def temp_json_file():

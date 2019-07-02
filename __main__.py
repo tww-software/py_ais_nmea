@@ -157,8 +157,8 @@ def read_from_file(filepath, outpath, jsonverbose=False, jsonoutput=True,
         csvdata = aistracker.create_csv_data()
         ais.write_csv_file(csvdata, outpath + '.csv')
     if kmloutput:
-        AISLOGGER.debug('saving KML output to %s.kml', outpath)
-        aistracker.create_kml_map(outpath + '.kml')
+        AISLOGGER.debug('saving KML output to %s.kmz', outpath)
+        aistracker.create_kml_map(outpath + '.kmz')
     AISLOGGER.info('Finished')
 
 

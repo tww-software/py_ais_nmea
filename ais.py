@@ -8,6 +8,7 @@ contains the main class that represents each AIS station
 import collections
 import csv
 import json
+import os
 
 import binary
 import geojson
@@ -41,7 +42,7 @@ class AISStation():
         self.mmsi = mmsi
         self.type = 'Unknown'
         self.subtype = 'Unknown'
-        self.name = 'Unknown'
+        self.name = ''
         self.posrep = []
         self.details = {}
         self.flag = self.identify_flag()
@@ -181,7 +182,6 @@ class AISStation():
         """
         if str(self.mmsi).startswith('99'):
             self.type = 'Navigation Aid'
-            return
         if str(self.mmsi).startswith('98'):
             self.type = 'Auxiliary craft associated with a parent ship'
             return
@@ -213,6 +213,10 @@ class AISStation():
         msgtype = type(msgobj)
         if msgtype in typesdict:
             self.type = typesdict[msgtype]
+            if self.type == 'SAR Aircraft':
+                self.subtype = 'SAR Aircraft'
+            if self.type == 'Base Station':
+                self.subtype = 'Base Station'
         else:
             self.type = 'Unknown'
 
@@ -319,7 +323,7 @@ class AISTracker():
         if self.stations[msgobj.mmsi].type == 'Unknown':
             self.stations[msgobj.mmsi].determine_station_type(msgobj)
         if (self.stations[msgobj.mmsi].subtype == 'Unknown' or
-                self.stations[msgobj.mmsi].name == 'Unknown'):
+                self.stations[msgobj.mmsi].name == ''):
             self.stations[msgobj.mmsi].find_station_name_and_subtype(msgobj)
         self.stations[msgobj.mmsi].add_station_information(msgobj)
         if timestamp:
@@ -411,14 +415,15 @@ class AISTracker():
         Args:
             outputfile(str): full path to output to
         """
-        kmlmap = kml.KMLOutputParser(outputfile)
+        docpath = os.path.join(os.path.dirname(outputfile), 'doc.kml')
+        kmlmap = kml.KMLOutputParser(docpath)
         kmlmap.create_kml_header()
         for mmsi in self.stations:
             lastpos = self.stations[mmsi].get_latest_position()
             if lastpos == 'Unknown':
                 continue
             else:
-                stntype = self.stations[mmsi].type
+                stntype = self.stations[mmsi].subtype
                 kmlmap.open_folder(str(mmsi))
                 desc = kmlmap.format_kml_placemark_description(
                     self.stations[mmsi].__dict__)
@@ -430,6 +435,7 @@ class AISTracker():
                                          stntype)
                 kmlmap.close_folder()
         kmlmap.close_kml_file()
+        kml.make_kmz(outputfile)
 
     def create_geojson_map(self, outputfile=None):
         """

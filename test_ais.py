@@ -2,12 +2,18 @@
 Unit tests for the AIS Decoder
 """
 
+# pylint: disable=no-member
+# pylint: disable=import-error
+# pylint: disable=no-name-in-module
+
 import datetime
+import os
 import unittest
 
 import ais
 import binary
 import geojson
+import icons
 import nmea
 import messages
 import messages.aismessage
@@ -584,6 +590,26 @@ class GeoJSONTests(unittest.TestCase):
                     "properties": testinfo}
         returned = self.parser.create_feature_linestring(positions, testinfo)
         self.assertEqual(expected, returned)
+
+
+class IconTests(unittest.TestCase):
+    """
+    check the icons are correct and accessible
+    """
+
+    def test_icons_exist(self):
+        """
+        check the icon files are in the correct location, tests that the number
+        of icons in the icons folder is the same as in the icons.ICONS dict
+        """
+        exists = 0
+        iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                 'static', 'icons')
+        for vesselname in icons.ICONS:
+            if os.path.exists(os.path.join(iconspath,
+                                           icons.ICONS[vesselname])):
+                exists += 1
+        self.assertEqual(len(icons.ICONS), exists)
 
 
 if __name__ == '__main__':
