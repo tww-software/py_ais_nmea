@@ -97,6 +97,20 @@ def read_from_network(outpath, host='localhost', port=10110):
                 break
 
 
+def open_file_generator(filepath):
+    """
+    open a file line by line using a generator
+
+    Args:
+        filepath(str): path to the file
+    """
+    with open(filepath, 'r') as infile:
+        for line in infile:
+            if line == '\n' or line == '\r\n':
+                continue
+            yield line
+
+
 def read_from_file(filepath, outpath, debug=False, jsonverbose=False,
                    jsonoutput=True, geojsonoutput=True, csvoutput=True,
                    kmloutput=False, kmzoutput=True):
@@ -121,36 +135,33 @@ def read_from_file(filepath, outpath, debug=False, jsonverbose=False,
     messagelist.append(headers)
     aistracker = ais.AISTracker()
     nmeatracker = nmea.NMEAtracker()
-    with open(filepath, 'r') as infile:
-        for line in infile:
-            try:
-                if line == '\n' or line == '\r\n':
-                    continue
-                payload = nmeatracker.process_sentence(line)
-                if payload:
-                    msg = aistracker.process_message(payload)
-                    if debug:
-                        msglist = []
-                        msglist.append(payload)
-                        msglist.append(msg.msgtype)
-                        msglist.append(msg.mmsi)
-                        msglist.append(msg.__str__())
-                        messagelist.append(msglist)
-            except nmea.NMEAInvalidSentence as err:
-                AISLOGGER.debug(str(err))
-                continue
-            except nmea.NMEACheckSumFailed as err:
-                AISLOGGER.debug(str(err))
-                continue
-            except ais.UnknownMessageType as err:
-                AISLOGGER.debug(str(err))
-                AISLOGGER.debug('unknown message - %s', line)
-                continue
-            except IndexError:
-                AISLOGGER.debug('no data on line')
-                continue
-    stnstats = aistracker.all_station_info(verbose=jsonverbose)
-    pprint.pprint(stnstats['Stats'])
+    for line in open_file_generator(filepath):
+        try:
+            payload = nmeatracker.process_sentence(line)
+            if payload:
+                msg = aistracker.process_message(payload)
+                if debug:
+                    msglist = []
+                    msglist.append(payload)
+                    msglist.append(msg.msgtype)
+                    msglist.append(msg.mmsi)
+                    msglist.append(msg.__str__())
+                    messagelist.append(msglist)
+        except nmea.NMEAInvalidSentence as err:
+            AISLOGGER.debug(str(err))
+            continue
+        except nmea.NMEACheckSumFailed as err:
+            AISLOGGER.debug(str(err))
+            continue
+        except ais.UnknownMessageType as err:
+            AISLOGGER.debug(str(err))
+            AISLOGGER.debug('unknown message - %s', line)
+            continue
+        except IndexError:
+            AISLOGGER.debug('no data on line')
+            continue
+    stnstats = aistracker.all_station_info(statsonly=True)
+    pprint.pprint(stnstats)
     print(aistracker.__str__())
     print(nmeatracker.__str__())
     if jsonoutput:

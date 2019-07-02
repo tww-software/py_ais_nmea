@@ -138,7 +138,7 @@ def read_capture_file():
                         nmea.NMEACheckSumFailed, nmea.NMEAInvalidSentence):
                     continue
             STATIONS.update(aistracker.stations)
-            stnstats = aistracker.all_station_info(verbose=False)
+            stnstats = aistracker.all_station_info()
             FLAGS.update(stnstats['Flags'])
             SHIPTYPES.update(stnstats['Subtypes'])
             STATS['Messages'] = stnstats['Stats']['Message Stats']

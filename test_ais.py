@@ -43,6 +43,7 @@ import messages.t25
 import messages.t26
 import messages.t27
 
+
 class BinaryTests(unittest.TestCase):
     """
     tests related to decoding binary data
@@ -122,7 +123,7 @@ class NMEATests(unittest.TestCase):
             '!AIVDM,1,1,,B,13P6>F002lwcg8`NvhLT>kP;HL02,0*3C']
         testtracker = nmea.NMEAtracker()
         for sentence in testsentences:
-            processed = testtracker.process_sentence(sentence)
+            testtracker.process_sentence(sentence)
         teststats = testtracker.nmea_stats()
         expectedstats = {'Total Sentences Processed': 8,
                          'Multipart Messages Reassembled': 1,
@@ -242,7 +243,8 @@ class AISStationTests(unittest.TestCase):
             [53.90793333333333, -3.6327133333333332],
             [53.90606666666667, -3.3356966666666668]]
         for posrep in positions:
-            self.aisteststn.update_position(posrep[0], posrep[1])
+            self.aisteststn.update_position({'Latitude': posrep[0],
+                                             'Longitude': posrep[1]})
         lastpos = self.aisteststn.get_latest_position()
         self.assertEqual(lastpos, expectedpos)
 
@@ -462,16 +464,24 @@ class Type8BinaryMessageTests(unittest.TestCase):
     """
 
     def test_inland_static_and_voyage_data(self):
+        """
+        Test to see if a particular type 8 message is recognised
+        """
         payload = '83P=pSPj2`8800400PPPM00M5fp0'
         msgbinary = binary.ais_sentence_payload_binary(payload)
         msg = messages.t8.Type8BinaryBroadcastMessage(msgbinary)
         self.assertEqual(msg.msgsubtype, 'Inland Static & Voyage Data')
 
     def test_meteorological_and_hydrological_data(self):
-        payload = '8>jHC700Gwn;21S`2j2ePPFQDB06EuOwgwl?wnSwe7wvlO1PsAwwnSAEwvh0'
+        """
+        Test to see if a particular type 8 message is recognised
+        """
+        payload = ('8>jHC700Gwn;21S`2j2ePPFQDB06EuOwgwl'
+                   '?wnSwe7wvlO1PsAwwnSAEwvh0')
         msgbinary = binary.ais_sentence_payload_binary(payload)
         msg = messages.t8.Type8BinaryBroadcastMessage(msgbinary)
-        self.assertEqual(msg.msgsubtype, 'Meteorological and Hydrological Data')
+        self.assertEqual(msg.msgsubtype,
+                         'Meteorological and Hydrological Data')
 
 
 class Type6BinaryMessageTests(unittest.TestCase):
@@ -480,12 +490,18 @@ class Type6BinaryMessageTests(unittest.TestCase):
     """
 
     def test_navigation_aid_monitoring_UK(self):
+        """
+        Test to see if a particular type 6 message is recognised
+        """
         payload = '6>jHC700V:C0>da6TPAvP00'
         msgbinary = binary.ais_sentence_payload_binary(payload)
         msg = messages.t6.Type6BinaryMessage(msgbinary)
         self.assertEqual(msg.msgsubtype, 'Aid to Navigation monitoring UK')
 
     def test_navigation_aid_monitoring_ROI(self):
+        """
+        Test to see if a particular type 6 message is recognised
+        """
         payload = '6>jHC7D0V:C0?``00000P00i'
         msgbinary = binary.ais_sentence_payload_binary(payload)
         msg = messages.t6.Type6BinaryMessage(msgbinary)
@@ -642,6 +658,36 @@ class IconTests(unittest.TestCase):
                                            icons.ICONS[vesselname])):
                 exists += 1
         self.assertEqual(len(icons.ICONS), exists)
+
+
+class IMO_Number_tests(unittest.TestCase):
+    """
+    check IMO integrity check works
+    """
+
+    def test_check_valid_imo_number(self):
+        """
+        a correct IMO number
+        """
+        self.assertTrue(ais.check_imo_number('9170705'))
+
+    def test_check_invalid_imo_number(self):
+        """
+        correct length but is not a valid IMO number
+        """
+        self.assertFalse(ais.check_imo_number('9999999'))
+
+    def test_check_too_short_imo_number(self):
+        """
+        IMO number that is too short - < 7 chars
+        """
+        self.assertFalse(ais.check_imo_number('9999'))
+
+    def test_check_too_long_imo_number(self):
+        """
+        IMO number that is too long - > 7 chars
+        """
+        self.assertFalse(ais.check_imo_number('917070500005'))
 
 
 if __name__ == '__main__':

@@ -74,20 +74,16 @@ class AISStation():
             flag = 'Unknown'
         return flag
 
-    def update_position(self, lat, lon, **kwargs):
+    def update_position(self, currentpos):
         """
         update the position of the AIS Station
 
         Args:
-            lat(float): latitude
-            lon(float): longitude
-            **kwargs: other postion report information
+            currentpos(dict): position report must have a minimum of keys
+                              'Latitude' and 'Longitude'
         """
-        if lat == 91.0 or lon == 181.0:
+        if currentpos['Latitude'] == 91.0 or currentpos['Longitude'] == 181.0:
             raise NoSuitablePositionReport('do not have a suitable LAT/LON')
-        currentpos = {'Latitude': lat, 'Longitude': lon}
-        if kwargs:
-            currentpos.update(kwargs)
         self.posrep.append(currentpos)
 
     def find_station_name_and_subtype(self, msgobj):
@@ -127,15 +123,10 @@ class AISStation():
         if msgobj.msgtype in posreptypes:
             try:
                 posrepdict = msgobj.get_position_data()
-            except NotImplementedError:
-                posrepdict = {}
-            if timestamp:
-                posrepdict['Time'] = timestamp
-            try:
-                self.update_position(msgobj.latitude,
-                                     msgobj.longitude,
-                                     **posrepdict)
-            except NoSuitablePositionReport:
+                if timestamp:
+                    posrepdict['Time'] = timestamp
+                self.update_position(posrepdict)
+            except (NotImplementedError, NoSuitablePositionReport):
                 pass
         try:
             self.details.update(msgobj.get_details())
@@ -172,6 +163,7 @@ class AISStation():
             msgobj(messages.aismessage.AISMessage): message object
         """
         mmsitypes = {
+            '8': 'Portable VHF Transceiver',
             '98': 'Auxiliary craft associated with a parent ship',
             '99': 'Navigation Aid',
             '00': 'Base Station',
@@ -285,11 +277,13 @@ class AISTracker():
                             newstn.name = self.stations[station].name
                             newstn.details = self.stations[station].details
                             timestampaistracker.stations[station] = newstn
-                        timestampaistracker.stations[station].posrep.append(posrep)
+                        timestampaistracker.stations[
+                            station].posrep.append(posrep)
             geojsonparser = timestampaistracker.create_geojson_map()
-            positionlog[time] = {'geojson': geojsonparser.main["features"],
-                                 'mapcentre': timestampaistracker.get_centre_of_map(),
-                                 'stations': len(timestampaistracker.stations)}
+            positionlog[time] = {
+                'geojson': geojsonparser.main["features"],
+                'mapcentre': timestampaistracker.get_centre_of_map(),
+                'stations': len(timestampaistracker.stations)}
         return positionlog
 
     def process_message(self, data, timestamp=None):
@@ -303,6 +297,7 @@ class AISTracker():
         Raises:
             UnknownMessageType: if the message type is not in the
                                 allmessages.MSGTYPES dict
+            InvalidMMSI: if the mmsi = 000000000
 
         Returns:
             msgobj(messages.aismessage.AISMessage): the ais message type object
@@ -315,12 +310,12 @@ class AISTracker():
             raise UnknownMessageType(
                 'Unknown message type {} - {}'.format(msgtype, data))
         if msgobj.mmsi == '000000000':
-            return msgobj
+            raise InvalidMMSI('Invalid MMSI - 000000000')
         self.messages[allmessages.MSGDESCRIPTIONS[msgtype]] += 1
-        self.messagesprocessed += 1
         if msgobj.mmsi not in self.stations:
             newstn = AISStation(msgobj.mmsi)
             self.stations[msgobj.mmsi] = newstn
+        if self.stations[msgobj.mmsi].type == 'Unknown':
             self.stations[msgobj.mmsi].determine_station_type(msgobj)
         if (self.stations[msgobj.mmsi].subtype == 'Unknown' or
                 self.stations[msgobj.mmsi].name == ''):
@@ -329,7 +324,7 @@ class AISTracker():
             if timestamp not in self.timings:
                 self.timings.append(timestamp)
         else:
-            if msgtype == 4 or msgtype == 11:
+            if msgtype in (4, 11):
                 if msgobj.timestamp != '00000_246060':
                     if timestamp not in self.timings:
                         self.timings.append(msgobj.timestamp)
@@ -338,6 +333,7 @@ class AISTracker():
             except IndexError:
                 timestamp = 'N/A'
         self.stations[msgobj.mmsi].find_position_information(msgobj, timestamp)
+        self.messagesprocessed += 1
         return msgobj
 
     def get_centre_of_map(self):
@@ -368,14 +364,11 @@ class AISTracker():
         for mmsi in self.stations:
             print(self.stations[mmsi].__str__())
 
-    def all_station_info(self, verbose=False, statsonly=False):
+    def all_station_info(self, statsonly=False):
         """
         get all the station information we have in a dictionary
 
         Args:
-            verbose(bool): if true then all positions of vessels that have been
-                           recorded will be returned, if false then only the
-                           last know position will be returned for each vessel
             statsonly(bool): if true then only the statistics will be returned
                              no data for individual stations will be returned
 
@@ -401,12 +394,10 @@ class AISTracker():
             subtypescount[self.stations[mmsi].subtype] += 1
             flags[self.stations[mmsi].flag].append(mmsi)
             flagcount[self.stations[mmsi].flag] += 1
-            if not verbose:
-                try:
-                    del allstations[mmsi]['posrep']
-                except AttributeError:
-                    print('no posrep to delete')
-                    continue
+            try:
+                del allstations[mmsi]['posrep']
+            except AttributeError:
+                continue
         allstations['Flags'] = flags
         allstations['Subtypes'] = subtypes
         allstations['Stationtypes'] = stntypes
@@ -429,8 +420,7 @@ class AISTracker():
             allstations['Times'] = 'No time data available.'
         if statsonly:
             return (allstations['Stats'], allstations['Times'])
-        else:
-            return allstations
+        return allstations
 
     def create_kml_map(self, outputfile, kmzoutput=True):
         """
@@ -565,6 +555,11 @@ class UnknownMessageType(Exception):
     """
     pass
 
+class InvalidMMSI(Exception):
+    """
+    raise when an incorrect MMSI is encountered
+    """
+    pass
 
 class NoSuitablePositionReport(Exception):
     """
@@ -596,3 +591,28 @@ def write_csv_file(lines, outpath):
     with open(outpath, 'w') as outfile:
         csvwriter = csv.writer(outfile)
         csvwriter.writerows(lines)
+
+
+def check_imo_number(imo):
+    """
+    do a basic integrity check of an IMO number
+
+    Args:
+        imo(str): the IMO number as a string
+
+    Returns:
+        True: if valid IMO number
+        False: invalid IMO number
+    """
+    if len(imo) > 7:
+        return False
+    try:
+        lastdigit = imo[6]
+        total = 0
+        multiplyby = 7
+        for digit in range(0, 6):
+            total += int(imo[digit]) * multiplyby
+            multiplyby -= 1
+    except IndexError:
+        return False
+    return bool(str(total)[len(str(total)) - 1] == lastdigit)

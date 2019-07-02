@@ -100,5 +100,7 @@ class Type19ExtendedReportClassB(messages.aismessage.AISMessage):
         posrep = {
             'Speed (knots)': self.speed,
             'True Heading': self.trueheading,
-            'CoG': self.courseoverground}
+            'CoG': self.courseoverground,
+            'Latitude': self.latitude,
+            'Longitude': self.longitude}
         return posrep

@@ -79,5 +79,8 @@ class Type4BaseStationReport(messages.aismessage.AISMessage):
         Returns:
             posrep(dict): position and navigation details from the message
         """
-        posrep = {'Time Stamp (UTC)': self.timestamp}
+        posrep = {
+            'Time Stamp (UTC)': self.timestamp,
+            'Latitude': self.latitude,
+            'Longitude': self.longitude}
         return posrep

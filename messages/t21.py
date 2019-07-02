@@ -130,3 +130,15 @@ class Type21AidToNavigation(messages.aismessage.AISMessage):
         details['Assigned Mode'] = self.assignedmode
         return details
 
+    def get_position_data(self):
+        """
+        get the position data from this message
+
+        Returns:
+            posrep(dict): position and navigation details from the message
+        """
+        posrep = {
+            'Latitude': self.latitude,
+            'Longitude': self.longitude}
+        return posrep
+

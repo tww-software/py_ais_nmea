@@ -83,5 +83,7 @@ class Type9StandardSARAircraftPositionReport(messages.aismessage.AISMessage):
         posrep = {
             'Altitude (m)': self.altitude,
             'CoG': self.courseoverground,
-            'Ground Speed (knots)': self.speedoverground}
+            'Ground Speed (knots)': self.speedoverground,
+            'Latitude': self.latitude,
+            'Longitude': self.longitude}
         return posrep

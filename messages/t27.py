@@ -70,5 +70,7 @@ class Type27LongRangeAISPositionReport(messages.aismessage.AISMessage):
         posrep = {
             'Navigation Status': self.navstatus,
             'Speed (knots)': self.speed,
-            'CoG': self.courseoverground}
+            'CoG': self.courseoverground,
+            'Latitude': self.latitude,
+            'Longitude': self.longitude}
         return posrep

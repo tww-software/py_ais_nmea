@@ -99,7 +99,7 @@ class GeoJsonParser():
             outputfilepath(str or path like object): where to save to
         """
         with open(outputfilepath, 'w') as geojsonfile:
-            json.dump(self.main, geojsonfile, indent=2)
+            json.dump(self.main, geojsonfile)
 
     def get_json_string(self):
         """

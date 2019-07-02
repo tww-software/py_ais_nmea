@@ -98,5 +98,7 @@ class Type123PositionReportClassA(messages.aismessage.AISMessage):
             'CoG': self.courseoverground,
             'Navigation Status': self.navstatus,
             'Turn Rate': self.turnrate,
-            'Special Maneuver': self.maneuverindicator}
+            'Special Maneuver': self.maneuverindicator,
+            'Latitude': self.latitude,
+            'Longitude': self.longitude}
         return posrep
