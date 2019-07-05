@@ -43,6 +43,16 @@ def map():
                            icons=ICONS)
 
 
+@app.route('/bearingmap')
+def bearingmap():
+    geojsonfeatures = STATIONS['geojson']
+    centrelat = STATIONS['centremap']['Latitude']
+    centrelon = STATIONS['centremap']['Longitude']
+    return render_template('leafletmap4.html', geojsonfeatures=geojsonfeatures,
+                           centrelat=centrelat, centrelon=centrelon,
+                           icons=ICONS)
+
+
 @app.route('/countrymap/<country>')
 def country_map(country):
     """
@@ -135,7 +145,8 @@ def read_capture_file():
                         msglist.append(msg.__str__())
                         ALLMESSAGES.append(msglist)
                 except (IndexError, ais.UnknownMessageType,
-                        nmea.NMEACheckSumFailed, nmea.NMEAInvalidSentence):
+                        nmea.NMEACheckSumFailed, nmea.NMEAInvalidSentence,
+                        ais.InvalidMMSI):
                     continue
             STATIONS.update(aistracker.stations)
             stnstats = aistracker.all_station_info()

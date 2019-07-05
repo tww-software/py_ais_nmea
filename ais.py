@@ -485,6 +485,10 @@ class AISTracker():
                 currentproperties['Name'] = self.stations[mmsi].name
                 currentproperties['Icon'] = \
                     icons.ICONS[self.stations[mmsi].subtype]
+                try:
+                    currentproperties['Bearing'] = lastpos['True Heading']
+                except KeyError:
+                    currentproperties['Bearing'] = 0
                 currentproperties.update(self.stations[mmsi].details)
                 lastlat = lastpos['Latitude']
                 lastlon = lastpos['Longitude']
