@@ -267,7 +267,7 @@ class AISTracker():
         positionlog = {}
         for time in self.timings:
             timestampaistracker = AISTracker()
-            for station in self.stations:
+            for station in self.stations_generator():
                 for posrep in self.stations[station].posrep:
                     if posrep['Time'] == time:
                         if station not in timestampaistracker.stations:
@@ -346,7 +346,7 @@ class AISTracker():
         """
         lats = []
         lons = []
-        for mmsi in self.stations:
+        for mmsi in self.stations_generator():
             lastpos = self.stations[mmsi].get_latest_position()
             if lastpos == 'Unknown':
                 continue
@@ -361,8 +361,19 @@ class AISTracker():
         """
         quick method to print all the stations the AISTracker knows
         """
-        for mmsi in self.stations:
+        for mmsi in self.stations_generator():
             print(self.stations[mmsi].__str__())
+
+    def stations_generator(self):
+        """
+        a generator because we often find ourselves iterating over the
+        self.stations dictionary
+
+        Yields:
+            AISStation - ais station object
+        """
+        for stn in self.stations:
+            yield stn
 
     def all_station_info(self, statsonly=False):
         """
@@ -384,7 +395,7 @@ class AISTracker():
         flagcount = collections.Counter()
         stntypescount = collections.Counter()
         subtypescount = collections.Counter()
-        for mmsi in self.stations:
+        for mmsi in self.stations_generator():
             allstations[mmsi] = self.stations[mmsi].__dict__.copy()
             allstations[mmsi]['Last Known Position'] = (self.stations[mmsi]
                                                         .get_latest_position())
@@ -437,7 +448,7 @@ class AISTracker():
             docpath = os.path.join(outputfile)
         kmlmap = kml.KMLOutputParser(docpath)
         kmlmap.create_kml_header(kmz=kmzoutput)
-        for mmsi in self.stations:
+        for mmsi in self.stations_generator():
             lastpos = self.stations[mmsi].get_latest_position()
             if lastpos == 'Unknown':
                 continue
@@ -471,7 +482,7 @@ class AISTracker():
                                                processing
         """
         geojsonmap = geojson.GeoJsonParser()
-        for mmsi in self.stations:
+        for mmsi in self.stations_generator():
             lastpos = self.stations[mmsi].get_latest_position()
             if lastpos == 'Unknown':
                 continue
@@ -521,7 +532,7 @@ class AISTracker():
                      'IMO number', 'RAIM', 'Fix Type', 'Position Accuracy',
                      'Latitude', 'Longitude', 'Total Messages']
         csvtable.append(csvheader)
-        for mmsi in self.stations:
+        for mmsi in self.stations_generator():
             line = [mmsi,
                     self.stations[mmsi].type,
                     self.stations[mmsi].subtype,

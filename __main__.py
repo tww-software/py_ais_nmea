@@ -89,6 +89,9 @@ def read_from_network(outpath, host='localhost', port=10110):
                 AISLOGGER.debug(str(err))
                 AISLOGGER.debug('unknown message - %s', data)
                 continue
+            except ais.InvalidMMSI as err:
+                AISLOGGER.debug(str(err))
+                continue
             except IndexError:
                 AISLOGGER.debug('no data on line')
                 continue
@@ -153,6 +156,9 @@ def read_from_file(filepath, outpath, debug=False, jsonverbose=False,
         except nmea.NMEACheckSumFailed as err:
             AISLOGGER.debug(str(err))
             continue
+        except ais.InvalidMMSI as err:
+                AISLOGGER.debug(str(err))
+                continue
         except ais.UnknownMessageType as err:
             AISLOGGER.debug(str(err))
             AISLOGGER.debug('unknown message - %s', line)
