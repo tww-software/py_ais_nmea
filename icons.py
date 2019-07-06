@@ -109,4 +109,5 @@ ICONS = {'Base Station': 'basestn.png',
          'Auxiliary craft associated with a parent ship': 'auxiliary.png',
          'MOB (Man Overboard) device': 'mob.png',
          'AIS SART (Search and Rescue Transmitter)': 'aissart.png',
-         'EPIRB (Emergency Position Indicating Radio Beacon)': 'epirb.png'}
+         'EPIRB (Emergency Position Indicating Radio Beacon)': 'epirb.png',
+         'Portable VHF Transceiver': 'portablevhf.png'}
