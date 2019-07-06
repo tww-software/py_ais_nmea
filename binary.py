@@ -37,7 +37,7 @@ def ais_sentence_payload_binary(payload):
         sixbitchar = ord(char) - 48
         if sixbitchar > 40:
             sixbitchar = sixbitchar - 8
-        decoded.append(format(sixbitchar, '06b'))
+        decoded.append(f'{sixbitchar:06b}')
     binarystr = ''.join(decoded)
     return binarystr
 
