@@ -391,6 +391,14 @@ class AISTrackerTests(unittest.TestCase):
         msg = self.process_sentence(testsentence)
         self.assertIsInstance(msg, messages.t11.Type11UTCDateResponse)
 
+    def test_addressed_safety_message(self):
+        """
+        Test to see if a particular message type is recognised
+        """
+        testsentence = '<778Vo1E5r5PD5CD'
+        msg = self.process_sentence(testsentence)
+        self.assertIsInstance(msg, messages.t12.Type12AddressedSafetyMessage)
+
     def test_safety_acknowlegement(self):
         """
         Test to see if a particular message type is recognised
@@ -406,6 +414,15 @@ class AISTrackerTests(unittest.TestCase):
         testsentence = '?3P=A400SJJl@00'
         msg = self.process_sentence(testsentence)
         self.assertIsInstance(msg, messages.t15.Type15Interrogation)
+
+    def test_DGNSS_binary_broadcast(self):
+        """
+        Test to see if a particular message type is recognised
+        """
+        testsentence = ('A03n9r0MFhOC00@0f;EV302K4ih20:'
+                        'cj7QT0AwlV1Ovb2QtM04`4FQP0EwmG1gpWuB2b')
+        msg = self.process_sentence(testsentence)
+        self.assertIsInstance(msg, messages.t17.Type17DGNSSBroadcastBinaryMessage)
 
     def test_classB_position_report(self):
         """

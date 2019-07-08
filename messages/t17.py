@@ -5,7 +5,7 @@ import messages.aismessage
 
 class Type17DGNSSBroadcastBinaryMessage(messages.aismessage.AISMessage):
     """
-    NO REAL LIFE TEST DATA FOUND YET!
+    used to broadcast differential corrections for GPS
     """
 
     def __str__(self):

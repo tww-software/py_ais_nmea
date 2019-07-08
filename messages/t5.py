@@ -32,8 +32,11 @@ class Type5StaticAndVoyageData(messages.aismessage.AISMessage):
         self.imo = binary.decode_sixbit_integer(msgbinary, 40, 70)
         self.callsign = binary.decode_sixbit_ascii(msgbinary, 70, 112).rstrip()
         self.name = binary.decode_sixbit_ascii(msgbinary, 112, 232).rstrip()
-        self.shiptype = self.shiptypes[binary.decode_sixbit_integer(
-            msgbinary, 232, 240)]
+        try:
+            self.shiptype = self.shiptypes[binary.decode_sixbit_integer(
+                msgbinary, 232, 240)]
+        except KeyError:
+            self.shiptype = 'Unknown'
         tobow = binary.decode_sixbit_integer(msgbinary, 240, 249)
         tostern = binary.decode_sixbit_integer(msgbinary, 249, 258)
         toport = binary.decode_sixbit_integer(msgbinary, 258, 264)

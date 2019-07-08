@@ -5,7 +5,7 @@ import messages.aismessage
 
 class Type12AddressedSafetyMessage(messages.aismessage.AISMessage):
     """
-    NO REAL LIFE TEST DATA FOUND YET!
+    Safety message from one station to another
     """
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
