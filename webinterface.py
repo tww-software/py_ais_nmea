@@ -43,8 +43,8 @@ def map():
                            icons=ICONS)
 
 
-@app.route('/bearingmap')
-def bearingmap():
+@app.route('/headingmap')
+def heading_map():
     geojsonfeatures = STATIONS['geojson']
     centrelat = STATIONS['centremap']['Latitude']
     centrelon = STATIONS['centremap']['Longitude']
@@ -149,17 +149,18 @@ def read_capture_file():
                         ais.InvalidMMSI):
                     continue
             STATIONS.update(aistracker.stations)
-            stnstats = aistracker.all_station_info()
-            FLAGS.update(stnstats['Flags'])
-            SHIPTYPES.update(stnstats['Subtypes'])
-            STATS['Messages'] = stnstats['Stats']['Message Stats']
+            stnstats = aistracker.tracker_stats()
+            organisedmmsis = aistracker.sort_mmsi_by_catagory()
+            FLAGS.update(organisedmmsis['Flags'])
+            SHIPTYPES.update(organisedmmsis['Subtypes'])
+            STATS['Messages'] = stnstats['Message Stats']
             STATS['Times'] = stnstats['Times']
             STATS['TotalNMEASentences'] = nmeatracker.sentencecount
             STATS['MultipartMessagesReassembled'] = nmeatracker.reassembled
             STATS['MessagesRXonchannel'] = nmeatracker.channelcounter
-            STATS['AISStationTypes'] = stnstats['Stats']['AIS Station Types']
-            STATS['ShipTypes'] = stnstats['Stats']['Ship Types']
-            STATS['Flags'] = stnstats['Stats']['Country Flags']
+            STATS['AISStationTypes'] = stnstats['AIS Station Types']
+            STATS['ShipTypes'] = stnstats['Ship Types']
+            STATS['Flags'] = stnstats['Country Flags']
             ais.write_json_file(stnstats, tempjsonpath)
             foutput = aistracker.create_csv_data()
             ais.write_csv_file(foutput, tempcsvpath)
@@ -189,9 +190,9 @@ def station_details(mmsi):
                                'data', mmsi + '.kmz')
     singlestntracker = ais.AISTracker()
     singlestntracker.stations[mmsi] = STATIONS[mmsi]
-    singlestntracker.create_kml_map(tempkmlpath)
-    lastpos = STATIONS[mmsi].get_latest_position()
-    if lastpos != 'Unknown':
+    try:
+        singlestntracker.create_kml_map(tempkmlpath)
+        lastpos = STATIONS[mmsi].get_latest_position()
         geojsonparser = singlestntracker.create_geojson_map()
         geojsonfeatures = geojsonparser.main["features"]
         centremap = singlestntracker.get_centre_of_map()
@@ -202,7 +203,7 @@ def station_details(mmsi):
                                icons=ICONS,
                                geojsonfeatures=geojsonfeatures,
                                centrelat=centrelat, centrelon=centrelon)
-    else:
+    except ais.NoSuitablePositionReport:
         return render_template('ais_station_no_location.html', station=station)
 
 @app.route('/<mmsi>.kmz')

@@ -137,14 +137,39 @@ class AISStation():
         """
         return the last known position we have for the ais station
 
+        Raises:
+            NoSuitablePositionReport: if no posrep found
+
         Returns:
-            'Unknown'(str): if no posrep found
             self.posrep(dict): last item in self.posrep
         """
         try:
             return self.posrep[len(self.posrep) - 1]
         except (IndexError, AttributeError):
-            return 'Unknown'
+            raise NoSuitablePositionReport('Unknown')
+
+    def get_station_info(self):
+        """
+        return the most relevant information about this AIS station as a
+        dictionary
+
+        Returns:
+            stninfo(dict):
+        """
+        stninfo = {}
+        stninfo['MMSI'] = self.mmsi
+        stninfo['Type'] = self.type
+        stninfo['Sub Type'] = self.subtype
+        stninfo['Flag'] = self.flag
+        stninfo['Name'] = self.name
+        usefulinfo = ['Callsign', 'IMO number',
+                      'RAIM in use', 'EPFD Fix type', 'Position Accuracy']
+        for item in usefulinfo:
+           try:
+               stninfo[item] = self.details[item]
+           except KeyError:
+               stninfo[item] = ''
+        return stninfo
 
     def determine_station_type(self, msgobj):
         """
@@ -193,15 +218,15 @@ class AISStation():
             self.type = typesdict[msgobj.msgtype]
 
     def __str__(self):
-        lastpos = self.get_latest_position()
-        if lastpos == 'Unknown':
-            posstr = lastpos
-        else:
+        try:
+            lastpos = self.get_latest_position()
             try:
                 posstr = '{},{}'.format(lastpos['Latitude'],
                                         lastpos['Longitude'])
             except KeyError:
                 posstr = 'Unknown'
+        except NoSuitablePositionReport:
+            posstr= 'Unknown'
         strtext = ('AIS Station - MMSI: {}, Name: {}, Type: {},'
                    ' Subtype: {}, Flag: {}, Last Known Position: {},'
                    ''.format(self.mmsi,
@@ -347,8 +372,9 @@ class AISTracker():
         lats = []
         lons = []
         for mmsi in self.stations_generator():
-            lastpos = self.stations[mmsi].get_latest_position()
-            if lastpos == 'Unknown':
+            try:
+                lastpos = self.stations[mmsi].get_latest_position()
+            except NoSuitablePositionReport:
                 continue
             lats.append(lastpos['Latitude'])
             lons.append(lastpos['Longitude'])
@@ -375,62 +401,76 @@ class AISTracker():
         for stn in self.stations:
             yield stn
 
-    def all_station_info(self, statsonly=False):
+    def sort_mmsi_by_catagory(self):
+        """
+        sort MMSIs by type, subtype, flag etc
+        so its easy to find all the MMSIs that fall under a certain catagory
+        e.g. all the vessels that are Tugs
+
+        Returns:
+            organised(dict): dictionary with lists of MMSIs for each catagory
+        """
+        organised = {}
+        stntypes = collections.defaultdict(list)
+        subtypes = collections.defaultdict(list)
+        flags = collections.defaultdict(list)
+        for mmsi in self.stations_generator():
+            stntypes[self.stations[mmsi].type].append(mmsi)
+            subtypes[self.stations[mmsi].subtype].append(mmsi)
+            flags[self.stations[mmsi].flag].append(mmsi)
+        organised['Flags'] = flags
+        organised['Subtypes'] = subtypes
+        organised['Stationtypes'] = stntypes
+        return organised
+
+    def tracker_stats(self):
+        """
+        calculate statistics for this tracker object and return them
+        in a dictionary
+
+        Returns:
+            stats(dict): various statistics including what types, subtypes,
+                         flags and messages we have seen
+        """
+        stats = {}
+
+        flagcount = collections.Counter()
+        stntypescount = collections.Counter()
+        subtypescount = collections.Counter()
+        for mmsi in self.stations_generator():
+            stntypescount[self.stations[mmsi].type] += 1
+            subtypescount[self.stations[mmsi].subtype] += 1
+            flagcount[self.stations[mmsi].flag] += 1
+        stats['Total Unique Stations'] = self.__len__()
+        stats['Total Messages Processed'] = \
+            self.messagesprocessed
+        stats['Message Stats'] = self.messages
+        stats['AIS Station Types'] = \
+            stntypescount
+        stats['Ship Types'] = \
+            subtypescount
+        stats['Country Flags'] = \
+            flagcount
+        try:
+            stats['Times'] = {}
+            stats['Times']['Started'] = self.timings[0]
+            stats['Times']['Finished'] = self.timings[
+                len(self.timings) - 1]
+        except IndexError:
+            stats['Times'] = 'No time data available.'
+        return stats
+
+    def all_station_info(self):
         """
         get all the station information we have in a dictionary
-
-        Args:
-            statsonly(bool): if true then only the statistics will be returned
-                             no data for individual stations will be returned
 
         Returns:
             allstations(dict): dictionary of all the information the aistracker
                                currently has on all vessels it has recorded
         """
         allstations = {}
-        allstations['Stats'] = {}
-        stntypes = collections.defaultdict(list)
-        subtypes = collections.defaultdict(list)
-        flags = collections.defaultdict(list)
-        flagcount = collections.Counter()
-        stntypescount = collections.Counter()
-        subtypescount = collections.Counter()
         for mmsi in self.stations_generator():
-            allstations[mmsi] = self.stations[mmsi].__dict__.copy()
-            allstations[mmsi]['Last Known Position'] = (self.stations[mmsi]
-                                                        .get_latest_position())
-            stntypes[self.stations[mmsi].type].append(mmsi)
-            stntypescount[self.stations[mmsi].type] += 1
-            subtypes[self.stations[mmsi].subtype].append(mmsi)
-            subtypescount[self.stations[mmsi].subtype] += 1
-            flags[self.stations[mmsi].flag].append(mmsi)
-            flagcount[self.stations[mmsi].flag] += 1
-            try:
-                del allstations[mmsi]['posrep']
-            except AttributeError:
-                continue
-        allstations['Flags'] = flags
-        allstations['Subtypes'] = subtypes
-        allstations['Stationtypes'] = stntypes
-        allstations['Stats']['Total Unique Stations'] = self.__len__()
-        allstations['Stats']['Total Messages Processed'] = \
-            self.messagesprocessed
-        allstations['Stats']['Message Stats'] = self.messages
-        allstations['Stats']['AIS Station Types'] = \
-            stntypescount
-        allstations['Stats']['Ship Types'] = \
-            subtypescount
-        allstations['Stats']['Country Flags'] = \
-            flagcount
-        try:
-            allstations['Times'] = {}
-            allstations['Times']['Started'] = self.timings[0]
-            allstations['Times']['Finished'] = self.timings[
-                len(self.timings) - 1]
-        except IndexError:
-            allstations['Times'] = 'No time data available.'
-        if statsonly:
-            return (allstations['Stats'], allstations['Times'])
+            allstations[mmsi] = self.stations.get_station_info()
         return allstations
 
     def create_kml_map(self, outputfile, kmzoutput=True):
@@ -449,21 +489,21 @@ class AISTracker():
         kmlmap = kml.KMLOutputParser(docpath)
         kmlmap.create_kml_header(kmz=kmzoutput)
         for mmsi in self.stations_generator():
-            lastpos = self.stations[mmsi].get_latest_position()
-            if lastpos == 'Unknown':
+            try:
+                lastpos = self.stations[mmsi].get_latest_position()
+            except NoSuitablePositionReport:
                 continue
-            else:
-                stntype = self.stations[mmsi].subtype
-                kmlmap.open_folder(mmsi)
-                desc = kmlmap.format_kml_placemark_description(
-                    self.stations[mmsi].__dict__)
-                posreps = self.stations[mmsi].posrep
-                kmlmap.add_kml_placemark_linestring(mmsi, posreps)
-                kmlmap.add_kml_placemark(mmsi, desc,
-                                         str(lastpos['Longitude']),
-                                         str(lastpos['Latitude']),
-                                         stntype, kmzoutput)
-                kmlmap.close_folder()
+            stntype = self.stations[mmsi].subtype
+            kmlmap.open_folder(mmsi)
+            desc = kmlmap.format_kml_placemark_description(
+                self.stations[mmsi].__dict__)
+            posreps = self.stations[mmsi].posrep
+            kmlmap.add_kml_placemark_linestring(mmsi, posreps)
+            kmlmap.add_kml_placemark(mmsi, desc,
+                                     str(lastpos['Longitude']),
+                                     str(lastpos['Latitude']),
+                                     stntype, kmzoutput)
+            kmlmap.close_folder()
         kmlmap.close_kml_file()
         kmlmap.write_kml_doc_file()
         if kmzoutput:
@@ -483,34 +523,30 @@ class AISTracker():
         """
         geojsonmap = geojson.GeoJsonParser()
         for mmsi in self.stations_generator():
-            lastpos = self.stations[mmsi].get_latest_position()
-            if lastpos == 'Unknown':
+            try:
+                lastpos = self.stations[mmsi].get_latest_position()
+            except NoSuitablePositionReport:
                 continue
-            else:
-                currentmmsi = self.stations[mmsi].mmsi
-                currentproperties = {}
-                currentproperties['MMSI'] = self.stations[mmsi].mmsi
-                currentproperties['Type'] = self.stations[mmsi].type
-                currentproperties['Subtype'] = self.stations[mmsi].subtype
-                currentproperties['Flag'] = self.stations[mmsi].flag
-                currentproperties['Name'] = self.stations[mmsi].name
-                currentproperties['Icon'] = \
-                    icons.ICONS[self.stations[mmsi].subtype]
-                try:
-                    currentproperties['Bearing'] = lastpos['True Heading']
-                except KeyError:
-                    currentproperties['Bearing'] = 0
-                currentproperties.update(self.stations[mmsi].details)
-                lastlat = lastpos['Latitude']
-                lastlon = lastpos['Longitude']
-                currentcoords = []
-                for pos in self.stations[mmsi].posrep:
-                    currentcoords.append([pos['Longitude'], pos['Latitude']])
-                geojsonmap.add_station_info(currentmmsi,
-                                            currentproperties,
-                                            currentcoords,
-                                            lastlon,
-                                            lastlat)
+            currentmmsi = self.stations[mmsi].mmsi
+            currentproperties = {}
+            currentproperties.update(
+                self.stations[mmsi].get_station_info())
+            currentproperties['Icon'] = \
+                icons.ICONS[self.stations[mmsi].subtype]
+            try:
+                currentproperties['Heading'] = lastpos['True Heading']
+            except KeyError:
+                currentproperties['Heading'] = 0
+            lastlat = lastpos['Latitude']
+            lastlon = lastpos['Longitude']
+            currentcoords = []
+            for pos in self.stations[mmsi].posrep:
+                currentcoords.append([pos['Longitude'], pos['Latitude']])
+            geojsonmap.add_station_info(currentmmsi,
+                                        currentproperties,
+                                        currentcoords,
+                                        lastlon,
+                                        lastlat)
         if outputfile:
             geojsonmap.save_to_file(outputfile)
         return geojsonmap
@@ -529,37 +565,24 @@ class AISTracker():
         """
         csvtable = []
         csvheader = ['MMSI', 'Type', 'Sub Type', 'Flag', 'Name', 'Callsign',
-                     'IMO number', 'RAIM', 'Fix Type', 'Position Accuracy',
+                     'IMO number', 'RAIM in use', 'EPFD Fix type', 'Position Accuracy',
                      'Latitude', 'Longitude', 'Total Messages']
         csvtable.append(csvheader)
         for mmsi in self.stations_generator():
-            line = [mmsi,
-                    self.stations[mmsi].type,
-                    self.stations[mmsi].subtype,
-                    self.stations[mmsi].flag,
-                    self.stations[mmsi].name]
-            usefulinfo = ['Callsign', 'IMO number',
-                          'RAIM in use', 'EPFD Fix type', 'Position Accuracy']
-            linedetails = []
-            for item in usefulinfo:
-                try:
-                    linedetails.append(self.stations[mmsi].details[item])
-                except KeyError:
-                    linedetails.append('')
-            line.extend(linedetails)
-            lastpos = self.stations[mmsi].get_latest_position()
-            if lastpos == 'Unknown':
-                lat = ''
-                lon = ''
-            else:
-                lat = lastpos['Latitude']
-                lon = lastpos['Longitude']
-            totalmsgs = 0
+            stninfo = self.stations[mmsi].get_station_info()
+            line = []
+            try:
+                lastpos = self.stations[mmsi].get_latest_position()
+                stninfo['Latitude'] = lastpos['Latitude']
+                stninfo['Longitude'] = lastpos['Longitude']
+            except (NoSuitablePositionReport, TypeError, KeyError):
+                stninfo['Latitude'] = ''
+                stninfo['Longitude'] = ''
+            stninfo['Total Messages'] = 0
             for i in self.stations[mmsi].sentmsgs:
-                totalmsgs += self.stations[mmsi].sentmsgs[i]
-            line.append(lat)
-            line.append(lon)
-            line.append(totalmsgs)
+                stninfo['Total Messages'] += self.stations[mmsi].sentmsgs[i]
+            for item in csvheader:
+                line.append(stninfo[item])
             csvtable.append(line)
         return csvtable
 

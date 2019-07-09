@@ -25,11 +25,11 @@ L.tileLayer('http://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
 L.control.scale().addTo(mymap);
 
 
-function getBearingIcon(feature) {
-     if (feature.properties['Bearing'] == 511) {
+function getHeadingIcon(feature) {
+     if (feature.properties['Heading'] == 511) {
         newicon = '/static/icons/' + feature.properties.Icon;
      } else {
-        newicon = '/static/arrows/' + feature.properties.Bearing + '.png';
+        newicon = '/static/arrows/' + feature.properties.Heading + '.png';
     }
     var shipIcon = new L.Icon({
      iconSize: [65, 65],
@@ -66,7 +66,7 @@ function pointToLayer(feature, latlng) {
     if (feature.properties['Type'] == 'Base Station' || feature.properties['Type'] == 'Navigation Aid') {
         return L.marker(latlng, {icon: getTypeIcon(feature)});
     } else {
-        return L.marker(latlng, {icon: getBearingIcon(feature)});
+        return L.marker(latlng, {icon: getHeadingIcon(feature)});
 		}};
 
 

@@ -219,8 +219,8 @@ class AISStationTests(unittest.TestCase):
         try to grab its last known location
         this should return 'unknown' as we havn't given it any LATLON coords
         """
-        lastpos = self.aisteststn.get_latest_position()
-        self.assertEqual(lastpos, 'Unknown')
+        with self.assertRaises(ais.NoSuitablePositionReport):
+            lastpos = self.aisteststn.get_latest_position()
 
     def test_unknown_flag_identification(self):
         """
@@ -547,7 +547,7 @@ class AISTrackerTimingTests(unittest.TestCase):
             '402=acP000HttwhRddNPs;G00UhP']
         for data in timings:
             self.aistracker.process_message(data)
-        stats = self.aistracker.all_station_info()
+        stats = self.aistracker.tracker_stats()
         self.assertEqual(expected, stats['Times'])
 
     def test_valid_times_from_base_station(self):
@@ -565,7 +565,7 @@ class AISTrackerTimingTests(unittest.TestCase):
             '402=a`1v:DfD6Oi>SpNu0t102@3r']
         for data in timings:
             self.aistracker.process_message(data)
-        stats = self.aistracker.all_station_info()
+        stats = self.aistracker.tracker_stats()
         self.assertDictEqual(expected, stats['Times'])
 
     def test_live_times(self):

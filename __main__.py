@@ -166,9 +166,8 @@ def read_from_file(filepath, outpath, debug=False, jsonverbose=False,
         except IndexError:
             AISLOGGER.debug('no data on line')
             continue
-    stnstats = aistracker.all_station_info(statsonly=True)
+    stnstats = aistracker.tracker_stats()
     pprint.pprint(stnstats)
-    print(aistracker.__str__())
     print(nmeatracker.__str__())
     if jsonoutput:
         AISLOGGER.debug('saving JSON output to %s.json', outpath)
