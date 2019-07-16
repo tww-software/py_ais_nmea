@@ -11,7 +11,7 @@ class Type10UTCDateInquiry(messages.aismessage.AISMessage):
 
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.destinationmmsi = binary.decode_sixbit_integer(msgbinary, 40, 70)
+        self.destinationmmsi = self.decode_sixbit_integer(msgbinary[40:70])
 
     def __str__(self):
         """

@@ -328,7 +328,7 @@ class AISTracker():
             msgobj(messages.aismessage.AISMessage): the ais message type object
         """
         msgbinary = binary.ais_sentence_payload_binary(data)
-        msgtype = binary.decode_sixbit_integer(msgbinary, 0, 6)
+        msgtype = binary.decode_sixbit_integer(msgbinary[0:6])
         if msgtype in allmessages.MSGTYPES.keys():
             msgobj = allmessages.MSGTYPES[msgtype](msgbinary)
         else:
@@ -396,7 +396,7 @@ class AISTracker():
         self.stations dictionary
 
         Yields:
-            AISStation - ais station object
+            stn(AISStation): ais station object
         """
         for stn in self.stations:
             yield stn
@@ -565,8 +565,9 @@ class AISTracker():
         """
         csvtable = []
         csvheader = ['MMSI', 'Type', 'Sub Type', 'Flag', 'Name', 'Callsign',
-                     'IMO number', 'RAIM in use', 'EPFD Fix type', 'Position Accuracy',
-                     'Latitude', 'Longitude', 'Total Messages']
+                     'IMO number', 'RAIM in use', 'EPFD Fix type',
+                     'Position Accuracy', 'Latitude',
+                     'Longitude', 'Total Messages']
         csvtable.append(csvheader)
         for mmsi in self.stations_generator():
             stninfo = self.stations[mmsi].get_station_info()

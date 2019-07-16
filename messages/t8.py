@@ -66,9 +66,9 @@ class Type8BinaryBroadcastMessage(messages.aismessage.AISMessage):
         super().__init__(msgbinary)
         self.msgdetails = {}
         self.msgsubtype = 'Unknown'
-        self.designatedareacode = binary.decode_sixbit_integer(
-            msgbinary, 40, 50)
-        self.functionid = binary.decode_sixbit_integer(msgbinary, 50, 56)
+        self.designatedareacode = self.decode_sixbit_integer(
+            msgbinary[40:50])
+        self.functionid = self.decode_sixbit_integer(msgbinary[50:56])
         self.identify_subtype()
 
     def identify_subtype(self):
@@ -86,25 +86,25 @@ class Type8BinaryBroadcastMessage(messages.aismessage.AISMessage):
         """
         self.msgsubtype = 'Inland Static & Voyage Data'
         self.msgdetails['European Vessel ID'] = binary.decode_sixbit_ascii(
-            self.msgbinary, 56, 104)
-        self.msgdetails['Length'] = binary.decode_sixbit_integer(
-            self.msgbinary, 104, 117) / 10
-        self.msgdetails['Beam'] = binary.decode_sixbit_integer(
-            self.msgbinary, 117, 127) / 10
-        self.msgdetails['Ship Type'] = binary.decode_sixbit_integer(
-            self.msgbinary, 127, 141)
-        self.msgdetails['Hazard'] = self.hazards[binary.decode_sixbit_integer(
-            self.msgbinary, 141, 144)]
-        self.msgdetails['Draught'] = binary.decode_sixbit_integer(
-            self.msgbinary, 144, 155) / 100
+            self.msgbinary[56:104])
+        self.msgdetails['Length'] = self.decode_sixbit_integer(
+            self.msgbinary[104:117]) / 10
+        self.msgdetails['Beam'] = self.decode_sixbit_integer(
+            self.msgbinary[117:127]) / 10
+        self.msgdetails['Ship Type'] = self.decode_sixbit_integer(
+            self.msgbinary[127:141])
+        self.msgdetails['Hazard'] = self.hazards[self.decode_sixbit_integer(
+            self.msgbinary[141:144])]
+        self.msgdetails['Draught'] = self.decode_sixbit_integer(
+            self.msgbinary[144:155]) / 100
         self.msgdetails['Load Status'] = self.loadstatuses[
-            binary.decode_sixbit_integer(self.msgbinary, 155, 157)]
+            self.decode_sixbit_integer(self.msgbinary[155:157])]
         self.msgdetails['Speed Measurement Quality'] = self.quality[
-            binary.decode_sixbit_integer(self.msgbinary, 157, 158)]
+            self.decode_sixbit_integer(self.msgbinary[157:158])]
         self.msgdetails['Course Measurement Quality'] = self.quality[
-            binary.decode_sixbit_integer(self.msgbinary, 158, 159)]
+            self.decode_sixbit_integer(self.msgbinary[158:159])]
         self.msgdetails['Heading Measurement Quality'] = self.quality[
-            binary.decode_sixbit_integer(self.msgbinary, 159, 160)]
+            self.decode_sixbit_integer(self.msgbinary[159:160])]
 
     def meteorological_and_hydrological_data(self):
         """
@@ -112,75 +112,75 @@ class Type8BinaryBroadcastMessage(messages.aismessage.AISMessage):
         """
         self.msgsubtype = 'Meteorological and Hydrological Data'
         self.msgdetails['Position Fix Accuracy'] = self.accuracy[
-            binary.decode_sixbit_integer(self.msgbinary, 105, 106)]
-        self.msgdetails['Day'] = binary.decode_sixbit_integer(
-            self.msgbinary, 106, 111)
-        self.msgdetails['Hour'] = binary.decode_sixbit_integer(
-            self.msgbinary, 111, 116)
-        self.msgdetails['Minute'] = binary.decode_sixbit_integer(
-            self.msgbinary, 116, 122)
+            self.decode_sixbit_integer(self.msgbinary[105:106])]
+        self.msgdetails['Day'] = self.decode_sixbit_integer(
+            self.msgbinary[106:111])
+        self.msgdetails['Hour'] = self.decode_sixbit_integer(
+            self.msgbinary[111:116])
+        self.msgdetails['Minute'] = self.decode_sixbit_integer(
+            self.msgbinary[116:122])
         self.msgdetails['Average Wind Speed (knots)'] = \
-            binary.decode_sixbit_integer(self.msgbinary, 122, 129)
-        self.msgdetails['Gust Speed (knots)'] = binary.decode_sixbit_integer(
-            self.msgbinary, 129, 136)
-        self.msgdetails['Wind Direction'] = binary.decode_sixbit_integer(
-            self.msgbinary, 136, 145)
-        self.msgdetails['Gust Direction'] = binary.decode_sixbit_integer(
-            self.msgbinary, 145, 154)
-        self.msgdetails['Air Temperature'] = binary.decode_sixbit_integer(
-            self.msgbinary, 154, 165)
-        self.msgdetails['Relative Humidity'] = binary.decode_sixbit_integer(
-            self.msgbinary, 165, 172)
-        self.msgdetails['Dew Point'] = binary.decode_sixbit_integer(
-            self.msgbinary, 172, 182)
-        self.msgdetails['Air Pressure'] = binary.decode_sixbit_integer(
-            self.msgbinary, 182, 191)
+            self.decode_sixbit_integer(self.msgbinary[122:129])
+        self.msgdetails['Gust Speed (knots)'] = self.decode_sixbit_integer(
+            self.msgbinary[129:136])
+        self.msgdetails['Wind Direction'] = self.decode_sixbit_integer(
+            self.msgbinary[136:145])
+        self.msgdetails['Gust Direction'] = self.decode_sixbit_integer(
+            self.msgbinary[145:154])
+        self.msgdetails['Air Temperature'] = self.decode_sixbit_integer(
+            self.msgbinary[154:165])
+        self.msgdetails['Relative Humidity'] = self.decode_sixbit_integer(
+            self.msgbinary[165:172])
+        self.msgdetails['Dew Point'] = self.decode_sixbit_integer(
+            self.msgbinary[172:182])
+        self.msgdetails['Air Pressure'] = self.decode_sixbit_integer(
+            self.msgbinary[182:191])
         self.msgdetails['Pressure Tendancy'] = self.tendancy[
-            binary.decode_sixbit_integer(self.msgbinary, 191, 193)]
+            self.decode_sixbit_integer(self.msgbinary[191:193])]
         self.msgdetails['Horizontal Visibility'] =  \
-            binary.decode_sixbit_integer(self.msgbinary, 194, 201)
-        self.msgdetails['Water Level'] = binary.decode_sixbit_integer(
-            self.msgbinary, 201, 213)
+            self.decode_sixbit_integer(self.msgbinary[194:201])
+        self.msgdetails['Water Level'] = self.decode_sixbit_integer(
+            self.msgbinary[201:213])
         self.msgdetails['Water Level Trend'] = self.tendancy[
-            binary.decode_sixbit_integer(self.msgbinary, 213, 215)]
+            self.decode_sixbit_integer(self.msgbinary[213:215])]
         self.msgdetails['Surface Current Speed'] = \
-            binary.decode_sixbit_integer(self.msgbinary, 215, 223)
+            self.decode_sixbit_integer(self.msgbinary[215:223])
         self.msgdetails['Surface Current Direction'] = \
-            binary.decode_sixbit_integer(self.msgbinary, 223, 232)
-        self.msgdetails['Current Speed #2'] = binary.decode_sixbit_integer(
-            self.msgbinary, 232, 240)
-        self.msgdetails['Current Direction #2'] = binary.decode_sixbit_integer(
-            self.msgbinary, 240, 249)
-        self.msgdetails['Measurement Depth #2'] = binary.decode_sixbit_integer(
-            self.msgbinary, 249, 254)
-        self.msgdetails['Current Speed #3'] = binary.decode_sixbit_integer(
-            self.msgbinary, 254, 262)
-        self.msgdetails['Current Direction #3'] = binary.decode_sixbit_integer(
-            self.msgbinary, 262, 271)
-        self.msgdetails['Measurement Depth #3'] = binary.decode_sixbit_integer(
-            self.msgbinary, 271, 276)
-        self.msgdetails['Wave Height'] = binary.decode_sixbit_integer(
-            self.msgbinary, 276, 284)
-        self.msgdetails['Wave Period'] = binary.decode_sixbit_integer(
-            self.msgbinary, 284, 290)
-        self.msgdetails['Wave Direction'] = binary.decode_sixbit_integer(
-            self.msgbinary, 290, 299)
-        self.msgdetails['Swell Height'] = binary.decode_sixbit_integer(
-            self.msgbinary, 299, 307)
-        self.msgdetails['Swell Period'] = binary.decode_sixbit_integer(
-            self.msgbinary, 307, 313)
-        self.msgdetails['Swell Direction'] = binary.decode_sixbit_integer(
-            self.msgbinary, 313, 322)
+            self.decode_sixbit_integer(self.msgbinary[223:232])
+        self.msgdetails['Current Speed #2'] = self.decode_sixbit_integer(
+            self.msgbinary[232:240])
+        self.msgdetails['Current Direction #2'] = self.decode_sixbit_integer(
+            self.msgbinary[240:249])
+        self.msgdetails['Measurement Depth #2'] = self.decode_sixbit_integer(
+            self.msgbinary[249:254])
+        self.msgdetails['Current Speed #3'] = self.decode_sixbit_integer(
+            self.msgbinary[254:262])
+        self.msgdetails['Current Direction #3'] = self.decode_sixbit_integer(
+            self.msgbinary[262:271])
+        self.msgdetails['Measurement Depth #3'] = self.decode_sixbit_integer(
+            self.msgbinary[271:276])
+        self.msgdetails['Wave Height'] = self.decode_sixbit_integer(
+            self.msgbinary[276:284])
+        self.msgdetails['Wave Period'] = self.decode_sixbit_integer(
+            self.msgbinary[284:290])
+        self.msgdetails['Wave Direction'] = self.decode_sixbit_integer(
+            self.msgbinary[290:299])
+        self.msgdetails['Swell Height'] = self.decode_sixbit_integer(
+            self.msgbinary[299:307])
+        self.msgdetails['Swell Period'] = self.decode_sixbit_integer(
+            self.msgbinary[307:313])
+        self.msgdetails['Swell Direction'] = self.decode_sixbit_integer(
+            self.msgbinary[313:322])
         self.msgdetails['Sea State'] = self.beaufort[
-            binary.decode_sixbit_integer(self.msgbinary, 322, 326)]
-        self.msgdetails['Water Temperature'] = binary.decode_sixbit_integer(
-            self.msgbinary, 326, 336)
+            self.decode_sixbit_integer(self.msgbinary[322:326])]
+        self.msgdetails['Water Temperature'] = self.decode_sixbit_integer(
+            self.msgbinary[326:336])
         self.msgdetails['Precipitation'] = self.precipitation[
-            binary.decode_sixbit_integer(self.msgbinary, 336, 339)]
-        self.msgdetails['Salinity'] = binary.decode_sixbit_integer(
-            self.msgbinary, 339, 348)
-        self.msgdetails['Ice'] = self.ice[binary.decode_sixbit_integer(
-            self.msgbinary, 348, 350)]
+            self.decode_sixbit_integer(self.msgbinary[336:339])]
+        self.msgdetails['Salinity'] = self.decode_sixbit_integer(
+            self.msgbinary[339:348])
+        self.msgdetails['Ice'] = self.ice[self.decode_sixbit_integer(
+            self.msgbinary[348:350])]
 
     def get_details(self):
         """

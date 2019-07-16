@@ -37,33 +37,33 @@ class Type18PositionReportClassB(messages.aismessage.AISMessage):
 
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.speed = binary.decode_sixbit_integer(msgbinary, 46, 56) / 10
-        self.posfixaccuracy = self.accuracy[binary.decode_sixbit_integer(
-            msgbinary, 46, 47)]
+        self.speed = self.decode_sixbit_integer(msgbinary[46:56]) / 10
+        self.posfixaccuracy = self.accuracy[self.decode_sixbit_integer(
+            msgbinary[46:47])]
         self.longitude = binary.decode_twos_complement(
             msgbinary[57:85]) / 600000.0
         self.latitude = binary.decode_twos_complement(
             msgbinary[85:112]) / 600000.0
-        self.courseoverground = binary.decode_sixbit_integer(
-            msgbinary, 112, 124) / 10
-        self.trueheading = binary.decode_sixbit_integer(msgbinary, 124, 133)
-        self.timestampsecond = binary.decode_sixbit_integer(
-            msgbinary, 133, 139)
-        self.csunit = self.csdict[binary.decode_sixbit_integer(
-            msgbinary, 141, 142)]
-        self.displayunit = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 142, 143)]
-        self.dscflag = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 143, 144)]
-        self.bandflag = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 144, 145)]
-        self.message22flag = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 145, 146)]
+        self.courseoverground = self.decode_sixbit_integer(
+            msgbinary[112:124]) / 10
+        self.trueheading = self.decode_sixbit_integer(msgbinary[124:133])
+        self.timestampsecond = self.decode_sixbit_integer(
+            msgbinary[133:139])
+        self.csunit = self.csdict[self.decode_sixbit_integer(
+            msgbinary[141:142])]
+        self.displayunit = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[142:143])]
+        self.dscflag = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[143:144])]
+        self.bandflag = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[144:145])]
+        self.message22flag = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[145:146])]
         self.assignedmodeflag = self.assignmentmode[
-            binary.decode_sixbit_integer(msgbinary, 146, 147)]
-        self.raim = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 147, 148)]
-        self.radiostatus = binary.decode_sixbit_integer(msgbinary, 148, 168)
+            self.decode_sixbit_integer(msgbinary[146:147])]
+        self.raim = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[147:148])]
+        self.radiostatus = self.decode_sixbit_integer(msgbinary[148:168])
 
     def __str__(self):
         """

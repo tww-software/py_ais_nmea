@@ -24,25 +24,25 @@ class Type4BaseStationReport(messages.aismessage.AISMessage):
 
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        year = binary.decode_sixbit_integer(msgbinary, 38, 52)
-        month = binary.decode_sixbit_integer(msgbinary, 52, 56)
-        day = binary.decode_sixbit_integer(msgbinary, 56, 61)
-        hour = binary.decode_sixbit_integer(msgbinary, 61, 66)
-        minute = binary.decode_sixbit_integer(msgbinary, 66, 72)
-        second = binary.decode_sixbit_integer(msgbinary, 72, 78)
+        year = self.decode_sixbit_integer(msgbinary[38:52])
+        month = self.decode_sixbit_integer(msgbinary[52:56])
+        day = self.decode_sixbit_integer(msgbinary[56:61])
+        hour = self.decode_sixbit_integer(msgbinary[61:66])
+        minute = self.decode_sixbit_integer(msgbinary[66:72])
+        second = self.decode_sixbit_integer(msgbinary[72:78])
         self.timestamp = '{}{:02d}{:02d}_{:02d}{:02d}{:02d}'.format(
             year, month, day, hour, minute, second)
-        self.posfixaccuracy = self.accuracy[binary.decode_sixbit_integer(
-            msgbinary, 78, 79)]
+        self.posfixaccuracy = self.accuracy[self.decode_sixbit_integer(
+            msgbinary[78:79])]
         self.longitude = binary.decode_twos_complement(
             msgbinary[79:107]) / 600000.0
         self.latitude = binary.decode_twos_complement(
             msgbinary[107:134]) / 600000.0
-        self.epfdfixtype = self.epfdfixtypes[binary.decode_sixbit_integer(
-            msgbinary, 134, 138)]
-        self.raim = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 148, 149)]
-        self.sotdmastate = binary.decode_sixbit_integer(msgbinary, 149, 168)
+        self.epfdfixtype = self.epfdfixtypes[self.decode_sixbit_integer(
+            msgbinary[134:138])]
+        self.raim = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[148:149])]
+        self.sotdmastate = self.decode_sixbit_integer(msgbinary[149:168])
 
     def __str__(self):
         """

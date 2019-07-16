@@ -66,35 +66,35 @@ class Type21AidToNavigation(messages.aismessage.AISMessage):
 
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.aidtype = self.navaidtypes[binary.decode_sixbit_integer(
-            msgbinary, 38, 43)]
-        name = binary.decode_sixbit_ascii(msgbinary, 43, 163).rstrip()
-        self.posfixaccuracy = self.accuracy[binary.decode_sixbit_integer(
-            msgbinary, 163, 164)]
+        self.aidtype = self.navaidtypes[self.decode_sixbit_integer(
+            msgbinary[38:43])]
+        name = binary.decode_sixbit_ascii(msgbinary[43:163]).rstrip()
+        self.posfixaccuracy = self.accuracy[self.decode_sixbit_integer(
+            msgbinary[163:164])]
         self.longitude = binary.decode_twos_complement(
             msgbinary[164:192]) / 600000.0
         self.latitude = binary.decode_twos_complement(
             msgbinary[192:219]) / 600000.0
-        tobow = binary.decode_sixbit_integer(msgbinary, 219, 228)
-        tostern = binary.decode_sixbit_integer(msgbinary, 228, 237)
-        toport = binary.decode_sixbit_integer(msgbinary, 237, 243)
-        tostarboard = binary.decode_sixbit_integer(msgbinary, 243, 249)
+        tobow = self.decode_sixbit_integer(msgbinary[219:228])
+        tostern = self.decode_sixbit_integer(msgbinary[228:237])
+        toport = self.decode_sixbit_integer(msgbinary[237:243])
+        tostarboard = self.decode_sixbit_integer(msgbinary[243:249])
         self.length = tobow + tostern
         self.width = toport + tostarboard
-        self.epfdfixtype = self.epfdfixtypes[binary.decode_sixbit_integer(
-            msgbinary, 249, 253)]
-        self.timestampsecond = binary.decode_sixbit_integer(
-            msgbinary, 253, 259)
-        self.offposition = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 259, 260)]
-        self.raim = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 268, 269)]
-        self.virtualaid = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 269, 270)]
-        self.assignedmode = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 270, 271)]
+        self.epfdfixtype = self.epfdfixtypes[self.decode_sixbit_integer(
+            msgbinary[249:253])]
+        self.timestampsecond = self.decode_sixbit_integer(
+            msgbinary[253:259])
+        self.offposition = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[259:260])]
+        self.raim = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[268:269])]
+        self.virtualaid = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[269:270])]
+        self.assignedmode = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[270:271])]
         nameextension = binary.decode_sixbit_ascii(
-            msgbinary, 272, 361).rstrip()
+            msgbinary[272:361]).rstrip()
         self.name = name + nameextension
 
     def __str__(self):

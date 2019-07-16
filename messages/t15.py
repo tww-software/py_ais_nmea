@@ -20,20 +20,20 @@ class Type15Interrogation(messages.aismessage.AISMessage):
     """
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.interrogatedmmsi1 = binary.decode_sixbit_integer(
-            msgbinary, 40, 70)
-        self.firstmessagetype = binary.decode_sixbit_integer(msgbinary, 70, 76)
-        self.firstslotoffset = binary.decode_sixbit_integer(msgbinary, 76, 88)
-        self.secondmessagetype = binary.decode_sixbit_integer(
-            msgbinary, 90, 96)
-        self.secondslotoffset = binary.decode_sixbit_integer(
-            msgbinary, 96, 108)
-        self.interrogatedmmsi2 = binary.decode_sixbit_integer(
-            msgbinary, 110, 140)
-        self.firstmessagetype2 = binary.decode_sixbit_integer(
-            msgbinary, 140, 146)
-        self.firstslotoffset2 = binary.decode_sixbit_integer(
-            msgbinary, 146, 158)
+        self.interrogatedmmsi1 = self.decode_sixbit_integer(
+            msgbinary[40:70])
+        self.firstmessagetype = self.decode_sixbit_integer(msgbinary[70:76])
+        self.firstslotoffset = self.decode_sixbit_integer(msgbinary[76:88])
+        self.secondmessagetype = self.decode_sixbit_integer(
+            msgbinary[90:96])
+        self.secondslotoffset = self.decode_sixbit_integer(
+            msgbinary[96:108])
+        self.interrogatedmmsi2 = self.decode_sixbit_integer(
+            msgbinary[110:140])
+        self.firstmessagetype2 = self.decode_sixbit_integer(
+            msgbinary[140:146])
+        self.firstslotoffset2 = self.decode_sixbit_integer(
+            msgbinary[146:158])
 
     def __str__(self):
         """

@@ -9,13 +9,13 @@ class Type16AssignmentModeCommand(messages.aismessage.AISMessage):
     """
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.destinationammsi = binary.decode_sixbit_integer(msgbinary, 40, 70)
-        self.offseta = binary.decode_sixbit_integer(msgbinary, 70, 82)
-        self.incrementa = binary.decode_sixbit_integer(msgbinary, 82, 92)
-        self.destinationbmmsi = binary.decode_sixbit_integer(
-            msgbinary, 92, 122)
-        self.offsetb = binary.decode_sixbit_integer(msgbinary, 122, 134)
-        self.incrementb = binary.decode_sixbit_integer(msgbinary, 134, 144)
+        self.destinationammsi = self.decode_sixbit_integer(msgbinary[40:70])
+        self.offseta = self.decode_sixbit_integer(msgbinary[70:82])
+        self.incrementa = self.decode_sixbit_integer(msgbinary[82:92])
+        self.destinationbmmsi = self.decode_sixbit_integer(
+            msgbinary[92:122])
+        self.offsetb = self.decode_sixbit_integer(msgbinary[122:134])
+        self.incrementb = self.decode_sixbit_integer(msgbinary[134:144])
 
     def __str__(self):
         """

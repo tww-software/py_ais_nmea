@@ -22,12 +22,12 @@ class Type6BinaryMessage(messages.aismessage.AISMessage):
         super().__init__(msgbinary)
         self.msgsubtype = 'Unknown'
         self.msgdetails = {}
-        self.sequenceno = binary.decode_sixbit_integer(msgbinary, 38, 40)
-        self.destinationmmsi = binary.decode_sixbit_integer(msgbinary, 40, 70)
-        self.retransmitflag = binary.decode_sixbit_integer(msgbinary, 70, 71)
-        self.designatedareacode = binary.decode_sixbit_integer(
-            msgbinary, 72, 82)
-        self.functionid = binary.decode_sixbit_integer(msgbinary, 82, 88)
+        self.sequenceno = self.decode_sixbit_integer(msgbinary[38:40])
+        self.destinationmmsi = self.decode_sixbit_integer(msgbinary[40:70])
+        self.retransmitflag = self.decode_sixbit_integer(msgbinary[70:71])
+        self.designatedareacode = self.decode_sixbit_integer(
+            msgbinary[72:82])
+        self.functionid = self.decode_sixbit_integer(msgbinary[82:88])
         self.identify_subtype()
 
     def identify_subtype(self):
@@ -51,22 +51,22 @@ class Type6BinaryMessage(messages.aismessage.AISMessage):
                        2: 'light off', 3: 'light ERROR'}
         health = {0: 'good health', 1: 'alarm'}
         posstatus = {0: 'on position', 1: 'off position'}
-        self.msgdetails['Analogue'] = binary.decode_sixbit_integer(
-            self.msgbinary, 88, 98)
-        self.msgdetails['Analogue ext 1'] = binary.decode_sixbit_integer(
-            self.msgbinary, 98, 108)
-        self.msgdetails['Analogue ext 2'] = binary.decode_sixbit_integer(
-            self.msgbinary, 108, 118)
+        self.msgdetails['Analogue'] = self.decode_sixbit_integer(
+            self.msgbinary[88:98])
+        self.msgdetails['Analogue ext 1'] = self.decode_sixbit_integer(
+            self.msgbinary[98:108])
+        self.msgdetails['Analogue ext 2'] = self.decode_sixbit_integer(
+            self.msgbinary[108:118])
         self.msgdetails['RACON status'] = raconstatus[
-            binary.decode_sixbit_integer(self.msgbinary, 118, 120)]
+            self.decode_sixbit_integer(self.msgbinary[118:120])]
         self.msgdetails['Light status'] = lightstatus[
-            binary.decode_sixbit_integer(self.msgbinary, 120, 122)]
-        self.msgdetails['Health'] = health[binary.decode_sixbit_integer(
-            self.msgbinary, 122, 123)]
-        self.msgdetails['Status (external)'] = binary.decode_sixbit_integer(
-            self.msgbinary, 123, 131)
+            self.decode_sixbit_integer(self.msgbinary[120:122])]
+        self.msgdetails['Health'] = health[self.decode_sixbit_integer(
+            self.msgbinary[122:123])]
+        self.msgdetails['Status (external)'] = self.decode_sixbit_integer(
+            self.msgbinary[123:131])
         self.msgdetails['Position status'] = posstatus[
-            binary.decode_sixbit_integer(self.msgbinary, 131, 132)]
+            self.decode_sixbit_integer(self.msgbinary[131:132])]
 
     def __str__(self):
         """

@@ -22,19 +22,19 @@ class Type27LongRangeAISPositionReport(messages.aismessage.AISMessage):
 
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.posfixaccuracy = self.accuracy[binary.decode_sixbit_integer(
-            msgbinary, 38, 39)]
-        self.raim = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 39, 40)]
-        self.navstatus = self.navstatustypes[binary.decode_sixbit_integer(
-            msgbinary, 40, 44)]
+        self.posfixaccuracy = self.accuracy[self.decode_sixbit_integer(
+            msgbinary[38:39])]
+        self.raim = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[39:40])]
+        self.navstatus = self.navstatustypes[self.decode_sixbit_integer(
+            msgbinary[40:44])]
         self.longitude = binary.decode_twos_complement(
             msgbinary[44:62]) / 600.0
         self.latitude = binary.decode_twos_complement(msgbinary[62:79]) / 600.0
-        self.speed = binary.decode_sixbit_integer(msgbinary, 79, 85) / 10
-        self.courseoverground = binary.decode_sixbit_integer(msgbinary, 85, 94)
-        self.gnsspositon = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 94, 95)]
+        self.speed = self.decode_sixbit_integer(msgbinary[79:85]) / 10
+        self.courseoverground = self.decode_sixbit_integer(msgbinary[85:94])
+        self.gnsspositon = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[94:95])]
 
     def __str__(self):
         """

@@ -33,26 +33,26 @@ class Type123PositionReportClassA(messages.aismessage.AISMessage):
 
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.navstatus = self.navstatustypes[binary.decode_sixbit_integer(
-            msgbinary, 38, 42)]
-        self.turnrate = binary.decode_sixbit_integer(msgbinary, 42, 50)
-        self.speed = binary.decode_sixbit_integer(msgbinary, 50, 60) / 10
-        self.posfixaccuracy = self.accuracy[binary.decode_sixbit_integer(
-            msgbinary, 60, 61)]
+        self.navstatus = self.navstatustypes[self.decode_sixbit_integer(
+            msgbinary[38:42])]
+        self.turnrate = self.decode_sixbit_integer(msgbinary[42:50])
+        self.speed = self.decode_sixbit_integer(msgbinary[50:60]) / 10
+        self.posfixaccuracy = self.accuracy[self.decode_sixbit_integer(
+            msgbinary[60:61])]
         self.longitude = binary.decode_twos_complement(
             msgbinary[61:89]) / 600000.0
         self.latitude = binary.decode_twos_complement(
             msgbinary[89:116]) / 600000.0
-        self.courseoverground = binary.decode_sixbit_integer(
-            msgbinary, 116, 128) / 10
-        self.trueheading = binary.decode_sixbit_integer(msgbinary, 128, 137)
-        self.timestampsecond = binary.decode_sixbit_integer(
-            msgbinary, 137, 143)
-        self.maneuverindicator = binary.decode_sixbit_integer(
-            msgbinary, 143, 145)
-        self.raim = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 148, 149)]
-        self.radiostatus = binary.decode_sixbit_integer(msgbinary, 149, 168)
+        self.courseoverground = self.decode_sixbit_integer(
+            msgbinary[116:128]) / 10
+        self.trueheading = self.decode_sixbit_integer(msgbinary[128:137])
+        self.timestampsecond = self.decode_sixbit_integer(
+            msgbinary[137:143])
+        self.maneuverindicator = self.decode_sixbit_integer(
+            msgbinary[143:145])
+        self.raim = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[148:149])]
+        self.radiostatus = self.decode_sixbit_integer(msgbinary[149:168])
 
     def __str__(self):
         """

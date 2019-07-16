@@ -29,33 +29,33 @@ class Type19ExtendedReportClassB(messages.aismessage.AISMessage):
 
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.speed = binary.decode_sixbit_integer(msgbinary, 46, 56) / 10
-        self.posfixaccuracy = self.accuracy[binary.decode_sixbit_integer(
-            msgbinary, 46, 47)]
+        self.speed = self.decode_sixbit_integer(msgbinary[46:56]) / 10
+        self.posfixaccuracy = self.accuracy[self.decode_sixbit_integer(
+            msgbinary[46:47])]
         self.longitude = binary.decode_twos_complement(
             msgbinary[57:85]) / 600000.0
         self.latitude = binary.decode_twos_complement(
             msgbinary[85:112]) / 600000.0
-        self.courseoverground = binary.decode_sixbit_integer(
-            msgbinary, 112, 124) / 10
-        self.trueheading = binary.decode_sixbit_integer(msgbinary, 124, 133)
-        self.timestampsecond = binary.decode_sixbit_integer(
-            msgbinary, 133, 139)
-        self.name = binary.decode_sixbit_ascii(msgbinary, 143, 263).rstrip()
-        self.shiptype = self.shiptypes[binary.decode_sixbit_integer(
-            msgbinary, 263, 271)]
-        tobow = binary.decode_sixbit_integer(msgbinary, 271, 280)
-        tostern = binary.decode_sixbit_integer(msgbinary, 280, 289)
-        toport = binary.decode_sixbit_integer(msgbinary, 289, 295)
-        tostarboard = binary.decode_sixbit_integer(msgbinary, 295, 301)
+        self.courseoverground = self.decode_sixbit_integer(
+            msgbinary[112:124]) / 10
+        self.trueheading = self.decode_sixbit_integer(msgbinary[124:133])
+        self.timestampsecond = self.decode_sixbit_integer(
+            msgbinary[133:139])
+        self.name = binary.decode_sixbit_ascii(msgbinary[143:263]).rstrip()
+        self.shiptype = self.shiptypes[self.decode_sixbit_integer(
+            msgbinary[263:271])]
+        tobow = self.decode_sixbit_integer(msgbinary[271:280])
+        tostern = self.decode_sixbit_integer(msgbinary[280:289])
+        toport = self.decode_sixbit_integer(msgbinary[289:295])
+        tostarboard = self.decode_sixbit_integer(msgbinary[295:301])
         self.length = tobow + tostern
         self.width = toport + tostarboard
-        self.epfdfixtype = self.epfdfixtypes[binary.decode_sixbit_integer(
-            msgbinary, 301, 305)]
-        self.raim = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 305, 306)]
-        self.dte = self.dtevalues[binary.decode_sixbit_integer(
-            msgbinary, 306, 307)]
+        self.epfdfixtype = self.epfdfixtypes[self.decode_sixbit_integer(
+            msgbinary[301:305])]
+        self.raim = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[305:306])]
+        self.dte = self.dtevalues[self.decode_sixbit_integer(
+            msgbinary[306:307])]
 
     def __str__(self):
         """

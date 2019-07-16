@@ -80,7 +80,7 @@ class BinaryTests(unittest.TestCase):
                          '100000110000110001110010110011110100110101'
                          '110110110111111000111001')
         expectedstr = 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG 0123456789'
-        resultstr = binary.decode_sixbit_ascii(testbinarystr, 0, 324)
+        resultstr = binary.decode_sixbit_ascii(testbinarystr[0:324])
         self.assertEqual(expectedstr, resultstr)
 
     def test_binary_string_to_NMEA_payload(self):
@@ -98,8 +98,20 @@ class BinaryTests(unittest.TestCase):
         """
         binstr = '000001100'
         expected = 12
-        decoded = binary.decode_sixbit_integer(binstr, 2, 9)
+        decoded = binary.decode_sixbit_integer(binstr[2:9])
         self.assertEqual(expected, decoded)
+
+    def test_empty_value_for_cog(self):
+        """
+        this sentence doesn't appear to have a value for course over ground
+        the binary module should raise a NoBinaryData exception
+        """
+        testsentence = '!AIVDM,1,1,,A,3O>soN5MUNBoMdUdlh,0*64'
+        nmeatracker = nmea.NMEAtracker()
+        testdata = nmeatracker.process_sentence(testsentence)
+        testbinarystr = binary.ais_sentence_payload_binary(testdata)
+        with self.assertRaises(binary.NoBinaryData):
+            testcog = binary.decode_sixbit_integer(testbinarystr[116:128]) / 10
 
 
 class NMEATests(unittest.TestCase):

@@ -25,22 +25,22 @@ class Type24StaticDataReport(messages.aismessage.AISMessage):
 
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.partno = binary.decode_sixbit_integer(msgbinary, 38, 40)
+        self.partno = self.decode_sixbit_integer(msgbinary[38:40])
         if self.partno == 0:
-            self.name = binary.decode_sixbit_ascii(msgbinary, 40, 160).rstrip()
+            self.name = binary.decode_sixbit_ascii(msgbinary[40:160]).rstrip()
         elif self.partno == 1:
-            self.shiptype = self.shiptypes[binary.decode_sixbit_integer(
-                msgbinary, 40, 48)]
-            self.vendorid = binary.decode_sixbit_ascii(msgbinary, 48, 66)
-            self.unitmodelcode = binary.decode_sixbit_integer(
-                msgbinary, 66, 70)
-            self.serialno = binary.decode_sixbit_integer(msgbinary, 70, 90)
+            self.shiptype = self.shiptypes[self.decode_sixbit_integer(
+                msgbinary[40:48])]
+            self.vendorid = binary.decode_sixbit_ascii(msgbinary[48:66])
+            self.unitmodelcode = self.decode_sixbit_integer(
+                msgbinary[66:70])
+            self.serialno = self.decode_sixbit_integer(msgbinary[70:90])
             self.callsign = binary.decode_sixbit_ascii(
-                msgbinary, 90, 132).rstrip()
-            tobow = binary.decode_sixbit_integer(msgbinary, 240, 249)
-            tostern = binary.decode_sixbit_integer(msgbinary, 249, 258)
-            toport = binary.decode_sixbit_integer(msgbinary, 258, 264)
-            tostarboard = binary.decode_sixbit_integer(msgbinary, 264, 270)
+                msgbinary[90:132]).rstrip()
+            tobow = self.decode_sixbit_integer(msgbinary[240:249])
+            tostern = self.decode_sixbit_integer(msgbinary[249:258])
+            toport = self.decode_sixbit_integer(msgbinary[258:264])
+            tostarboard = self.decode_sixbit_integer(msgbinary[264:270])
             self.length = tobow + tostern
             self.width = toport + tostarboard
 

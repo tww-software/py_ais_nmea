@@ -28,33 +28,33 @@ class Type5StaticAndVoyageData(messages.aismessage.AISMessage):
     """
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.aisversion = binary.decode_sixbit_integer(msgbinary, 38, 40)
-        self.imo = binary.decode_sixbit_integer(msgbinary, 40, 70)
-        self.callsign = binary.decode_sixbit_ascii(msgbinary, 70, 112).rstrip()
-        self.name = binary.decode_sixbit_ascii(msgbinary, 112, 232).rstrip()
+        self.aisversion = self.decode_sixbit_integer(msgbinary[38:40])
+        self.imo = self.decode_sixbit_integer(msgbinary[40:70])
+        self.callsign = binary.decode_sixbit_ascii(msgbinary[70:112]).rstrip()
+        self.name = binary.decode_sixbit_ascii(msgbinary[112:232]).rstrip()
         try:
-            self.shiptype = self.shiptypes[binary.decode_sixbit_integer(
-                msgbinary, 232, 240)]
+            self.shiptype = self.shiptypes[self.decode_sixbit_integer(
+                msgbinary[232:240])]
         except KeyError:
             self.shiptype = 'Unknown'
-        tobow = binary.decode_sixbit_integer(msgbinary, 240, 249)
-        tostern = binary.decode_sixbit_integer(msgbinary, 249, 258)
-        toport = binary.decode_sixbit_integer(msgbinary, 258, 264)
-        tostarboard = binary.decode_sixbit_integer(msgbinary, 264, 270)
+        tobow = self.decode_sixbit_integer(msgbinary[240:249])
+        tostern = self.decode_sixbit_integer(msgbinary[249:258])
+        toport = self.decode_sixbit_integer(msgbinary[258:264])
+        tostarboard = self.decode_sixbit_integer(msgbinary[264:270])
         self.length = tobow + tostern
         self.width = toport + tostarboard
-        self.epfdfixtype = self.epfdfixtypes[binary.decode_sixbit_integer(
-            msgbinary, 270, 274)]
-        etamonth = binary.decode_sixbit_integer(msgbinary, 274, 278)
-        etaday = binary.decode_sixbit_integer(msgbinary, 278, 283)
-        etahour = binary.decode_sixbit_integer(msgbinary, 283, 288)
-        etamin = binary.decode_sixbit_integer(msgbinary, 288, 294)
+        self.epfdfixtype = self.epfdfixtypes[self.decode_sixbit_integer(
+            msgbinary[270:274])]
+        etamonth = self.decode_sixbit_integer(msgbinary[274:278])
+        etaday = self.decode_sixbit_integer(msgbinary[278:283])
+        etahour = self.decode_sixbit_integer(msgbinary[283:288])
+        etamin = self.decode_sixbit_integer(msgbinary[288:294])
         self.eta = '{}:{} {}/{}'.format(etahour, etamin, etaday, etamonth)
-        self.draught = binary.decode_sixbit_integer(msgbinary, 294, 302) / 10
+        self.draught = self.decode_sixbit_integer(msgbinary[294:302]) / 10
         self.destination = binary.decode_sixbit_ascii(
-            msgbinary, 302, 422).rstrip()
-        self.dte = self.dtevalues[binary.decode_sixbit_integer(
-            msgbinary, 422, 423)]
+            msgbinary[302:422]).rstrip()
+        self.dte = self.dtevalues[self.decode_sixbit_integer(
+            msgbinary[422:423])]
 
     def __str__(self):
         """

@@ -26,23 +26,23 @@ class Type9StandardSARAircraftPositionReport(messages.aismessage.AISMessage):
 
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.altitude = binary.decode_sixbit_integer(msgbinary, 38, 50)
-        self.speedoverground = binary.decode_sixbit_integer(msgbinary, 50, 60)
-        self.posfixaccuracy = self.accuracy[binary.decode_sixbit_integer(
-            msgbinary, 60, 61)]
+        self.altitude = self.decode_sixbit_integer(msgbinary[38:50])
+        self.speedoverground = self.decode_sixbit_integer(msgbinary[50:60])
+        self.posfixaccuracy = self.accuracy[self.decode_sixbit_integer(
+            msgbinary[60:61])]
         self.longitude = binary.decode_twos_complement(
             msgbinary[61:89]) / 600000.0
         self.latitude = binary.decode_twos_complement(
             msgbinary[89:116]) / 600000.0
-        self.courseoverground = binary.decode_sixbit_integer(
-            msgbinary, 116, 128) / 10
-        self.timestampsecond = binary.decode_sixbit_integer(
-            msgbinary, 128, 134)
-        self.dte = self.dtevalues[binary.decode_sixbit_integer(
-            msgbinary, 142, 143)]
-        self.raim = self.binaryflag[binary.decode_sixbit_integer(
-            msgbinary, 147, 148)]
-        self.radiostatus = binary.decode_sixbit_integer(msgbinary, 148, 168)
+        self.courseoverground = self.decode_sixbit_integer(
+            msgbinary[116:128]) / 10
+        self.timestampsecond = self.decode_sixbit_integer(
+            msgbinary[128:134])
+        self.dte = self.dtevalues[self.decode_sixbit_integer(
+            msgbinary[142:143])]
+        self.raim = self.binaryflag[self.decode_sixbit_integer(
+            msgbinary[147:148])]
+        self.radiostatus = self.decode_sixbit_integer(msgbinary[148:168])
 
     def __str__(self):
         """

@@ -20,6 +20,13 @@ SIXBIT = {0: '@', 1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'E', 6: 'F', 7: 'G',
 SIXBITREGEX = re.compile('[01]{6}')
 
 
+class NoBinaryData(Exception):
+    """
+    raise if there is no data to be found in the binary string
+    """
+    pass
+
+
 def ais_sentence_payload_binary(payload):
     """
     Take the payload from a AIS NMEA sentence and convert
@@ -66,26 +73,27 @@ def ais_sentence_binary_payload(binarystr):
     return payload
 
 
-def decode_sixbit_integer(binary, start, stop):
+def decode_sixbit_integer(binarystr):
     """
     used to decode parts of the data that are meant
     to be represented as integers
 
     Args:
-        binary(str): binary as a string
+        binarystr(str): binary as a string
+
+    Raises:
+        NoBinaryData: if the string is empty, i.e no binary data to process
 
     Returns:
         decodedint(int): the decoded int
-        0(int): if an empty string is entered
     """
-    if binary[start:stop] == '':
-        #maybe raise a exception here instead of returning 0
-        return 0
-    decodedint = int(binary[start:stop], 2)
+    if binarystr == '':
+        raise NoBinaryData('no data found')
+    decodedint = int(binarystr, 2)
     return decodedint
 
 
-def decode_sixbit_ascii(binary, start, stop):
+def decode_sixbit_ascii(binarystr):
     """
     used to decode parts of the data that are meant to be represented as text
     this function takes binary as a string splits it into groups of
@@ -99,15 +107,12 @@ def decode_sixbit_ascii(binary, start, stop):
         these are stripped from the end of the string
 
     Args:
-         binary(str): binary as a string e.g ''.join(decoded)
-         start(int): the position to start extracting data from
-         stop(int): the postion to stop extracting (up to and not including)
+         binarystr(str): binary as a string e.g ''.join(decoded)
 
     Returns:
          decodedstr(str): the decoded data as a string
     """
-    part = binary[start:stop]
-    bitslist = SIXBITREGEX.findall(part)
+    bitslist = SIXBITREGEX.findall(binarystr)
     charlist = []
     for bit in bitslist:
         char = SIXBIT[int(bit, 2)]
@@ -116,7 +121,7 @@ def decode_sixbit_ascii(binary, start, stop):
     return decodedstr
 
 
-def decode_twos_complement(binary):
+def decode_twos_complement(binarystr):
     """
     used to decode the binary that is represented as twos complement
 
@@ -124,14 +129,14 @@ def decode_twos_complement(binary):
         flip the bits and add one!
 
     Args:
-        binary(str): the binary as a string
+        binarystr(str): the binary as a string
 
     Returns:
         twoscomplement(int): the number as an integer
     """
-    if binary[0] == '1':
+    if binarystr[0] == '1':
         newbinlist = []
-        for i in binary:
+        for i in binarystr:
             if i == '0':
                 newbinlist.append('1')
             elif i == '1':
@@ -139,5 +144,5 @@ def decode_twos_complement(binary):
         onescomplement = ''.join(newbinlist)
         twoscomplement = -int(onescomplement, 2) + 1
     else:
-        twoscomplement = int(binary, 2)
+        twoscomplement = int(binarystr, 2)
     return twoscomplement

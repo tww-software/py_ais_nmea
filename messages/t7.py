@@ -14,10 +14,10 @@ class Type7BinaryAcknowlegement(messages.aismessage.AISMessage):
 
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.mmsi1 = binary.decode_sixbit_integer(msgbinary, 40, 70)
-        self.mmsi2 = binary.decode_sixbit_integer(msgbinary, 72, 102)
-        self.mmsi3 = binary.decode_sixbit_integer(msgbinary, 104, 134)
-        self.mmsi4 = binary.decode_sixbit_integer(msgbinary, 136, 166)
+        self.mmsi1 = self.decode_sixbit_integer(msgbinary[40:70])
+        self.mmsi2 = self.decode_sixbit_integer(msgbinary[72:102])
+        self.mmsi3 = self.decode_sixbit_integer(msgbinary[104:134])
+        self.mmsi4 = self.decode_sixbit_integer(msgbinary[136:166])
         self.senders = self.filter_senders()
 
     def filter_senders(self):
