@@ -189,9 +189,9 @@ class AISMessage():
 
     def __init__(self, msgbinary):
         self.msgbinary = msgbinary
-        self.msgtype = binary.decode_sixbit_integer(msgbinary, 0, 6)
-        self.repeatcount = binary.decode_sixbit_integer(msgbinary, 6, 8)
-        self.mmsi = format(binary.decode_sixbit_integer(msgbinary, 8, 38),
+        self.msgtype = binary.decode_sixbit_integer(msgbinary[0:6])
+        self.repeatcount = binary.decode_sixbit_integer(msgbinary[6:8])
+        self.mmsi = format(binary.decode_sixbit_integer(msgbinary[8:38]),
                            '09d')
         try:
             self.description = MSGDESCRIPTIONS[self.msgtype]
@@ -242,3 +242,18 @@ class AISMessage():
         """
         payload = binary.ais_sentence_binary_payload(self.msgbinary)
         return payload
+
+    @staticmethod
+    def decode_sixbit_integer(binarystr):
+        """
+        a wrapper for binary.decode_sixbit_intger
+        adds exception handling
+
+        Note:
+            if we get a no binary data exception simply return a 0
+        """
+        try:
+            returnval = binary.decode_sixbit_integer(binarystr)
+        except binary.NoBinaryData:
+            returnval = 0
+        return returnval
