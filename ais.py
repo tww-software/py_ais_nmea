@@ -9,6 +9,7 @@ import collections
 import csv
 import json
 import os
+import re
 
 import binary
 import geojson
@@ -169,6 +170,10 @@ class AISStation():
                stninfo[item] = self.details[item]
            except KeyError:
                stninfo[item] = ''
+        try:
+            stninfo['Last Known Position'] = self.get_latest_position()
+        except NoSuitablePositionReport:
+            stninfo['Last Known Position'] = 'Unknown'
         return stninfo
 
     def determine_station_type(self, msgobj):
@@ -470,7 +475,7 @@ class AISTracker():
         """
         allstations = {}
         for mmsi in self.stations_generator():
-            allstations[mmsi] = self.stations.get_station_info()
+            allstations[mmsi] = self.stations[mmsi].get_station_info()
         return allstations
 
     def create_kml_map(self, outputfile, kmzoutput=True):
@@ -655,3 +660,16 @@ def check_imo_number(imo):
     except IndexError:
         return False
     return bool(str(total)[len(str(total)) - 1] == lastdigit)
+
+
+def create_summary_text(summary):
+    """
+    write out a summary to a text file
+
+    Args:
+        outputpath(str): where to save the file to
+        summary(dict): the data to write out
+    """
+    summaryjson = json.dumps(summary, indent=3)
+    textsummary = re.sub('[{},"]', '', summaryjson)
+    return textsummary

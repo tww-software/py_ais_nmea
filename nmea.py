@@ -132,7 +132,7 @@ class NMEAtracker():
                    'reassembled, messages recieved on {}').format(
                        self.sentencecount,
                        self.reassembled,
-                       str(self.channelcounter))
+                       str(dict(self.channelcounter)))
         return strtext
 
     def __repr__(self):
