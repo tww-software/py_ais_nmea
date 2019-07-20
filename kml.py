@@ -187,6 +187,7 @@ def make_kmz(kmzoutputfilename):
             for icon in os.listdir(iconspath):
                 kmz.write(os.path.join(iconspath, icon),
                           os.path.join('icons', icon))
+            os.remove(docpath)
         except Exception as err:
             print('zip error')
             print(str(err))
