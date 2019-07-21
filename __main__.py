@@ -5,6 +5,7 @@ command line interface for processing AIS traffic
 import argparse
 import datetime
 import logging
+import os
 import socket
 import subprocess
 
@@ -134,6 +135,10 @@ def read_from_file(filepath, outpath, debug=False,
         kmloutput(bool): save output to kml file
         kmzoutput(bool): save output to kmz file
     """
+    if not os.path.exists(outpath):
+        AISLOGGER.info('output path does not exist creating directories')
+        os.makedirs(outpath)
+    AISLOGGER.info('processed output will be saved in %s', outpath)
     AISLOGGER.info('reading nmea sentences from - %s', filepath)
     headers = ['Message Payload', 'Message Type Number', 'MMSI',
                'Message Description']
@@ -171,10 +176,10 @@ def read_from_file(filepath, outpath, debug=False,
             continue
     stnstats = aistracker.tracker_stats()
     sentencestats = nmeatracker.nmea_stats()
-    AISLOGGER.debug('saving summary to %s.txt', outpath)
+    AISLOGGER.debug('saving summary to summary.txt')
     summary = ais.create_summary_text({'AIS Stats': stnstats,
                                    'NMEA Stats': sentencestats})
-    with open(outpath + '.txt', 'w') as textsummary:
+    with open(os.path.join(outpath, 'summary.txt'), 'w') as textsummary:
         textsummary.write(summary)
     print(summary)
     if jsonoutput:
@@ -182,25 +187,18 @@ def read_from_file(filepath, outpath, debug=False,
         joutdict['NMEA Stats'] = sentencestats
         joutdict['AIS Stats'] = stnstats
         joutdict['AIS Stations'] = aistracker.all_station_info()
-        AISLOGGER.debug('saving JSON output to %s.json', outpath)
-        ais.write_json_file(joutdict, outpath + '.json')
+        ais.write_json_file(joutdict, os.path.join(outpath, 'vessel-data.json'))
     if geojsonoutput:
-        AISLOGGER.debug('saving GEOJSON output to %s.geojson', outpath)
-        aistracker.create_geojson_map(outpath + '.geojson')
+        aistracker.create_geojson_map(os.path.join(outpath, 'map.geojson'))
     if csvoutput:
-        AISLOGGER.debug('saving CSV output to %s.csv', outpath)
         csvdata = aistracker.create_csv_data()
-        ais.write_csv_file(csvdata, outpath + '.csv')
+        ais.write_csv_file(csvdata, os.path.join(outpath, 'vessel-data.csv'))
     if kmloutput:
-        AISLOGGER.debug('saving KML output to %s.kml', outpath)
-        aistracker.create_kml_map(outpath + '.kml', kmzoutput=False)
+        aistracker.create_kml_map(os.path.join(outpath, 'map.kml'), kmzoutput=False)
     if kmzoutput:
-        AISLOGGER.debug('saving KML output to %s.kmz', outpath)
-        aistracker.create_kml_map(outpath + '.kmz', kmzoutput=True)
+        aistracker.create_kml_map(os.path.join(outpath, 'map.kmz'), kmzoutput=True)
     if debug:
-        AISLOGGER.info('all decoded AIS messages saved to - %s',
-                       outpath + '-messages.csv')
-        ais.write_csv_file(messagelist, outpath + '-messages.csv')
+        ais.write_csv_file(messagelist, os.path.join(outpath, 'ais-messages.csv'))
     AISLOGGER.info('Finished')
 
 

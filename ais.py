@@ -500,6 +500,14 @@ class AISTracker():
                 continue
             stntype = self.stations[mmsi].subtype
             kmlmap.open_folder(mmsi)
+            try:
+                heading = lastpos['True Heading']
+                kmlmap.add_kml_placemark(mmsi, mmsi,
+                                         str(lastpos['Longitude']),
+                                         str(lastpos['Latitude']),
+                                         heading, kmzoutput)
+            except KeyError:
+                pass
             desc = kmlmap.format_kml_placemark_description(
                 self.stations[mmsi].__dict__)
             posreps = self.stations[mmsi].posrep
