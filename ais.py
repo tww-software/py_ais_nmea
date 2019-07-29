@@ -343,8 +343,7 @@ class AISTracker():
             raise InvalidMMSI('Invalid MMSI - 000000000')
         self.messages[allmessages.MSGDESCRIPTIONS[msgtype]] += 1
         if msgobj.mmsi not in self.stations:
-            newstn = AISStation(msgobj.mmsi)
-            self.stations[msgobj.mmsi] = newstn
+            self.stations[msgobj.mmsi] = AISStation(msgobj.mmsi)
         if self.stations[msgobj.mmsi].type == 'Unknown':
             self.stations[msgobj.mmsi].determine_station_type(msgobj)
         if (self.stations[msgobj.mmsi].subtype == 'Unknown' or
@@ -502,10 +501,11 @@ class AISTracker():
             kmlmap.open_folder(mmsi)
             try:
                 heading = lastpos['True Heading']
-                kmlmap.add_kml_placemark(mmsi, mmsi,
-                                         str(lastpos['Longitude']),
-                                         str(lastpos['Latitude']),
-                                         heading, kmzoutput)
+                if heading != 511:
+                    kmlmap.add_kml_placemark(mmsi, mmsi,
+                                             str(lastpos['Longitude']),
+                                             str(lastpos['Latitude']),
+                                             heading, kmzoutput)
             except KeyError:
                 pass
             desc = kmlmap.format_kml_placemark_description(
@@ -549,7 +549,7 @@ class AISTracker():
             try:
                 currentproperties['Heading'] = lastpos['True Heading']
             except KeyError:
-                currentproperties['Heading'] = 0
+                currentproperties['Heading'] = 511
             lastlat = lastpos['Latitude']
             lastlon = lastpos['Longitude']
             currentcoords = []
@@ -672,11 +672,14 @@ def check_imo_number(imo):
 
 def create_summary_text(summary):
     """
-    write out a summary to a text file
+    format a dictionary so it can be printed to screen or written to a plain
+    text file
 
     Args:
-        outputpath(str): where to save the file to
-        summary(dict): the data to write out
+        summary(dict): the data to format
+
+    Returns:
+        textsummary(str): the summary dict formatted as a string
     """
     summaryjson = json.dumps(summary, indent=3)
     textsummary = re.sub('[{},"]', '', summaryjson)

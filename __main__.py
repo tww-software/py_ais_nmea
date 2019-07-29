@@ -106,6 +106,9 @@ def open_file_generator(filepath):
 
     Args:
         filepath(str): path to the file
+
+    Yields:
+        line(str): a line from the open file
     """
     with open(filepath, 'r') as infile:
         for line in infile:
@@ -158,18 +161,9 @@ def read_from_file(filepath, outpath, debug=False,
                     msglist.append(msg.mmsi)
                     msglist.append(msg.__str__())
                     messagelist.append(msglist)
-        except nmea.NMEAInvalidSentence as err:
+        except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
+                ais.UnknownMessageType, ais.InvalidMMSI) as err:
             AISLOGGER.debug(str(err))
-            continue
-        except nmea.NMEACheckSumFailed as err:
-            AISLOGGER.debug(str(err))
-            continue
-        except ais.InvalidMMSI as err:
-                AISLOGGER.debug(str(err))
-                continue
-        except ais.UnknownMessageType as err:
-            AISLOGGER.debug(str(err))
-            AISLOGGER.debug('unknown message - %s', line)
             continue
         except IndexError:
             AISLOGGER.debug('no data on line')
@@ -178,7 +172,8 @@ def read_from_file(filepath, outpath, debug=False,
     sentencestats = nmeatracker.nmea_stats()
     AISLOGGER.debug('saving summary to summary.txt')
     summary = ais.create_summary_text({'AIS Stats': stnstats,
-                                   'NMEA Stats': sentencestats})
+                                       'NMEA Stats': sentencestats,
+                                       'Capture File': filepath})
     with open(os.path.join(outpath, 'summary.txt'), 'w') as textsummary:
         textsummary.write(summary)
     print(summary)
