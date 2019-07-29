@@ -19,6 +19,10 @@ import maritimeidentifiers
 import allmessages
 
 
+HEADINGUNAVAILABLE = 511
+LATITUDEUNAVAILABLE = 91.0
+LONGITUDEUNAVAILABLE = 181.0
+
 class AISStation():
     """
     represents a single AIS station
@@ -83,7 +87,8 @@ class AISStation():
             currentpos(dict): position report must have a minimum of keys
                               'Latitude' and 'Longitude'
         """
-        if currentpos['Latitude'] == 91.0 or currentpos['Longitude'] == 181.0:
+        if (currentpos['Latitude'] == LATITUDEUNAVAILABLE or
+                currentpos['Longitude'] == LONGITUDEUNAVAILABLE):
             raise NoSuitablePositionReport('do not have a suitable LAT/LON')
         self.posrep.append(currentpos)
 
@@ -501,7 +506,7 @@ class AISTracker():
             kmlmap.open_folder(mmsi)
             try:
                 heading = lastpos['True Heading']
-                if heading != 511:
+                if heading != HEADINGUNAVAILABLE:
                     kmlmap.add_kml_placemark(mmsi, mmsi,
                                              str(lastpos['Longitude']),
                                              str(lastpos['Latitude']),
@@ -549,7 +554,7 @@ class AISTracker():
             try:
                 currentproperties['Heading'] = lastpos['True Heading']
             except KeyError:
-                currentproperties['Heading'] = 511
+                currentproperties['Heading'] = HEADINGUNAVAILABLE
             lastlat = lastpos['Latitude']
             lastlon = lastpos['Longitude']
             currentcoords = []

@@ -27,9 +27,9 @@ L.control.scale().addTo(mymap);
 
 function getHeadingIcon(feature) {
      if (feature.properties['Heading'] == 511) {
-        newicon = '/static/icons/' + feature.properties.Icon;
+        newicon = '/static/green_arrows/0.png';
      } else {
-        newicon = '/static/arrows/' + feature.properties.Heading + '.png';
+        newicon = '/static/green_arrows/' + feature.properties.Heading + '.png';
     }
     var shipIcon = new L.Icon({
      iconSize: [65, 65],
@@ -63,16 +63,19 @@ function onEachFeature(feature, layer) {
 
 
 function pointToLayer(feature, latlng) {
-    if (feature.properties['Type'] == 'Base Station' || feature.properties['Type'] == 'Navigation Aid') {
-        return L.marker(latlng, {icon: getTypeIcon(feature)});
-    } else {
+    if (feature.properties['Type'] != 'Base Station' || feature.properties['Type'] != 'Navigation Aid' || feature.properties['Type'] != 'SAR Aircraft') {
         return L.marker(latlng, {icon: getHeadingIcon(feature)});
 		}};
 
 
+function pointToLayer2(feature, latlng) {
+    return L.marker(latlng, {icon: getTypeIcon(feature)});
+		};
+
 geojsonFeature = {{ geojsonfeatures|tojson|safe }};
 
 L.geoJSON(geojsonFeature, {pointToLayer: pointToLayer, onEachFeature: onEachFeature}).addTo(mymap);
+L.geoJSON(geojsonFeature, {pointToLayer: pointToLayer2, onEachFeature: onEachFeature}).addTo(mymap);
 
 </script>
 </body>

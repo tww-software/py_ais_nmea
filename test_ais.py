@@ -434,7 +434,8 @@ class AISTrackerTests(unittest.TestCase):
         testsentence = ('A03n9r0MFhOC00@0f;EV302K4ih20:'
                         'cj7QT0AwlV1Ovb2QtM04`4FQP0EwmG1gpWuB2b')
         msg = self.process_sentence(testsentence)
-        self.assertIsInstance(msg, messages.t17.Type17DGNSSBroadcastBinaryMessage)
+        self.assertIsInstance(msg,
+                              messages.t17.Type17DGNSSBroadcastBinaryMessage)
 
     def test_classB_position_report(self):
         """
@@ -689,7 +690,7 @@ class IconTests(unittest.TestCase):
         self.assertEqual(len(icons.ICONS), exists)
 
 
-class IMO_Number_tests(unittest.TestCase):
+class IMONumberTests(unittest.TestCase):
     """
     check IMO integrity check works
     """
@@ -718,6 +719,62 @@ class IMO_Number_tests(unittest.TestCase):
         """
         self.assertFalse(ais.check_imo_number('917070500005'))
 
+class TextSummaryFormattingTests(unittest.TestCase):
+    """
+    test the formatting of text summaries that can be printed to screen
+    or saved to text file
+    """
+
+    def test_text_summary(self):
+        """
+        feed in a dictionary and see if the str output from the text summary
+        method matches our expected output string
+        """
+        testdict = {
+            'AIS Stats': {'Total Unique Stations': 2,
+                          'Total Messages Processed': 15,
+                          'Message Stats': {
+                              'Type 3 - Position Report Class A': 13,
+                              'Type 5 - Static and Voyage Related Data': 2},
+                          'AIS Station Types': {'Class A': 2},
+                          'Ship Types': {'Cargo, all ships of this type': 2},
+                          'Country Flags': {'Bahamas': 1, 'Netherlands': 1},
+                          'Times': 'No time data available.'},
+            'NMEA Stats': {'Total Sentences Processed': 17,
+                           'Multipart Messages Reassembled': 2,
+                           'Messages Recieved on Channel': {'A': 13, 'B': 4}}}
+        expectedstr = """
+   AIS Stats: 
+      Total Unique Stations: 2
+      Total Messages Processed: 15
+      Message Stats: 
+         Type 3 - Position Report Class A: 13
+         Type 5 - Static and Voyage Related Data: 2
+      
+      AIS Station Types: 
+         Class A: 2
+      
+      Ship Types: 
+         Cargo all ships of this type: 2
+      
+      Country Flags: 
+         Bahamas: 1
+         Netherlands: 1
+      
+      Times: No time data available.
+   
+   NMEA Stats: 
+      Total Sentences Processed: 17
+      Multipart Messages Reassembled: 2
+      Messages Recieved on Channel: 
+         A: 13
+         B: 4
+      
+   
+"""
+        testresult = ais.create_summary_text(testdict)
+        self.assertEqual(testresult, expectedstr)
+        
 
 if __name__ == '__main__':
     unittest.main()
