@@ -151,8 +151,8 @@ class AISStation():
         """
         try:
             return self.posrep[len(self.posrep) - 1]
-        except (IndexError, AttributeError):
-            raise NoSuitablePositionReport('Unknown')
+        except (IndexError, AttributeError) as err:
+            raise NoSuitablePositionReport('Unknown') from err
 
     def get_station_info(self):
         """

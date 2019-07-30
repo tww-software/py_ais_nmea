@@ -62,34 +62,20 @@ function onEachFeature(feature, layer) {
 };
 
 
-function pointToHeadingLayer(feature, latlng) {
+function pointToLayer(feature, latlng) {
     if (feature.properties['Type'] != 'Base Station' || feature.properties['Type'] != 'Navigation Aid' || feature.properties['Type'] != 'SAR Aircraft') {
         return L.marker(latlng, {icon: getHeadingIcon(feature)});
 		}};
 
 
-function pointToTypeLayer(feature, latlng) {
+function pointToLayer2(feature, latlng) {
     return L.marker(latlng, {icon: getTypeIcon(feature)});
 		};
 
 geojsonFeature = {{ geojsonfeatures|tojson|safe }};
 
-var headings = L.layerGroup();
-var types = L.layerGroup();
-
-L.geoJSON(geojsonFeature, {pointToLayer: pointToHeadingLayer, onEachFeature: onEachFeature}).addTo(headings);
-L.geoJSON(geojsonFeature, {pointToLayer: pointToTypeLayer, onEachFeature: onEachFeature}).addTo(types);
-
-
-var layeroptions = {
-		"Headings": headings
-	};
-
-var baselayer = {
-        "Types": types
-    };
-
-L.control.layers(baselayer, layeroptions).addTo(mymap);
+L.geoJSON(geojsonFeature, {pointToLayer: pointToLayer, onEachFeature: onEachFeature}).addTo(mymap);
+L.geoJSON(geojsonFeature, {pointToLayer: pointToLayer2, onEachFeature: onEachFeature}).addTo(mymap);
 
 </script>
 </body>
