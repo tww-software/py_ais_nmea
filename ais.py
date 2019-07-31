@@ -19,9 +19,12 @@ import maritimeidentifiers
 import allmessages
 
 
+SPEEDUNAVAILABLE = 102.3
+COGUNAVAILABLE = 360
 HEADINGUNAVAILABLE = 511
 LATITUDEUNAVAILABLE = 91.0
 LONGITUDEUNAVAILABLE = 181.0
+
 
 class AISStation():
     """
