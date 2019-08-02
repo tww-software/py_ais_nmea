@@ -142,7 +142,7 @@ def decode_twos_complement(binarystr):
             elif i == '1':
                 newbinlist.append('0')
         onescomplement = ''.join(newbinlist)
-        twoscomplement = -int(onescomplement, 2) + 1
+        twoscomplement = (int(onescomplement, 2) + 1) * -1
     else:
         twoscomplement = int(binarystr, 2)
     return twoscomplement

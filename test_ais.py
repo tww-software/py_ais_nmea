@@ -719,6 +719,7 @@ class IMONumberTests(unittest.TestCase):
         """
         self.assertFalse(ais.check_imo_number('917070500005'))
 
+
 class TextSummaryFormattingTests(unittest.TestCase):
     """
     test the formatting of text summaries that can be printed to screen
@@ -774,7 +775,71 @@ class TextSummaryFormattingTests(unittest.TestCase):
 """
         testresult = ais.create_summary_text(testdict)
         self.assertEqual(testresult, expectedstr)
+
+
+class TurnRateTests(unittest.TestCase):
+    """
+    test interpretation of the turn rate field that appears in message types
+    1,2 & 3
+    """
+
+    def test_no_turn_rate_available(self):
+        """
+        test value for no turn rate data
+        """
+        turnrateint = '10000000'
+        turnratestr = messages.t123.decode_turn_rate(turnrateint)
+        expectedstr = 'no turn rate available'
+        self.assertEqual(turnratestr, expectedstr)
+
+    def test_not_turning(self):
+        """
+        test value for when the vessel is not turning
+        """
+        turnrateint = '00000000'
+        turnratestr = messages.t123.decode_turn_rate(turnrateint)
+        expectedstr = 'not turning'
+        self.assertEqual(turnratestr, expectedstr)
+
+    def test_right_turn_no_turn_indicator(self):
+        """
+        test a right turn - test value is 127
+        """
+        turnrateint = '01111111'
+        turnratestr = messages.t123.decode_turn_rate(turnrateint)
+        expectedstr = ('turning right at more than 10 degrees per minute'
+                       ' - NO TURN INDICATOR')
+        self.assertEqual(turnratestr, expectedstr)
+
+    def test_right_turn(self):
+        """
+        test a right turn of 19.7 degrees per minute
+        """
+        turnrateint = '00010101'
+        turnratestr = messages.t123.decode_turn_rate(turnrateint)
+        expectedstr = 'turning right at 19.7 degrees per minute'
+        self.assertEqual(turnratestr, expectedstr)
         
+    def test_left_turn_no_turn_indicator(self):
+        """
+        test a left turn - test value is -127 in twos complement
+        (129 as unsigned binary int)
+        """
+        turnrateint = '10000001'
+        turnratestr = messages.t123.decode_turn_rate(turnrateint)
+        expectedstr = ('turning left at more than -10 degrees per minute'
+                       ' - NO TURN INDICATOR')
+        self.assertEqual(turnratestr, expectedstr)
+
+    def test_left_turn(self):
+        """
+        test a left turn of 12.9 degrees per minute
+        """
+        turnrateint = '11101111'
+        turnratestr = messages.t123.decode_turn_rate(turnrateint)
+        expectedstr = 'turning left at -12.9 degrees per minute'
+        self.assertEqual(turnratestr, expectedstr)
+
 
 if __name__ == '__main__':
     unittest.main()

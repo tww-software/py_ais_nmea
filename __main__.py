@@ -156,7 +156,7 @@ def read_from_file(filepath, outpath, debug=False,
                 msg = aistracker.process_message(payload)
                 if debug:
                     msglist = []
-                    msglist.append(payload)
+                    msglist.append(line.rstrip())
                     msglist.append(msg.msgtype)
                     msglist.append(msg.mmsi)
                     msglist.append(msg.__str__())

@@ -3,6 +3,38 @@ import binary
 import messages.aismessage
 
 
+def decode_turn_rate(rawvalue):
+    """
+    decode the turn rate value to something meaningful
+
+    Args:
+        rawvalue(str): turn rate encoded as binary string
+
+    Returns:
+        turnvalue(str): actual turn rate of the vessel
+    """
+    decodedturnrate = binary.decode_sixbit_integer(rawvalue)
+    decodedvalues = {
+        0: 'not turning', 128: 'no turn rate available',
+        127: ('turning right at more than 10 degrees per minute'
+              ' - NO TURN INDICATOR'),
+        129: ('turning left at more than -10 degrees per minute'
+              ' - NO TURN INDICATOR')}
+    if decodedturnrate in decodedvalues:
+        turnvalue = decodedvalues[decodedturnrate]
+    else:
+        twos = binary.decode_twos_complement(rawvalue)
+        rot = (twos / 4.733) ** 2
+        if rawvalue[0] == '1':
+            rot = rot * -1
+            direction = 'left'
+        else:
+            direction = 'right'
+        turnvalue = 'turning {} at {} degrees per minute'.format(
+            direction, round(rot, 1))
+    return turnvalue
+
+
 class Type123PositionReportClassA(messages.aismessage.AISMessage):
     """
     used by AIS class A transponders to send position information
@@ -35,7 +67,7 @@ class Type123PositionReportClassA(messages.aismessage.AISMessage):
         super().__init__(msgbinary)
         self.navstatus = self.navstatustypes[self.decode_sixbit_integer(
             msgbinary[38:42])]
-        self.turnrate = self.decode_sixbit_integer(msgbinary[42:50])
+        self.turnrate = decode_turn_rate(msgbinary[42:50])
         self.speed = self.decode_sixbit_integer(msgbinary[50:60]) / 10
         self.posfixaccuracy = self.accuracy[self.decode_sixbit_integer(
             msgbinary[60:61])]
@@ -48,7 +80,7 @@ class Type123PositionReportClassA(messages.aismessage.AISMessage):
         self.trueheading = self.decode_sixbit_integer(msgbinary[128:137])
         self.timestampsecond = self.decode_sixbit_integer(
             msgbinary[137:143])
-        self.maneuverindicator = self.manuvers[self.decode_sixbit_integer(
+        self.maneuverindicator = self.maneuvers[self.decode_sixbit_integer(
             msgbinary[143:145])]
         self.raim = self.binaryflag[self.decode_sixbit_integer(
             msgbinary[148:149])]
@@ -61,8 +93,9 @@ class Type123PositionReportClassA(messages.aismessage.AISMessage):
         Returns:
             strtext(str): string containing information about the message
         """
-        strtext = ('{} - MMSI: {}, '
-                   ' Location: {},{}, Speed: {}, True Heading: {}, CoG: {}, '
+        strtext = ('{} - MMSI: {},  Location: {},{}, '
+                   'Speed: {}, True Heading: {}, '
+                   'CoG: {}, Turn Rate: {}, '
                    'Navigation Status: {}').format(self.description,
                                                    self.mmsi,
                                                    self.latitude,
@@ -70,6 +103,7 @@ class Type123PositionReportClassA(messages.aismessage.AISMessage):
                                                    self.speed,
                                                    self.trueheading,
                                                    self.courseoverground,
+                                                   self.turnrate,
                                                    self.navstatus)
         return strtext
 
