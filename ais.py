@@ -301,6 +301,13 @@ class AISTracker():
         try to use timing data to map out when we recieved signals
         a new AISTracker object is created for each timestamp and the geojson
         saved as a value in position log, timestamps are the keys
+
+        Returns:
+            positionlog(dict): keys are timestamps,
+                               values are dicts containing:
+                                   geojson map,
+                                   latlon for the centre of the map
+                                   the number of stations seen
         """
         positionlog = {}
         for time in self.timings:

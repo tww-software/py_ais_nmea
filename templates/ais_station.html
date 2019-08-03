@@ -74,12 +74,24 @@ L.geoJSON(geojsonFeature, {onEachFeature: onEachFeature}).addTo(mymap);
 </table>
 <p  />
 <h1>Last Position Reported</h1>
+{% for key, value in lastpos.items() %}
 <table>
 <tr>
-{% for key, value in lastpos.items() %}
 <th>{{ key }}</th>
 <td>{{ value }}</td>
+</tr>
+</table>
+{% endfor %}
+<p  />
+<h1>Position Reports</h1>
+oldest to newest
+<table>
+{% for pos in station.posrep %}
 <tr>
+{% for key, value in pos.items() %}
+<th>{{ key }}</th><td>{{ value }}</td>
+{% endfor %}
+</tr>
 {% endfor %}
 </table>
 </body>
