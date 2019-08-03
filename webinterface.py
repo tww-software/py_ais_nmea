@@ -33,15 +33,6 @@ def help_page():
 def about_page():
     return render_template('about.html')
 
-@app.route('/map')
-def map():
-    geojsonfeatures = STATIONS['geojson']
-    centrelat = STATIONS['centremap']['Latitude']
-    centrelon = STATIONS['centremap']['Longitude']
-    return render_template('leafletmap3.html', geojsonfeatures=geojsonfeatures,
-                           centrelat=centrelat, centrelon=centrelon,
-                           icons=ICONS)
-
 
 @app.route('/headingmap')
 def heading_map():
@@ -67,7 +58,7 @@ def country_map(country):
     centremap = countrystntracker.get_centre_of_map()
     centrelat = centremap['Latitude']
     centrelon = centremap['Longitude']
-    return render_template('leafletmap3.html', geojsonfeatures=geojsonfeatures,
+    return render_template('leafletmap4.html', geojsonfeatures=geojsonfeatures,
                            centrelat=centrelat, centrelon=centrelon,
                            icons=ICONS)
 
@@ -86,7 +77,7 @@ def ship_map(shiptype):
     centremap = shiptypestntracker.get_centre_of_map()
     centrelat = centremap['Latitude']
     centrelon = centremap['Longitude']
-    return render_template('leafletmap3.html', geojsonfeatures=geojsonfeatures,
+    return render_template('leafletmap4.html', geojsonfeatures=geojsonfeatures,
                            centrelat=centrelat, centrelon=centrelon,
                            icons=ICONS)
 
@@ -100,7 +91,7 @@ def history_map(timestamp):
     centrelat = POSITIONLOG[timestamp]['mapcentre']['Latitude']
     centrelon = POSITIONLOG[timestamp]['mapcentre']['Longitude']
     geojsonfeatures = POSITIONLOG[timestamp]['geojson']
-    return render_template('leafletmap3.html', geojsonfeatures=geojsonfeatures,
+    return render_template('leafletmap4.html', geojsonfeatures=geojsonfeatures,
                            centrelat=centrelat, centrelon=centrelon,
                            icons=ICONS)
 

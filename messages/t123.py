@@ -80,8 +80,11 @@ class Type123PositionReportClassA(messages.aismessage.AISMessage):
         self.trueheading = self.decode_sixbit_integer(msgbinary[128:137])
         self.timestampsecond = self.decode_sixbit_integer(
             msgbinary[137:143])
-        self.maneuverindicator = self.maneuvers[self.decode_sixbit_integer(
-            msgbinary[143:145])]
+        try:
+            self.maneuverindicator = self.maneuvers[self.decode_sixbit_integer(
+                msgbinary[143:145])]
+        except KeyError:
+            self.maneuverindicator = 'unknown'
         self.raim = self.binaryflag[self.decode_sixbit_integer(
             msgbinary[148:149])]
         self.radiostatus = self.decode_sixbit_integer(msgbinary[149:168])

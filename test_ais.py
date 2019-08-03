@@ -689,6 +689,19 @@ class IconTests(unittest.TestCase):
                 exists += 1
         self.assertEqual(len(icons.ICONS), exists)
 
+    def test_green_arrows(self):
+        """
+        check that we have the green arrows to represent heading
+        """
+        exists = 0
+        iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                 'static', 'green_arrows')
+        for heading in range(0, 360):
+            if os.path.exists(os.path.join(iconspath,
+                                           str(heading) + '.png')):
+                exists += 1
+        self.assertEqual(360, exists)
+
 
 class IMONumberTests(unittest.TestCase):
     """
@@ -840,6 +853,13 @@ class TurnRateTests(unittest.TestCase):
         expectedstr = 'turning left at -12.9 degrees per minute'
         self.assertEqual(turnratestr, expectedstr)
 
+
+class MiscTests(unittest.TestCase):
+    """
+    tests that don't fit into any other catagory
+    """
+    pass
+    
 
 if __name__ == '__main__':
     unittest.main()

@@ -27,7 +27,7 @@ L.control.scale().addTo(mymap);
 
 function getHeadingIcon(feature) {
      if (feature.properties['Heading'] == 511) {
-        newicon = '/static/green_arrows/0.png';
+        newicon = '/static/green_arrows/na.png';
      } else {
         newicon = '/static/green_arrows/' + feature.properties.Heading + '.png';
     }
@@ -78,18 +78,14 @@ var headings = L.layerGroup();
 var types = L.layerGroup();
 
 L.geoJSON(geojsonFeature, {pointToLayer: pointToHeadingLayer, onEachFeature: onEachFeature}).addTo(headings);
-L.geoJSON(geojsonFeature, {pointToLayer: pointToTypeLayer, onEachFeature: onEachFeature}).addTo(types);
+L.geoJSON(geojsonFeature, {pointToLayer: pointToTypeLayer, onEachFeature: onEachFeature}).addTo(mymap);
 
 
 var layeroptions = {
 		"Headings": headings
 	};
 
-var baselayer = {
-        "Types": types
-    };
-
-L.control.layers(baselayer, layeroptions).addTo(mymap);
+L.control.layers(null, layeroptions).addTo(mymap);
 
 </script>
 </body>
