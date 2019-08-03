@@ -45,6 +45,7 @@ def cli_arg_parser():
     outputformats.add_argument('--kmz', action='store_true', help='kmz output')
     outputformats.add_argument('--kml', action='store_true', help='kml output')
     outputformats.add_argument('-c', action='store_true', help='csv output')
+    outputformats.add_argument('-t', action='store_true', help='tsv output')
     outputformats.add_argument('-d', action='store_true',
         help=('read AIS traffic from a capture file then decode'
               ' and display all the messages individually'))
@@ -119,6 +120,7 @@ def open_file_generator(filepath):
 
 def read_from_file(filepath, outpath, debug=False,
                    jsonoutput=True, geojsonoutput=True, csvoutput=True,
+                   tsvoutput=False,
                    kmloutput=False, kmzoutput=True):
     """
     read AIS NMEA sentences from a text file and save to various output formats
@@ -185,9 +187,15 @@ def read_from_file(filepath, outpath, debug=False,
         ais.write_json_file(joutdict, os.path.join(outpath, 'vessel-data.json'))
     if geojsonoutput:
         aistracker.create_geojson_map(os.path.join(outpath, 'map.geojson'))
-    if csvoutput:
-        csvdata = aistracker.create_csv_data()
-        ais.write_csv_file(csvdata, os.path.join(outpath, 'vessel-data.csv'))
+    if csvoutput or tsvoutput:
+        outputdata = aistracker.create_csv_data()
+        if csvoutput:
+            ais.write_csv_file(outputdata,
+                               os.path.join(outpath, 'vessel-data.csv'))
+        if tsvoutput:
+            ais.write_csv_file(outputdata,
+                               os.path.join(outpath, 'vessel-data.tsv'),
+                               dialect='excel-tab')
     if kmloutput:
         aistracker.create_kml_map(os.path.join(outpath, 'map.kml'), kmzoutput=False)
     if kmzoutput:
@@ -210,6 +218,7 @@ def main():
         read_from_file(CLIARGS.inputfile, CLIARGS.outputfile, CLIARGS.d,
                        jsonoutput=CLIARGS.j,
                        geojsonoutput=CLIARGS.g, csvoutput=CLIARGS.c,
+                       tsvoutput=CLIARGS.t,
                        kmloutput=CLIARGS.kml, kmzoutput=CLIARGS.kmz)
     elif CLIARGS.subcommand == 'net':
         read_from_network(CLIARGS.outputfile)

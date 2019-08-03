@@ -640,16 +640,21 @@ def write_json_file(jsonstations, outpath):
         json.dump(jsonstations, jsonfile, indent=2)
 
 
-def write_csv_file(lines, outpath):
+def write_csv_file(lines, outpath, dialect='excel'):
     """
     write out the details to a csv file
+
+    Note:
+        default dialect is 'excel' to create a CSV file
+        we change this to 'excel-tab' for TSV output
 
     Args:
         lines(list): list of lines to write out to the csv, each line is a list
         outpath(str): full path to write the csv file to
+        dialect(str): type of seperated values file we are creating
     """
     with open(outpath, 'w') as outfile:
-        csvwriter = csv.writer(outfile)
+        csvwriter = csv.writer(outfile, dialect=dialect)
         csvwriter.writerows(lines)
 
 
