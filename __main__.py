@@ -132,7 +132,8 @@ def read_from_file(filepath, outpath, debug=False,
     Args:
         filepath(str): full path to the input file containing NMEA sentences
         outpath(str): path to save to excluding file extensions
-        debug(bool): create a csv file containing all the individual messages
+        debug(bool): create a json lines file containing
+                     all the individual messages
                      decoded with the original payloads
         jsonoutput(bool): save output to json file
         geojsonoutput(bool): save output to geojson file
@@ -145,10 +146,7 @@ def read_from_file(filepath, outpath, debug=False,
         os.makedirs(outpath)
     AISLOGGER.info('processed output will be saved in %s', outpath)
     AISLOGGER.info('reading nmea sentences from - %s', filepath)
-    headers = ['Message Payload', 'Message Type Number', 'MMSI',
-               'Message Description']
     messagelist = []
-    messagelist.append(headers)
     aistracker = ais.AISTracker()
     nmeatracker = nmea.NMEAtracker()
     for line in open_file_generator(filepath):
@@ -157,12 +155,10 @@ def read_from_file(filepath, outpath, debug=False,
             if payload:
                 msg = aistracker.process_message(payload)
                 if debug:
-                    msglist = []
-                    msglist.append(line.rstrip())
-                    msglist.append(msg.msgtype)
-                    msglist.append(msg.mmsi)
-                    msglist.append(msg.__str__())
-                    messagelist.append(msglist)
+                    decodedmsg = {}
+                    decodedmsg['payload'] = payload
+                    decodedmsg.update(msg.__dict__) 
+                    messagelist.append(decodedmsg)
         except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                 ais.UnknownMessageType, ais.InvalidMMSI) as err:
             AISLOGGER.debug(str(err))
@@ -201,7 +197,7 @@ def read_from_file(filepath, outpath, debug=False,
     if kmzoutput:
         aistracker.create_kml_map(os.path.join(outpath, 'map.kmz'), kmzoutput=True)
     if debug:
-        ais.write_csv_file(messagelist, os.path.join(outpath, 'ais-messages.csv'))
+        ais.write_json_lines(messagelist, os.path.join(outpath, 'ais-messages.jsonl'))
     AISLOGGER.info('Finished')
 
 
