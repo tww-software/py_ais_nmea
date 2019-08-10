@@ -260,6 +260,33 @@ class AISStationTests(unittest.TestCase):
         lastpos = self.aisteststn.get_latest_position()
         self.assertEqual(lastpos, expectedpos)
 
+    def test_no_latitiude(self):
+        """
+        submit a position report with no latitude
+        """
+        with self.assertRaises(ais.NoSuitablePositionReport):
+            posrep = [91.0, -4.132333333332]
+            self.aisteststn.update_position({'Latitude': posrep[0],
+                                             'Longitude': posrep[1]})
+
+    def test_no_longitude(self):
+        """
+        submit a position report with no longitude
+        """
+        with self.assertRaises(ais.NoSuitablePositionReport):
+            posrep = [53.8923333333, 181.0]
+            self.aisteststn.update_position({'Latitude': posrep[0],
+                                             'Longitude': posrep[1]})
+
+    def test_no_longitude_no_latitiude(self):
+        """
+        submit a position report with no longitude
+        """
+        with self.assertRaises(ais.NoSuitablePositionReport):
+            posrep = [91.0, 181.0]
+            self.aisteststn.update_position({'Latitude': posrep[0],
+                                             'Longitude': posrep[1]})
+
 
 class AISStationTestsRealData(unittest.TestCase):
     """
@@ -328,6 +355,16 @@ class AISTrackerTests(unittest.TestCase):
         """
         msgobj = self.aistracker.process_message(payload)
         return msgobj
+
+    def test_all_zeros_mmsi(self):
+        testsentence = '7000003dTni4'
+        with self.assertRaises(ais.InvalidMMSI):
+            msg = self.process_sentence(testsentence)
+
+    def test_unknown_message(self):
+        testsentence = 'NHIV000IhO9ftkdhwh'
+        with self.assertRaises(ais.UnknownMessageType):
+            msg = self.process_sentence(testsentence)
 
     def test_classA_position_report(self):
         """
@@ -858,8 +895,15 @@ class MiscTests(unittest.TestCase):
     """
     tests that don't fit into any other catagory
     """
-    pass
-    
+
+    def test_mmsi_with_single_leading_zero(self):
+        """
+        identify the flag for MMSI with a single leading zero
+        """
+        teststn = ais.AISStation('023358500')
+        expectedflag = 'United Kingdom'
+        self.assertEqual(expectedflag, teststn.flag)
+
 
 if __name__ == '__main__':
     unittest.main()
