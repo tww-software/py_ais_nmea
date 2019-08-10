@@ -89,6 +89,10 @@ class AISStation():
         Args:
             currentpos(dict): position report must have a minimum of keys
                               'Latitude' and 'Longitude'
+
+        Raises:
+            NoSuitablePositionReport: if we do not have a minimum of a latitude
+                                      and longitude in currentpos
         """
         if (currentpos['Latitude'] == LATITUDEUNAVAILABLE or
                 currentpos['Longitude'] == LONGITUDEUNAVAILABLE):
@@ -402,13 +406,6 @@ class AISTracker():
         centre = {'Latitude': centrelat, 'Longitude': centrelon}
         return centre
 
-    def print_table(self):
-        """
-        quick method to print all the stations the AISTracker knows
-        """
-        for mmsi in self.stations_generator():
-            print(self.stations[mmsi].__str__())
-
     def stations_generator(self):
         """
         a generator because we often find ourselves iterating over the
@@ -594,22 +591,21 @@ class AISTracker():
         csvtable = []
         csvheader = ['MMSI', 'Type', 'Sub Type', 'Flag', 'Name', 'Callsign',
                      'IMO number', 'RAIM in use', 'EPFD Fix type',
-                     'Position Accuracy', 'Latitude',
-                     'Longitude', 'Total Messages']
+                     'Position Accuracy', 'Total Messages', 'Latitude',
+                     'Longitude', 'CoG', 'Speed (knots)']
+        lastposheader = ['Latitude', 'Longitude', 'CoG', 'Speed (knots)']
         csvtable.append(csvheader)
         for mmsi in self.stations_generator():
             stninfo = self.stations[mmsi].get_station_info()
             line = []
-            try:
-                lastpos = self.stations[mmsi].get_latest_position()
-                stninfo['Latitude'] = lastpos['Latitude']
-                stninfo['Longitude'] = lastpos['Longitude']
-            except (NoSuitablePositionReport, TypeError, KeyError):
-                stninfo['Latitude'] = ''
-                stninfo['Longitude'] = ''
             stninfo['Total Messages'] = 0
             for i in self.stations[mmsi].sentmsgs:
                 stninfo['Total Messages'] += self.stations[mmsi].sentmsgs[i]
+            for item in lastposheader:
+                try:
+                    stninfo[item] = (stninfo['Last Known Position'][item])
+                except (NoSuitablePositionReport, TypeError, KeyError):
+                    stninfo[item] = ''
             for item in csvheader:
                 line.append(stninfo[item])
             csvtable.append(line)
