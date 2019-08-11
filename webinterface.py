@@ -153,7 +153,7 @@ def read_capture_file():
             STATS['ShipTypes'] = stnstats['Ship Types']
             STATS['Flags'] = stnstats['Country Flags']
             ais.write_json_file(stnstats, tempjsonpath)
-            foutput = aistracker.create_csv_data()
+            foutput = aistracker.create_table_data()
             ais.write_csv_file(foutput, tempcsvpath)
             aistracker.create_kml_map(tempkmlpath)
             geojsonparser = aistracker.create_geojson_map(tempgeojsonpath)

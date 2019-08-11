@@ -576,7 +576,7 @@ class AISTracker():
             geojsonmap.save_to_file(outputfile)
         return geojsonmap
 
-    def create_csv_data(self):
+    def create_table_data(self):
         """
         creates a table of data we have on all vessels
 
