@@ -9,11 +9,13 @@ Unit tests for the AIS Decoder
 import datetime
 import os
 import unittest
+import xml.etree.ElementTree
 
 import ais
 import binary
 import geojson
 import icons
+import kml
 import nmea
 import messages
 import messages.aismessage
@@ -934,6 +936,31 @@ class MiscTests(unittest.TestCase):
         teststn = ais.AISStation('023358500')
         expectedflag = 'United Kingdom'
         self.assertEqual(expectedflag, teststn.flag)
+
+
+class KMLTests(unittest.TestCase):
+    """
+    test the generation of Keyhole Markup Language
+    """
+
+    def setUp(self):
+        self.parser = kml.KMLOutputParser(None)
+
+    def test_basic_kml_doc(self):
+        """
+        create a very basic kml file with a folder containing a point
+        """
+        self.parser.create_kml_header()
+        self.parser.open_folder('Blackpool')
+        self.parser.add_kml_placemark('Blackpool Tower',
+                                      ('Blackpool tower is 158m tall and'
+                                       ' was completed in 1894.'),
+                                       '-3.055468', '53.815964', '', kmz=False) 
+        self.parser.close_folder()
+        self.parser.close_kml_file()
+        kmldoc = xml.etree.ElementTree.fromstring(''.join(self.parser.kmldoc))
+        self.assertIsInstance(kmldoc,
+                              xml.etree.ElementTree.Element)
 
 
 if __name__ == '__main__':
