@@ -643,6 +643,7 @@ class GeoJSONTests(unittest.TestCase):
 
     def setUp(self):
         self.parser = geojson.GeoJsonParser()
+        self.maxDiff = None
 
     def test_add_station_info(self):
         """
@@ -705,6 +706,36 @@ class GeoJSONTests(unittest.TestCase):
                     "properties": testinfo}
         returned = self.parser.create_feature_linestring(positions, testinfo)
         self.assertEqual(expected, returned)
+
+    def test_json_string(self):
+        """
+        Tests getting the geojson as a string
+
+        Note:
+            we are comparing length as the keys may not be in the same order
+        """
+        expected = ('{"type": "FeatureCollection", "features": '
+                    '[{"type": "Feature", "geometry": {"type": '
+                    '"Point", "coordinates": [-3.3356966666666668, '
+                    '53.90606666666667]}, "properties": {"MMSI": '
+                    '"123456789", "Type": "not specified", "Flag": '
+                    '"unknown"}}, {"type": "Feature", "geometry": '
+                    '{"type": "LineString", "coordinates": '
+                    '[[-4.328763333333334, 53.864983333333335], '
+                    '[-3.6327133333333332, 53.90793333333333], '
+                    '[-3.3356966666666668, 53.90606666666667]]}, '
+                    '"properties": {"MMSI": "123456789"}}]}')
+        mmsi = '123456789'
+        positions = [
+            [-4.328763333333334, 53.864983333333335],
+            [-3.6327133333333332, 53.90793333333333],
+            [-3.3356966666666668, 53.90606666666667]]
+        lon = positions[2][0]
+        lat = positions[2][1]
+        properties = {'Flag': 'unknown', 'Type': 'not specified', 'MMSI': mmsi}
+        self.parser.add_station_info(mmsi, properties, positions, lon, lat)
+        geojsonstring = self.parser.get_json_string()
+        self.assertEqual(len(expected), len(geojsonstring))
 
 
 class IconTests(unittest.TestCase):
