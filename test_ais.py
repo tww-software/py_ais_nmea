@@ -5,7 +5,9 @@ Unit tests for the AIS Decoder
 # pylint: disable=no-member
 # pylint: disable=import-error
 # pylint: disable=no-name-in-module
+# pylint: disable=invalid-name
 
+import collections
 import datetime
 import os
 import unittest
@@ -113,7 +115,7 @@ class BinaryTests(unittest.TestCase):
         testdata = nmeatracker.process_sentence(testsentence)
         testbinarystr = binary.ais_sentence_payload_binary(testdata)
         with self.assertRaises(binary.NoBinaryData):
-            testcog = binary.decode_sixbit_integer(testbinarystr[116:128]) / 10
+            cog = binary.decode_sixbit_integer(testbinarystr[116:128]) / 10
 
 
 class NMEATests(unittest.TestCase):
@@ -234,7 +236,7 @@ class AISStationTests(unittest.TestCase):
         this should return 'unknown' as we havn't given it any LATLON coords
         """
         with self.assertRaises(ais.NoSuitablePositionReport):
-            lastpos = self.aisteststn.get_latest_position()
+            self.aisteststn.get_latest_position()
 
     def test_unknown_flag_identification(self):
         """
@@ -359,14 +361,22 @@ class AISTrackerTests(unittest.TestCase):
         return msgobj
 
     def test_all_zeros_mmsi(self):
+        """
+        this message was sent from a stn that has a MMSI of all zeros
+        an Invalif MMSI exception should be raised
+        """
         testsentence = '7000003dTni4'
         with self.assertRaises(ais.InvalidMMSI):
-            msg = self.process_sentence(testsentence)
+            self.process_sentence(testsentence)
 
     def test_unknown_message(self):
+        """
+        This is an unknown message, random letters we made up
+        an Unknown Message exception should be raised
+        """
         testsentence = 'NHIV000IhO9ftkdhwh'
         with self.assertRaises(ais.UnknownMessageType):
-            msg = self.process_sentence(testsentence)
+            self.process_sentence(testsentence)
 
     def test_classA_position_report(self):
         """
@@ -902,7 +912,7 @@ class TurnRateTests(unittest.TestCase):
         turnratestr = messages.t123.decode_turn_rate(turnrateint)
         expectedstr = 'turning right at 19.7 degrees per minute'
         self.assertEqual(turnratestr, expectedstr)
-        
+
     def test_left_turn_no_turn_indicator(self):
         """
         test a left turn - test value is -127 in twos complement
@@ -944,23 +954,72 @@ class KMLTests(unittest.TestCase):
     """
 
     def setUp(self):
+        self.maxDiff = None
         self.parser = kml.KMLOutputParser(None)
 
     def test_basic_kml_doc(self):
         """
         create a very basic kml file with a folder containing a point
         """
+        testcoords = [
+            {'Latitude': 53.81631259853631, 'Longitude': -3.055718449226172},
+            {'Latitude': 53.81637571982642, 'Longitude': -3.054978876647683},
+            {'Latitude': 53.81553582648765, 'Longitude': -3.054681431837341},
+            {'Latitude': 53.81547082550122, 'Longitude': -3.055649507902522},
+            {'Latitude': 53.81631259853631, 'Longitude': -3.055718449226172}]
         self.parser.create_kml_header()
         self.parser.open_folder('Blackpool')
         self.parser.add_kml_placemark('Blackpool Tower',
                                       ('Blackpool tower is 158m tall and'
                                        ' was completed in 1894.'),
-                                       '-3.055468', '53.815964', '', kmz=False) 
+                                      '-3.055468', '53.815964', '', kmz=False)
+        self.parser.add_kml_placemark_linestring('Perimeter', testcoords)
         self.parser.close_folder()
         self.parser.close_kml_file()
         kmldoc = xml.etree.ElementTree.fromstring(''.join(self.parser.kmldoc))
         self.assertIsInstance(kmldoc,
                               xml.etree.ElementTree.Element)
+
+    def test_placemark_html_formatting(self):
+        """
+        test the formatting of dictionaries into html for the placemarks
+        """
+        sentmsgs = collections.Counter(
+            {'Type 21 - Aid to Navigation Report': 32})
+        testdict = {
+            'mmsi': '992351030', 'type': 'Navigation Aid',
+            'subtype': 'Cardinal Mark S', 'name': 'LUNE DEEP BUOY',
+            'posrep': [{'Latitude': 53.934846666666665,
+                        'Longitude': -3.2158883333333335,
+                        'Time': '20180909_140026'},
+                       {'Latitude': 53.93485666666667,
+                        'Longitude': -3.215895, 'Time': '20180909_140126'},
+                       {'Latitude': 53.93484, 'Longitude': -3.2158783333333334,
+                        'Time': '20180909_140726'}],
+            'details': {'Width (m)': 2, 'Length (m)': 2,
+                        'Navigation Aid Type': 'Cardinal Mark S',
+                        'EPFD Fix type': 'GPS', 'RAIM in use': True,
+                        'Virtual Navigation Aid': False,
+                        'Position Accuracy': '< 10m', 'Off Position': False,
+                        'Assigned Mode': False}, 'flag': 'United Kingdom',
+            'sentmsgs': sentmsgs}
+        testhtml = self.parser.format_kml_placemark_description(testdict)
+        expectedhtml = """<![CDATA[MMSI - 992351030<br  />
+TYPE - Navigation Aid<br  />
+SUBTYPE - Cardinal Mark S<br  />
+NAME - LUNE DEEP BUOY<br  />
+WIDTH (M) - 2<br  />
+LENGTH (M) - 2<br  />
+NAVIGATION AID TYPE - Cardinal Mark S<br  />
+EPFD FIX TYPE - GPS<br  />
+RAIM IN USE - True<br  />
+VIRTUAL NAVIGATION AID - False<br  />
+POSITION ACCURACY - < 10m<br  />
+OFF POSITION - False<br  />
+ASSIGNED MODE - False<br  />
+FLAG - United Kingdom<br  />
+]]>"""
+        self.assertEqual(testhtml, expectedhtml)
 
 
 if __name__ == '__main__':

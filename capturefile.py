@@ -32,6 +32,33 @@ def open_file_generator(filepath):
             yield line
 
 
+def aistracker_from_file(filepath, debug=False):
+    """
+    open a file, read all nmea sentences and return an ais.AISTracker object
+    """
+    messagelist = []
+    aistracker = ais.AISTracker()
+    nmeatracker = nmea.NMEAtracker()
+    for line in open_file_generator(filepath):
+        try:
+            payload = nmeatracker.process_sentence(line)
+            if payload:
+                msg = aistracker.process_message(payload)
+                if debug:
+                    decodedmsg = {}
+                    decodedmsg['payload'] = payload
+                    decodedmsg.update(msg.__dict__)
+                    messagelist.append(decodedmsg)
+        except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
+                ais.UnknownMessageType, ais.InvalidMMSI) as err:
+            AISLOGGER.debug(str(err))
+            continue
+        except IndexError:
+            AISLOGGER.debug('no data on line')
+            continue
+    return (aistracker, messagelist)
+
+
 def read_from_file(filepath, outpath, debug=False,
                    jsonoutput=True, geojsonoutput=True, csvoutput=True,
                    tsvoutput=False,
@@ -60,26 +87,7 @@ def read_from_file(filepath, outpath, debug=False,
         os.makedirs(outpath)
     AISLOGGER.info('processed output will be saved in %s', outpath)
     AISLOGGER.info('reading nmea sentences from - %s', filepath)
-    messagelist = []
-    aistracker = ais.AISTracker()
-    nmeatracker = nmea.NMEAtracker()
-    for line in open_file_generator(filepath):
-        try:
-            payload = nmeatracker.process_sentence(line)
-            if payload:
-                msg = aistracker.process_message(payload)
-                if debug:
-                    decodedmsg = {}
-                    decodedmsg['payload'] = payload
-                    decodedmsg.update(msg.__dict__)
-                    messagelist.append(decodedmsg)
-        except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
-                ais.UnknownMessageType, ais.InvalidMMSI) as err:
-            AISLOGGER.debug(str(err))
-            continue
-        except IndexError:
-            AISLOGGER.debug('no data on line')
-            continue
+    aistracker, messagelist = aistracker_from_file(filepath, debug=debug)
     stnstats = aistracker.tracker_stats()
     sentencestats = nmeatracker.nmea_stats()
     AISLOGGER.debug('saving summary to summary.txt')
