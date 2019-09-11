@@ -14,6 +14,7 @@ from flask import Flask, render_template, request, send_file
 ICONS = icons.ICONS
 
 STATIONS = {}
+TABLE = []
 POSITIONLOG = {}
 STATS = {}
 ALLMESSAGES = []
@@ -98,24 +99,11 @@ def history_map(timestamp):
 @app.route('/read_capture_file', methods=['GET', 'POST'])
 def read_capture_file():
     """
-    WORKS
-    foutput = 'raw capture file data is displayed here'
-    if request.method == 'POST':
-        if request.files['file']:
-            foutput = request.files['file'].read()
-    return render_template('readcapturefile.html', foutput=foutput)
+    read from a capture file
     """
     headers = ['Message Payload', 'Message Type Number',
                'Message Description']
     ALLMESSAGES.append(headers)
-    tempcsvpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               'data', 'temp.csv')
-    tempjsonpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               'data', 'temp.json')
-    tempgeojsonpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               'data', 'temp.geojson')
-    tempkmlpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               'data', 'temp.kmz')
     if request.method == 'GET':
         foutput = []
     elif request.method == 'POST':
@@ -139,6 +127,8 @@ def read_capture_file():
                         nmea.NMEACheckSumFailed, nmea.NMEAInvalidSentence,
                         ais.InvalidMMSI):
                     continue
+            TABLE.clear()
+            TABLE.extend(aistracker.create_table_data())
             STATIONS.update(aistracker.stations)
             stnstats = aistracker.tracker_stats()
             organisedmmsis = aistracker.sort_mmsi_by_catagory()
@@ -152,16 +142,19 @@ def read_capture_file():
             STATS['AISStationTypes'] = stnstats['AIS Station Types']
             STATS['ShipTypes'] = stnstats['Ship Types']
             STATS['Flags'] = stnstats['Country Flags']
-            ais.write_json_file(stnstats, tempjsonpath)
-            foutput = aistracker.create_table_data()
-            ais.write_csv_file(foutput, tempcsvpath)
-            aistracker.create_kml_map(tempkmlpath)
-            geojsonparser = aistracker.create_geojson_map(tempgeojsonpath)
+            geojsonparser = aistracker.create_geojson_map()
             STATIONS['geojson'] = geojsonparser.main["features"]
             STATIONS['centremap'] = aistracker.get_centre_of_map()
             poslogs = aistracker.position_log()
             POSITIONLOG.update(poslogs)
-    return render_template('readcapturefile.html', foutput=foutput)
+    return render_template('readcapturefile.html')
+
+@app.route('/vesselstable')
+def stations_table():
+    """
+    display a table of all the stations we know of
+    """
+    return render_template('vesselstable.html', foutput=TABLE)
 
 @app.route('/msgdebug_capture_file')
 def msgdebug_capture_file():

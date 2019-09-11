@@ -56,7 +56,7 @@ def aistracker_from_file(filepath, debug=False):
         except IndexError:
             AISLOGGER.debug('no data on line')
             continue
-    return (aistracker, messagelist)
+    return (aistracker, nmeatracker, messagelist)
 
 
 def read_from_file(filepath, outpath, debug=False,
@@ -87,7 +87,8 @@ def read_from_file(filepath, outpath, debug=False,
         os.makedirs(outpath)
     AISLOGGER.info('processed output will be saved in %s', outpath)
     AISLOGGER.info('reading nmea sentences from - %s', filepath)
-    aistracker, messagelist = aistracker_from_file(filepath, debug=debug)
+    aistracker, nmeatracker, messagelist = aistracker_from_file(
+        filepath, debug=debug)
     stnstats = aistracker.tracker_stats()
     sentencestats = nmeatracker.nmea_stats()
     AISLOGGER.debug('saving summary to summary.txt')
