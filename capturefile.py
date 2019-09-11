@@ -35,6 +35,21 @@ def open_file_generator(filepath):
 def aistracker_from_file(filepath, debug=False):
     """
     open a file, read all nmea sentences and return an ais.AISTracker object
+
+    Note:
+        if debug is set then individual messages are saved into the messagelist
+
+    Args:
+        filepath(str): full path to nmea file
+        debug(bool): save all message payloads and decoded attributes into
+                     messagelist
+
+    Returns:
+        aistracker(ais.AISTracker): object that keeps track of all the
+                                    ships we have seen
+        nmeatracker(nmea.NMEAtracker): object that organises the nmea sentences
+        messagelist(list): list of dicts, each dict has the nmea payload
+                           and decoded attributes from the message object
     """
     messagelist = []
     aistracker = ais.AISTracker()
