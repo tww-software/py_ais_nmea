@@ -8,12 +8,18 @@ import tkinter.filedialog
 import tkinter.messagebox
 import tkinter.scrolledtext
 import tkinter.ttk
+import queue
+import multiprocessing
+import threading
+import logging
 
 
 import ais
 import capturefile
 import nmea
+import network
 
+AISLOGGER = logging.getLogger(__name__)
 
 
 class BasicGUI():
@@ -46,16 +52,50 @@ class BasicGUI():
         tabcontrol.add(self.tab2, text='Ships')
         self.tab3 = tkinter.ttk.Frame(tabcontrol)
         tabcontrol.add(self.tab3, text='Export')
+        self.tab4 = tkinter.ttk.Frame(tabcontrol)
+        tabcontrol.add(self.tab4, text='Network')
         self.exportoptions = tkinter.ttk.Combobox(self.tab3)
         tabcontrol.pack(expand=1, fill='both')
         self.txt = tkinter.scrolledtext.ScrolledText(tab1)
         self.txt.pack(side='left', fill='both', expand=tkinter.TRUE)
+        self.nmeabox = tkinter.scrolledtext.ScrolledText(self.tab4)
+        self.nmeabox.pack(side='left', fill='both', expand=tkinter.TRUE)
+        self.top_menu()
+        self.mpq = multiprocessing.Queue()
+
+    def top_menu(self):
+        """
+        format and add the top menu to the main window
+        """
         menu = tkinter.Menu(self.window)
         openfileitem = tkinter.Menu(menu, tearoff=0)
         openfileitem.add_command(label='Open', command=self.open_file)
         openfileitem.add_command(label='Quit', command=self.quit)
         menu.add_cascade(label='File', menu=openfileitem)
+        networkitem = tkinter.Menu(menu, tearoff=0)
+        networkitem.add_command(label='Start Network Server', command=self.start_server)
+        networkitem.add_command(label='Stop Network Server', command=self.stop_server)
+        menu.add_cascade(label='Network', menu=networkitem)
+        helpitem = tkinter.Menu(menu, tearoff=0)
+        helpitem.add_command(label='Help', command=self.help)
+        helpitem.add_command(label='About', command=self.about)
+        menu.add_cascade(label='Help', menu=helpitem)
         self.window.config(menu=menu)
+
+    def about(self):
+        tkinter.messagebox.showinfo('About', 'Created by Thomas W Whittam')
+
+    def help(self):
+        tkinter.messagebox.showinfo('Help', 'No help for you')
+
+    def start_server(self):  
+        serverprocess = multiprocessing.Process(target=network.mpserver, args=[self.mpq])
+        serverprocess.start()
+        updateguithread = threading.Thread(target=self.update)
+        updateguithread.start()
+
+    def stop_server(self):
+        pass
 
     @staticmethod
     def quit():
@@ -214,6 +254,27 @@ class BasicGUI():
                     'GEOJSON': self.export_geojson}
         option = self.exportoptions.get()
         commands[option]()
+
+    def update(self):
+        while True:
+            qdata = self.mpq.get()
+            if qdata:
+                try:
+                    data = qdata.decode('utf-8')
+                    payload = self.nmeatracker.process_sentence(data)
+                    if payload:
+                        msg = self.aistracker.process_message(payload)
+                        self.nmeabox.insert(tkinter.INSERT, msg.__str__())
+                        self.nmeabox.insert(tkinter.INSERT, '\n\n')
+                        self.write_stats()
+                        self.create_ship_table()
+                except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
+                        ais.UnknownMessageType, ais.InvalidMMSI) as err:
+                    AISLOGGER.debug(str(err))
+                    continue
+                except IndexError:
+                    AISLOGGER.debug('no data on line')
+                    continue
 
     def display_gui(self):
         """
