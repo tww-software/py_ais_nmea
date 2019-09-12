@@ -27,6 +27,7 @@ class MyGUI():
         tabcontrol.add(self.tab2, text='Ships')
         self.tab3 = tkinter.ttk.Frame(tabcontrol)
         tabcontrol.add(self.tab3, text='Export')
+        self.exportoptions = tkinter.ttk.Combobox(self.tab3)
         tabcontrol.pack(expand=1, fill='both')
         self.txt = tkinter.scrolledtext.ScrolledText(tab1)
         self.txt.pack(side='left', fill='both', expand=tkinter.TRUE)
@@ -92,10 +93,13 @@ class MyGUI():
         self.aistracker.create_geojson_map(outputfile)
 
     def open_file(self):
-        self.txt.delete(1.0, tkinter.END)
-        self.txt.insert(tkinter.INSERT, '...Loading...')
         inputfile = tkinter.filedialog.askopenfilename()
         self.aistracker, self.nmeatracker, _ = capturefile.aistracker_from_file(inputfile)
+        self.export_buttons()
+        self.write_stats()
+        self.create_ship_table()
+
+    def write_stats(self):
         self.txt.delete(1.0, tkinter.END)
         self.txt.insert(tkinter.INSERT, self.aistracker.__str__())
         self.txt.insert(tkinter.INSERT, '\n\n')
@@ -103,8 +107,6 @@ class MyGUI():
         printablestats = ais.create_summary_text(self.aistracker.tracker_stats())
         self.txt.insert(tkinter.INSERT, '\n\n')
         self.txt.insert(tkinter.INSERT, printablestats)
-        self.export_buttons()
-        self.create_ship_table()
 
     def create_ship_table(self):
         tree = tkinter.ttk.Treeview(self.tab2)
@@ -113,8 +115,9 @@ class MyGUI():
         horizontalscrollbar = tkinter.ttk.Scrollbar(self.tab2, orient=tkinter.HORIZONTAL, command=tree.xview)
         horizontalscrollbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)
         tabledata = self.aistracker.create_table_data()
-        tree["columns"] = tabledata[0]
-        for column in tabledata[0]:
+        headers = tabledata.pop(0)
+        tree["columns"] = headers
+        for column in headers:
             tree.column(column, width=200, minwidth=70, stretch=tkinter.NO)
             tree.heading(column, text=column, anchor=tkinter.W)
         counter = 0
@@ -124,18 +127,21 @@ class MyGUI():
         tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
 
     def export_buttons(self):
-        exportcsvbutton = tkinter.Button(self.tab3, text='Export CSV', command=self.export_csv)
-        exportcsvbutton.grid(column=1, row=1)
-        exportcsvbutton = tkinter.Button(self.tab3, text='Export TSV', command=self.export_tsv)
-        exportcsvbutton.grid(column=1, row=3)
-        exportkmlbutton = tkinter.Button(self.tab3, text='Export KML', command=self.export_kml)
-        exportkmlbutton.grid(column=1, row=5)
-        exportkmzbutton = tkinter.Button(self.tab3, text='Export KMZ', command=self.export_kmz)
-        exportkmzbutton.grid(column=1, row=7)
-        exportkmzbutton = tkinter.Button(self.tab3, text='Export JSON', command=self.export_json)
-        exportkmzbutton.grid(column=1, row=9)
-        exportkmzbutton = tkinter.Button(self.tab3, text='Export GEOJSON', command=self.export_geojson)
-        exportkmzbutton.grid(column=1, row=11)
+        self.exportoptions['values']= ('CSV', 'TSV', 'KML', 'KMZ', 'JSON', 'GEOJSON')
+        self.exportoptions.set('KMZ')
+        self.exportoptions.grid(column=1, row=1)
+        self.exportbutton = tkinter.Button(self.tab3, text='Export', command=self.export_files)
+        self.exportbutton.grid(column=2, row=1)
+
+    def export_files(self):
+        commands = {'CSV': self.export_csv,
+                    'TSV': self.export_tsv,
+                    'KML': self.export_kml,
+                    'KMZ': self.export_kmz,
+                    'JSON': self.export_json,
+                    'GEOJSON': self.export_geojson}
+        option = self.exportoptions.get()
+        commands[option]()
 
     def display_gui(self):
         self.window.mainloop()
