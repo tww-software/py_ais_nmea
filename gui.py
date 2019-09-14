@@ -53,15 +53,29 @@ class BasicGUI():
         self.tab3 = tkinter.ttk.Frame(tabcontrol)
         tabcontrol.add(self.tab3, text='Export')
         self.tab4 = tkinter.ttk.Frame(tabcontrol)
-        tabcontrol.add(self.tab4, text='Network')
+        tabcontrol.add(self.tab4, text='AIS Messages')
+        self.tab5 = tkinter.ttk.Frame(tabcontrol)
+        tabcontrol.add(self.tab5, text='NMEA Sentences')
         self.exportoptions = tkinter.ttk.Combobox(self.tab3)
         tabcontrol.pack(expand=1, fill='both')
         self.txt = tkinter.scrolledtext.ScrolledText(tab1)
         self.txt.pack(side='left', fill='both', expand=tkinter.TRUE)
-        self.nmeabox = tkinter.scrolledtext.ScrolledText(self.tab4)
+        self.aisbox = tkinter.scrolledtext.ScrolledText(self.tab4)
+        self.aisbox.pack(side='left', fill='both', expand=tkinter.TRUE)
+        self.nmeabox = tkinter.scrolledtext.ScrolledText(self.tab5)
         self.nmeabox.pack(side='left', fill='both', expand=tkinter.TRUE)
         self.top_menu()
         self.mpq = multiprocessing.Queue()
+        self.updateguithread = None
+        self.serverpool = multiprocessing.Pool()
+        self.serverprocess = None
+        self.tree = tkinter.ttk.Treeview(self.tab2)
+        verticalscrollbar = tkinter.ttk.Scrollbar(
+            self.tab2, orient=tkinter.VERTICAL, command=self.tree.yview)
+        verticalscrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+        horizontalscrollbar = tkinter.ttk.Scrollbar(
+            self.tab2, orient=tkinter.HORIZONTAL, command=self.tree.xview)
+        horizontalscrollbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)
 
     def top_menu(self):
         """
@@ -88,14 +102,22 @@ class BasicGUI():
     def help(self):
         tkinter.messagebox.showinfo('Help', 'No help for you')
 
-    def start_server(self):  
-        serverprocess = multiprocessing.Process(target=network.mpserver, args=[self.mpq])
-        serverprocess.start()
-        updateguithread = threading.Thread(target=self.update)
-        updateguithread.start()
+    def start_server(self):
+        self.serverprocess = multiprocessing.Process(target=network.mpserver, args=[self.mpq])
+        self.serverprocess.start()
+        tkinter.messagebox.showinfo('Network', 'Server Started')
+        self.updateguithread = threading.Thread(target=self.update)
+        self.updateguithread.start()
 
     def stop_server(self):
-        pass
+        mplock = multiprocessing.Lock()
+        with mplock:
+            self.mpq.put('stop')
+        self.updateguithread.join()
+        self.serverprocess.terminate()
+        self.serverprocess = None
+        self.updateguithread = None
+        tkinter.messagebox.showinfo('Network', 'Server Stopped')
 
     @staticmethod
     def quit():
@@ -209,24 +231,18 @@ class BasicGUI():
         """
         draw a large table in tab2 of all the AIS stations we have
         """
-        tree = tkinter.ttk.Treeview(self.tab2)
-        verticalscrollbar = tkinter.ttk.Scrollbar(
-            self.tab2, orient=tkinter.VERTICAL, command=tree.yview)
-        verticalscrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
-        horizontalscrollbar = tkinter.ttk.Scrollbar(
-            self.tab2, orient=tkinter.HORIZONTAL, command=tree.xview)
-        horizontalscrollbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+        self.tree.delete(*self.tree.get_children())
         tabledata = self.aistracker.create_table_data()
         headers = tabledata.pop(0)
-        tree["columns"] = headers
+        self.tree["columns"] = headers
         for column in headers:
-            tree.column(column, width=200, minwidth=70, stretch=tkinter.NO)
-            tree.heading(column, text=column, anchor=tkinter.W)
+            self.tree.column(column, width=200, minwidth=70, stretch=tkinter.NO)
+            self.tree.heading(column, text=column, anchor=tkinter.W)
         counter = 0
         for line in tabledata:
-            tree.insert('', counter, values=line)
+            self.tree.insert('', counter, values=line)
             counter += 1
-        tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
+        self.tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
 
     def export_options(self):
         """
@@ -259,13 +275,16 @@ class BasicGUI():
         while True:
             qdata = self.mpq.get()
             if qdata:
+                if qdata == 'stop':
+                    break
                 try:
                     data = qdata.decode('utf-8')
+                    self.nmeabox.insert(tkinter.INSERT, data)
                     payload = self.nmeatracker.process_sentence(data)
                     if payload:
                         msg = self.aistracker.process_message(payload)
-                        self.nmeabox.insert(tkinter.INSERT, msg.__str__())
-                        self.nmeabox.insert(tkinter.INSERT, '\n\n')
+                        self.aisbox.insert(tkinter.INSERT, msg.__str__())
+                        self.aisbox.insert(tkinter.INSERT, '\n\n')
                         self.write_stats()
                         self.create_ship_table()
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,

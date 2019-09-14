@@ -9,20 +9,19 @@ import os
 import socket
 import subprocess
 import multiprocessing
+import queue
 
 import ais
 import nmea
 
 
-def mpserver(mpqueue):
+def mpserver(dataqueue, host = '127.0.0.1', port = 10110):
     """
     listen for NMEA sentences
     """
-    host = '127.0.0.1'
-    port = 10110
     serversock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     serversock.bind((host, port))
     while True:
         data, addr = serversock.recvfrom(1024)
         if data:
-            mpqueue.put(data)
+            dataqueue.put(data)
