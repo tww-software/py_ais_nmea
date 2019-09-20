@@ -176,7 +176,8 @@ class AISStation():
         stninfo['Flag'] = self.flag
         stninfo['Name'] = self.name
         usefulinfo = ['Callsign', 'IMO number',
-                      'RAIM in use', 'EPFD Fix type', 'Position Accuracy']
+                      'RAIM in use', 'EPFD Fix type', 'Position Accuracy',
+                      'Destination', 'ETA']
         for item in usefulinfo:
            try:
                stninfo[item] = self.details[item]
@@ -592,8 +593,8 @@ class AISTracker():
         csvheader = ['MMSI', 'Type', 'Sub Type', 'Flag', 'Name', 'Callsign',
                      'IMO number', 'RAIM in use', 'EPFD Fix type',
                      'Position Accuracy', 'Total Messages', 'Latitude',
-                     'Longitude', 'CoG', 'Speed (knots)']
-        lastposheader = ['Latitude', 'Longitude', 'CoG', 'Speed (knots)']
+                     'Longitude', 'CoG', 'Speed (knots)', "Navigation Status", "Time", 'Destination', 'ETA']
+        lastposheader = ['Latitude', 'Longitude', 'CoG', 'Speed (knots)', "Navigation Status", "Time"]
         csvtable.append(csvheader)
         for mmsi in self.stations_generator():
             stninfo = self.stations[mmsi].get_station_info()
