@@ -514,7 +514,7 @@ class AISTracker():
             kmlmap.open_folder(mmsi)
             try:
                 heading = lastpos['True Heading']
-                if heading != HEADINGUNAVAILABLE:
+                if heading != HEADINGUNAVAILABLE and kmzoutput:
                     kmlmap.add_kml_placemark(mmsi, mmsi,
                                              str(lastpos['Longitude']),
                                              str(lastpos['Latitude']),
