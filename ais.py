@@ -374,7 +374,7 @@ class AISTracker():
                 self.timings.append(timestamp)
         else:
             if msgtype in (4, 11):
-                if msgobj.timestamp != '00000_246060':
+                if msgobj.timestamp != '0/00/00 24:60:60':
                     if timestamp not in self.timings:
                         self.timings.append(msgobj.timestamp)
             try:

@@ -350,7 +350,7 @@ class BasicGUI():
                     self.nmeabox.see(tkinter.END)
                     payload = self.nmeatracker.process_sentence(data)
                     if payload:
-                        currenttime = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+                        currenttime = datetime.datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S')
                         msg = self.aistracker.process_message(payload, timestamp=currenttime)
                         self.aisbox.insert(tkinter.INSERT, msg.__str__())
                         self.aisbox.insert(tkinter.INSERT, '\n\n')

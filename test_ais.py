@@ -618,8 +618,8 @@ class AISTrackerTimingTests(unittest.TestCase):
         base station reports that have been recieved.
         """
         expected = {
-            "Started": "20180909_140714",
-            "Finished": "20180909_142006"}
+            "Started": "2018/09/09 14:07:14",
+            "Finished": "2018/09/09 14:20:06"}
         timings = [
             '402=aeQv:Df7>whRv`NPsHg005hL',
             '402=a`1v:Df:@Oi>SjNu0si02H9i',

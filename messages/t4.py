@@ -30,7 +30,7 @@ class Type4BaseStationReport(messages.aismessage.AISMessage):
         hour = self.decode_sixbit_integer(msgbinary[61:66])
         minute = self.decode_sixbit_integer(msgbinary[66:72])
         second = self.decode_sixbit_integer(msgbinary[72:78])
-        self.timestamp = '{}{:02d}{:02d}_{:02d}{:02d}{:02d}'.format(
+        self.timestamp = '{}/{:02d}/{:02d} {:02d}:{:02d}:{:02d}'.format(
             year, month, day, hour, minute, second)
         self.posfixaccuracy = self.accuracy[self.decode_sixbit_integer(
             msgbinary[78:79])]
