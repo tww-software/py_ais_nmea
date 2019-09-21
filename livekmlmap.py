@@ -37,6 +37,9 @@ class LiveKMLMap():
     def __init__(self, outputpath):
         self.mpq = multiprocessing.Queue()
         self.serverprocess = None
+        if not os.path.exists(outputpath):
+            AISLOGGER.info('output path does not exist creating directories')
+            os.makedirs(outpath)
         self.netlinkpath = os.path.join(outputpath, 'netlink.kml')
         self.kmlpath = os.path.join(outputpath, 'livemap.kml')
         self.aistracker = ais.AISTracker()
@@ -61,12 +64,15 @@ class LiveKMLMap():
         """
         stop the server process
         """
+        AISLOGGER.info('stopping server process')
         self.serverprocess.terminate()
 
     def get_nmea_sentences(self):
         """
         get the nmea sentences from the network and write to kml file
         """
+        AISLOGGER.info('live KML map, open {} to track vessels'.format(
+            os.path.realpath(self.netlinkpath)))
         while True:
             qdata = self.mpq.get()
             if qdata:
@@ -78,7 +84,7 @@ class LiveKMLMap():
                             '%Y/%m/%d %H:%M:%S')
                         msg = self.aistracker.process_message(
                             payload, timestamp=currenttime)
-                        print(msg.__str__())
+                        AISLOGGER.info(msg.__str__())
                         if currenttime.endswith('5'):
                             self.aistracker.create_kml_map(
                                 self.kmlpath, kmzoutput=False)

@@ -7,7 +7,7 @@ import logging
 
 import capturefile
 import gui
-import network
+import livekmlmap
 
 
 AISLOGGER = logging.getLogger(__name__)
@@ -23,17 +23,20 @@ def cli_arg_parser():
     desc = 'tool to decode AIS traffic and generate meaningful data'
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-v', action='store_true', help='verbose output')
-    parser.add_argument('-g', action='store_true', help='open the GUI')
     subparsers = parser.add_subparsers(dest='subcommand')
-    netparser = subparsers.add_parser('net',
+    guiparser = subparsers.add_parser('gui',
+                                      help=('open the GUI'))
+    livemapparser = subparsers.add_parser('livemap',
                                       help=('read AIS traffic from a '
-                                            'UDP network port'))
-    netparser.add_argument(help='output file path', dest='outputfile')
+                                            'UDP network port and create a '
+                                            'live updating KML map'))
+    livemapparser.add_argument(help=('output directory path, directory '
+                                    'to write kml files to'), dest='outputdir')
     fileparser = subparsers.add_parser('file',
                                        help=('read AIS traffic '
                                              'from a capture file'))
     fileparser.add_argument(help='input file path', dest='inputfile')
-    fileparser.add_argument(help='output file path', dest='outputfile')
+    fileparser.add_argument(help='output directory path', dest='outputdir')
     outputformats = fileparser.add_argument_group('output formats')
     outputformats.add_argument('-j', action='store_true', help='json output')
     outputformats.add_argument('-g', action='store_true',
@@ -62,18 +65,21 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO,
                             handlers=[logging.StreamHandler()])
-    if cliargs.g:
+    if cliargs.subcommand == 'gui':
             aisgui = gui.BasicGUI()
             aisgui.display_gui()
     elif cliargs.subcommand == 'file':
         capturefile.read_from_file(
-            cliargs.inputfile, cliargs.outputfile, cliargs.d,
+            cliargs.inputfile, cliargs.outputdir, cliargs.d,
             jsonoutput=cliargs.j,
             geojsonoutput=cliargs.g, csvoutput=cliargs.c,
             tsvoutput=cliargs.t,
             kmloutput=cliargs.kml, kmzoutput=cliargs.kmz)
-    elif cliargs.subcommand == 'net':
-        network.read_from_network(cliargs.outputfile)
+    elif cliargs.subcommand == 'livemap':
+        livemap = livekmlmap.LiveKMLMap(cliargs.outputdir)
+        livemap.create_netlink_file()
+        livemap.start_server()
+        livemap.get_nmea_sentences()
     else:
         cliparser.print_help()
 
