@@ -199,7 +199,7 @@ class AISStation():
             Base Stations
             message type 21 is only sent by Navigation Aids
             message types 1,2,3,5 and 27 are only sent by Class A
-            message types 18,19 and 24 are only sent by Class B
+            message types 14,18,19 and 24 are only sent by Class B
             message type 9 is only sent by SAR Aircraft
 
         Args:
@@ -228,6 +228,7 @@ class AISStation():
             3: 'Class A',
             5: 'Class A',
             27: 'Class A',
+            14: 'Class B',
             18: 'Class B',
             19: 'Class B',
             24: 'Class B',
