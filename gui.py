@@ -3,17 +3,15 @@ A GUI for the AIS decoder written with tkinter
 """
 
 import datetime
+import logging
+import multiprocessing
+import os
+import threading
 import tkinter
 import tkinter.filedialog
 import tkinter.messagebox
 import tkinter.scrolledtext
 import tkinter.ttk
-import queue
-import multiprocessing
-import threading
-import logging
-import os
-
 
 import ais
 import capturefile
@@ -23,7 +21,7 @@ import network
 AISLOGGER = logging.getLogger(__name__)
 
 
-class BasicGUI():
+class BasicGUI(tkinter.Tk):
     """
     a basic GUI using tkinter to control the program
 
@@ -42,12 +40,12 @@ class BasicGUI():
     """
 
     def __init__(self):
+        tkinter.Tk.__init__(self)
         self.nmeatracker = nmea.NMEAtracker()
         self.aistracker = ais.AISTracker()
-        self.window = tkinter.Tk()
-        self.window.protocol("WM_DELETE_WINDOW", self.quit)
-        self.window.title('AIS NMEA 0183 Decoder')
-        tabcontrol = tkinter.ttk.Notebook(self.window)
+        self.protocol("WM_DELETE_WINDOW", self.quit)
+        self.title('AIS NMEA 0183 Decoder')
+        tabcontrol = tkinter.ttk.Notebook(self)
         self.tab1 = tkinter.ttk.Frame(tabcontrol)
         tabcontrol.add(self.tab1, text='Stats')
         self.tab2 = tkinter.ttk.Frame(tabcontrol)
@@ -84,15 +82,18 @@ class BasicGUI():
         aismsgtotallabel.grid(column=0, row=0)
         self.aismsgtotal = tkinter.Label(self.tab1, text='')
         self.aismsgtotal.grid(column=1, row=0)
-        nmeasentencetotallabel = tkinter.Label(self.tab1, text='Total NMEA sentences')
+        nmeasentencetotallabel = tkinter.Label(
+            self.tab1, text='Total NMEA sentences')
         nmeasentencetotallabel.grid(column=0, row=1)
         self.nmeasentencetotal = tkinter.Label(self.tab1, text='')
         self.nmeasentencetotal.grid(column=1, row=1)
-        nmeamultipartassembledlabel = tkinter.Label(self.tab1, text='NMEA multipart sentences reassembled')
+        nmeamultipartassembledlabel = tkinter.Label(
+            self.tab1, text='NMEA multipart sentences reassembled')
         nmeamultipartassembledlabel.grid(column=0, row=2)
         self.nmeamultipartassembled = tkinter.Label(self.tab1, text='')
         self.nmeamultipartassembled.grid(column=1, row=2)
-        self.totalstnslabel = tkinter.Label(self.tab1, text='Total Unique Stations')
+        self.totalstnslabel = tkinter.Label(
+            self.tab1, text='Total Unique Stations')
         self.totalstnslabel.grid(column=0, row=3)
         self.totalstns = tkinter.Label(self.tab1, text='')
         self.totalstns.grid(column=1, row=3)
@@ -101,7 +102,7 @@ class BasicGUI():
         self.stntxt = tkinter.scrolledtext.ScrolledText(self.tab6)
         self.stntxt.grid(column=0, row=2)
         stnoptionsbutton = tkinter.Button(self.tab6, text='Display Info',
-                                      command=self.show_stn_info)
+                                          command=self.show_stn_info)
         stnoptionsbutton.grid(column=1, row=1)
         self.serverrunning = False
 
@@ -109,36 +110,52 @@ class BasicGUI():
         """
         format and add the top menu to the main window
         """
-        menu = tkinter.Menu(self.window)
+        menu = tkinter.Menu(self)
         openfileitem = tkinter.Menu(menu, tearoff=0)
         openfileitem.add_command(label='Open', command=self.open_file)
         openfileitem.add_command(label='Quit', command=self.quit)
         menu.add_cascade(label='File', menu=openfileitem)
         networkitem = tkinter.Menu(menu, tearoff=0)
-        networkitem.add_command(label='Start Network Server', command=self.start_server)
-        networkitem.add_command(label='Stop Network Server', command=self.stop_server)
+        networkitem.add_command(
+            label='Start Network Server', command=self.start_server)
+        networkitem.add_command(
+            label='Stop Network Server', command=self.stop_server)
         menu.add_cascade(label='Network', menu=networkitem)
         helpitem = tkinter.Menu(menu, tearoff=0)
         helpitem.add_command(label='Help', command=self.help)
         helpitem.add_command(label='About', command=self.about)
         menu.add_cascade(label='Help', menu=helpitem)
-        self.window.config(menu=menu)
+        self.config(menu=menu)
 
-    def about(self):
+    @staticmethod
+    def about():
+        """
+        display version, licence and who created it
+        """
         tkinter.messagebox.showinfo('About', 'Created by Thomas W Whittam')
 
     def help(self):
+        """
+        display the help window
+        """
         tkinter.messagebox.showinfo('Help', 'No help for you')
 
     def start_server(self):
+        """
+        start the server
+        """
         self.serverrunning = True
-        self.serverprocess = multiprocessing.Process(target=network.mpserver, args=[self.mpq])
+        self.serverprocess = multiprocessing.Process(
+            target=network.mpserver, args=[self.mpq])
         self.serverprocess.start()
         tkinter.messagebox.showinfo('Network', 'Server Started')
         self.updateguithread = threading.Thread(target=self.update)
         self.updateguithread.start()
 
     def stop_server(self):
+        """
+        stop the server
+        """
         self.serverrunning = False
         mplock = multiprocessing.Lock()
         with mplock:
@@ -168,12 +185,13 @@ class BasicGUI():
         """
         self.aismsgtotal.configure(text=self.aistracker.messagesprocessed)
         self.nmeasentencetotal.configure(text=self.nmeatracker.sentencecount)
-        self.nmeamultipartassembled.configure(text=self.nmeatracker.reassembled)
+        self.nmeamultipartassembled.configure(
+            text=self.nmeatracker.reassembled)
         self.totalstns.configure(text=self.aistracker.__len__())
 
     def write_stats_verbose(self):
         """
-        give a bit more info
+        give a bit more info than write_stats
         """
         self.txt.delete(1.0, tkinter.END)
         printablestats = ais.create_summary_text(
@@ -190,7 +208,8 @@ class BasicGUI():
         headers = tabledata.pop(0)
         self.tree["columns"] = headers
         for column in headers:
-            self.tree.column(column, width=200, minwidth=70, stretch=tkinter.NO)
+            self.tree.column(column, width=200, minwidth=70,
+                             stretch=tkinter.NO)
             self.tree.heading(column, text=column, anchor=tkinter.W)
         counter = 0
         for line in tabledata:
@@ -277,15 +296,16 @@ class BasicGUI():
         outpath = tkinter.filedialog.askdirectory()
         outputdata = self.aistracker.create_table_data()
         self.aistracker.create_kml_map(os.path.join(outpath, 'map.kmz'),
-                                  kmzoutput=True)
+                                       kmzoutput=True)
         self.aistracker.create_kml_map(os.path.join(outpath, 'map.kml'),
-                                  kmzoutput=False)
+                                       kmzoutput=False)
         ais.write_csv_file(outputdata,
-                               os.path.join(outpath, 'vessel-data.tsv'),
-                               dialect='excel-tab')
+                           os.path.join(outpath, 'vessel-data.tsv'),
+                           dialect='excel-tab')
         ais.write_csv_file(outputdata,
-                               os.path.join(outpath, 'vessel-data.csv'))
-        self.aistracker.create_geojson_map(os.path.join(outpath, 'map.geojson'))
+                           os.path.join(outpath, 'vessel-data.csv'))
+        self.aistracker.create_geojson_map(
+            os.path.join(outpath, 'map.geojson'))
         joutdict = {}
         joutdict['NMEA Stats'] = self.nmeatracker.nmea_stats()
         joutdict['AIS Stats'] = self.aistracker.tracker_stats()
@@ -305,7 +325,7 @@ class BasicGUI():
         exportbutton = tkinter.Button(self.tab3, text='Export',
                                       command=self.export_files)
         exportbutton.grid(column=2, row=1)
- 
+
     def export_files(self):
         """
         choose which export command to run from the exportoptions drop down
@@ -338,10 +358,15 @@ class BasicGUI():
         self.stntxt.delete(1.0, tkinter.END)
         lookupmmsi = self.stnoptions.get()
         if lookupmmsi != '':
-            stninfo = ais.create_summary_text(self.aistracker.stations[lookupmmsi].get_station_info())
+            stninfo = ais.create_summary_text(
+                self.aistracker.stations[lookupmmsi].get_station_info())
             self.stntxt.insert(tkinter.INSERT, stninfo)
 
     def update(self):
+        """
+        update the GUI in another thread whist the server is running and
+        recieving packets
+        """
         while True:
             qdata = self.mpq.get()
             if qdata:
@@ -353,8 +378,10 @@ class BasicGUI():
                     self.nmeabox.see(tkinter.END)
                     payload = self.nmeatracker.process_sentence(data)
                     if payload:
-                        currenttime = datetime.datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S')
-                        msg = self.aistracker.process_message(payload, timestamp=currenttime)
+                        currenttime = datetime.datetime.utcnow().strftime(
+                            '%Y/%m/%d %H:%M:%S')
+                        msg = self.aistracker.process_message(
+                            payload, timestamp=currenttime)
                         self.aisbox.insert(tkinter.INSERT, msg.__str__())
                         self.aisbox.insert(tkinter.INSERT, '\n\n')
                         self.aisbox.see(tkinter.END)
@@ -372,12 +399,6 @@ class BasicGUI():
                     AISLOGGER.debug('no data on line')
                     continue
 
-    def display_gui(self):
-        """
-        start the GUI main loop
-        """
-        self.window.mainloop()
-
     def quit(self):
         """
         open a confirmation box asking if the user wants to quit if yes then
@@ -387,9 +408,9 @@ class BasicGUI():
         if res:
             if self.serverrunning:
                 self.stop_server()
-            self.window.destroy()
+            self.destroy()
 
 
 if __name__ == '__main__':
     AISGUI = BasicGUI()
-    AISGUI.display_gui()
+    AISGUI.mainloop()
