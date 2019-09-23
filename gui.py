@@ -3,7 +3,6 @@ A GUI for the AIS decoder written with tkinter
 """
 
 import datetime
-import sys
 import tkinter
 import tkinter.filedialog
 import tkinter.messagebox
@@ -46,6 +45,7 @@ class BasicGUI():
         self.nmeatracker = nmea.NMEAtracker()
         self.aistracker = ais.AISTracker()
         self.window = tkinter.Tk()
+        self.window.protocol("WM_DELETE_WINDOW", self.quit)
         self.window.title('AIS NMEA 0183 Decoder')
         tabcontrol = tkinter.ttk.Notebook(self.window)
         self.tab1 = tkinter.ttk.Frame(tabcontrol)
@@ -61,6 +61,7 @@ class BasicGUI():
         self.tab6 = tkinter.ttk.Frame(tabcontrol)
         tabcontrol.add(self.tab6, text='Station Information')
         self.exportoptions = tkinter.ttk.Combobox(self.tab3)
+        self.export_options()
         self.stnoptions = tkinter.ttk.Combobox(self.tab6)
         self.stnoptions.grid(column=0, row=1)
         tabcontrol.pack(expand=1, fill='both')
@@ -147,7 +148,6 @@ class BasicGUI():
         self.serverprocess = None
         self.updateguithread = None
         tkinter.messagebox.showinfo('Network', 'Server Stopped')
-        self.export_options()
 
     def open_file(self):
         """
@@ -157,7 +157,6 @@ class BasicGUI():
         inputfile = tkinter.filedialog.askopenfilename()
         self.aistracker, self.nmeatracker, _ = \
             capturefile.aistracker_from_file(inputfile, debug=True)
-        self.export_options()
         self.stn_options()
         self.write_stats()
         self.write_stats_verbose()
@@ -312,15 +311,19 @@ class BasicGUI():
         choose which export command to run from the exportoptions drop down
         in the Export tab
         """
-        commands = {'ALL': self.export_all,
-                    'CSV': self.export_csv,
-                    'TSV': self.export_tsv,
-                    'KML': self.export_kml,
-                    'KMZ': self.export_kmz,
-                    'JSON': self.export_json,
-                    'GEOJSON': self.export_geojson}
-        option = self.exportoptions.get()
-        commands[option]()
+        if self.serverrunning:
+            tkinter.messagebox.showwarning(
+                'WARNING', 'Cannot export files whilst server is running')
+        else:
+            commands = {'ALL': self.export_all,
+                        'CSV': self.export_csv,
+                        'TSV': self.export_tsv,
+                        'KML': self.export_kml,
+                        'KMZ': self.export_kmz,
+                        'JSON': self.export_json,
+                        'GEOJSON': self.export_geojson}
+            option = self.exportoptions.get()
+            commands[option]()
 
     def stn_options(self):
         """
@@ -384,7 +387,7 @@ class BasicGUI():
         if res:
             if self.serverrunning:
                 self.stop_server()
-            sys.exit(0)
+            self.window.destroy()
 
 
 if __name__ == '__main__':
