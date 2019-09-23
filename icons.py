@@ -1,3 +1,10 @@
+"""
+all the different icons we have to represent different types of AIS stations
+
+ICONS(dict): keys are the AIS station type as a string, values are the filename
+             of the icon
+"""
+
 ICONS = {'Base Station': 'basestn.png',
          'Class A': 'classa.png',
          'Navigation Aid': 'navaid.png',
@@ -86,7 +93,7 @@ ICONS = {'Base Station': 'basestn.png',
          ('High speed craft (HSC), all ships of this '
           'type'): 'highspeedcraft.png',
          ('High speed craft (HSC), Reserved for future '
-           'use'): 'highspeedcraft.png',
+          'use'): 'highspeedcraft.png',
          ('High speed craft (HSC), No additional '
           'information'): 'highspeedcraft.png',
          ('High speed craft (HSC), Hazardous category '

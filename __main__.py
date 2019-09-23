@@ -24,14 +24,14 @@ def cli_arg_parser():
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-v', action='store_true', help='verbose output')
     subparsers = parser.add_subparsers(dest='subcommand')
-    guiparser = subparsers.add_parser('gui',
-                                      help=('open the GUI'))
-    livemapparser = subparsers.add_parser('livemap',
-                                      help=('read AIS traffic from a '
-                                            'UDP network port and create a '
-                                            'live updating KML map'))
+    subparsers.add_parser('gui', help=('open the GUI'))
+    livemapparser = subparsers.add_parser(
+        'livemap',
+        help=('read AIS traffic from a UDP network port and create a '
+              'live updating KML map'))
     livemapparser.add_argument(help=('output directory path, directory '
-                                    'to write kml files to'), dest='outputdir')
+                                     'to write kml files to'),
+                               dest='outputdir')
     fileparser = subparsers.add_parser('file',
                                        help=('read AIS traffic '
                                              'from a capture file'))
@@ -66,8 +66,8 @@ def main():
         logging.basicConfig(level=logging.INFO,
                             handlers=[logging.StreamHandler()])
     if cliargs.subcommand == 'gui':
-            aisgui = gui.BasicGUI()
-            aisgui.display_gui()
+        aisgui = gui.BasicGUI()
+        aisgui.display_gui()
     elif cliargs.subcommand == 'file':
         capturefile.read_from_file(
             cliargs.inputfile, cliargs.outputdir, cliargs.d,

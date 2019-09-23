@@ -984,39 +984,15 @@ class KMLTests(unittest.TestCase):
         """
         test the formatting of dictionaries into html for the placemarks
         """
-        sentmsgs = collections.Counter(
-            {'Type 21 - Aid to Navigation Report': 32})
         testdict = {
             'mmsi': '992351030', 'type': 'Navigation Aid',
             'subtype': 'Cardinal Mark S', 'name': 'LUNE DEEP BUOY',
-            'posrep': [{'Latitude': 53.934846666666665,
-                        'Longitude': -3.2158883333333335,
-                        'Time': '20180909_140026'},
-                       {'Latitude': 53.93485666666667,
-                        'Longitude': -3.215895, 'Time': '20180909_140126'},
-                       {'Latitude': 53.93484, 'Longitude': -3.2158783333333334,
-                        'Time': '20180909_140726'}],
-            'details': {'Width (m)': 2, 'Length (m)': 2,
-                        'Navigation Aid Type': 'Cardinal Mark S',
-                        'EPFD Fix type': 'GPS', 'RAIM in use': True,
-                        'Virtual Navigation Aid': False,
-                        'Position Accuracy': '< 10m', 'Off Position': False,
-                        'Assigned Mode': False}, 'flag': 'United Kingdom',
-            'sentmsgs': sentmsgs}
+            'flag': 'United Kingdom'}
         testhtml = self.parser.format_kml_placemark_description(testdict)
         expectedhtml = """<![CDATA[MMSI - 992351030<br  />
 TYPE - Navigation Aid<br  />
 SUBTYPE - Cardinal Mark S<br  />
 NAME - LUNE DEEP BUOY<br  />
-WIDTH (M) - 2<br  />
-LENGTH (M) - 2<br  />
-NAVIGATION AID TYPE - Cardinal Mark S<br  />
-EPFD FIX TYPE - GPS<br  />
-RAIM IN USE - True<br  />
-VIRTUAL NAVIGATION AID - False<br  />
-POSITION ACCURACY - < 10m<br  />
-OFF POSITION - False<br  />
-ASSIGNED MODE - False<br  />
 FLAG - United Kingdom<br  />
 ]]>"""
         self.assertEqual(testhtml, expectedhtml)

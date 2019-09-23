@@ -35,9 +35,7 @@ def calculate_nmea_checksum(sentence, start='!', seperator=','):
     for char in data:
         chksum ^= ord(char)
     chksum = hex(int(chksum))
-    # print(str(chksum))
-    if csum == chksum:
-        return True
+    return bool(csum == chksum)
 
 
 class NMEAInvalidSentence(Exception):

@@ -39,7 +39,7 @@ class LiveKMLMap():
         self.serverprocess = None
         if not os.path.exists(outputpath):
             AISLOGGER.info('output path does not exist creating directories')
-            os.makedirs(outpath)
+            os.makedirs(outputpath)
         self.netlinkpath = os.path.join(outputpath, 'netlink.kml')
         self.kmlpath = os.path.join(outputpath, 'livemap.kml')
         self.aistracker = ais.AISTracker()
@@ -71,8 +71,8 @@ class LiveKMLMap():
         """
         get the nmea sentences from the network and write to kml file
         """
-        AISLOGGER.info('live KML map, open {} to track vessels'.format(
-            os.path.realpath(self.netlinkpath)))
+        AISLOGGER.info('live KML map, open %s to track vessels',
+                       os.path.realpath(self.netlinkpath))
         while True:
             qdata = self.mpq.get()
             if qdata:

@@ -2,9 +2,11 @@
 a parser to generate Keyhole Markup Language (KML) for Google Earth
 """
 
-import icons
 import os
 import zipfile
+
+import icons
+
 
 class KMLOutputParser():
     """
@@ -81,11 +83,8 @@ class KMLOutputParser():
         descriptionlist = []
         descriptionlist.append(starttag)
         for item in placemarkdict:
-            if item == 'posrep':
-                continue
-            if item == 'sentmsgs':
-                continue
-            elif item == 'details':
+            if item == 'Last Known Position':
+                descriptionlist.append(newlinetag)
                 for subitem in placemarkdict[item]:
                     descriptionlist.append(str(subitem).upper())
                     descriptionlist.append(' - ')
@@ -111,7 +110,7 @@ class KMLOutputParser():
                 iconkml = self.styletemplate % (icontype,
                                                 icons.ICONS[icontype])
                 self.kmldoc.append(iconkml)
-            for heading in range(0,360):
+            for heading in range(0, 360):
                 iconkml = self.arrowtemplate % (heading, str(heading) + '.png')
                 self.kmldoc.append(iconkml)
 
@@ -194,13 +193,12 @@ def make_kmz(kmzoutputfilename):
     iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                              'static', 'icons')
     arrowspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                             'static', 'green_arrows')
+                              'static', 'green_arrows')
     with zipfile.ZipFile(kmzoutputfilename,
                          'w', zipfile.ZIP_DEFLATED, False) as kmz:
         try:
             kmz.debug = 3
             kmz.write(docpath, 'doc.kml')
-            #kmz.write(iconspath)
             for icon in os.listdir(iconspath):
                 kmz.write(os.path.join(iconspath, icon),
                           os.path.join('icons', icon))

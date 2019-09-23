@@ -179,10 +179,10 @@ class AISStation():
                       'RAIM in use', 'EPFD Fix type', 'Position Accuracy',
                       'Destination', 'ETA']
         for item in usefulinfo:
-           try:
-               stninfo[item] = self.details[item]
-           except KeyError:
-               stninfo[item] = ''
+            try:
+                stninfo[item] = self.details[item]
+            except KeyError:
+                stninfo[item] = ''
         try:
             stninfo['Last Known Position'] = self.get_latest_position()
         except NoSuitablePositionReport:
@@ -245,7 +245,7 @@ class AISStation():
             except KeyError:
                 posstr = 'Unknown'
         except NoSuitablePositionReport:
-            posstr= 'Unknown'
+            posstr = 'Unknown'
         strtext = ('AIS Station - MMSI: {}, Name: {}, Type: {},'
                    ' Subtype: {}, Flag: {}, Last Known Position: {},'
                    ''.format(self.mmsi,
@@ -512,18 +512,18 @@ class AISTracker():
             except NoSuitablePositionReport:
                 continue
             stntype = self.stations[mmsi].subtype
+            stninfo = self.stations[mmsi].get_station_info()
+            desc = kmlmap.format_kml_placemark_description(stninfo)
             kmlmap.open_folder(mmsi)
             try:
                 heading = lastpos['True Heading']
                 if heading != HEADINGUNAVAILABLE and kmzoutput:
-                    kmlmap.add_kml_placemark(mmsi, mmsi,
+                    kmlmap.add_kml_placemark(mmsi, desc,
                                              str(lastpos['Longitude']),
                                              str(lastpos['Latitude']),
                                              heading, kmzoutput)
             except KeyError:
                 pass
-            desc = kmlmap.format_kml_placemark_description(
-                self.stations[mmsi].__dict__)
             posreps = self.stations[mmsi].posrep
             kmlmap.add_kml_placemark_linestring(mmsi, posreps)
             kmlmap.add_kml_placemark(mmsi, desc,
@@ -594,8 +594,10 @@ class AISTracker():
         csvheader = ['MMSI', 'Type', 'Sub Type', 'Flag', 'Name', 'Callsign',
                      'IMO number', 'RAIM in use', 'EPFD Fix type',
                      'Position Accuracy', 'Total Messages', 'Latitude',
-                     'Longitude', 'CoG', 'Speed (knots)', "Navigation Status", "Time", 'Destination', 'ETA']
-        lastposheader = ['Latitude', 'Longitude', 'CoG', 'Speed (knots)', "Navigation Status", "Time"]
+                     'Longitude', 'CoG', 'Speed (knots)', 'Navigation Status',
+                     'Time', 'Destination', 'ETA']
+        lastposheader = ['Latitude', 'Longitude', 'CoG', 'Speed (knots)',
+                         'Navigation Status', 'Time']
         csvtable.append(csvheader)
         for mmsi in self.stations_generator():
             stninfo = self.stations[mmsi].get_station_info()
@@ -620,11 +622,13 @@ class UnknownMessageType(Exception):
     """
     pass
 
+
 class InvalidMMSI(Exception):
     """
     raise when an incorrect MMSI is encountered
     """
     pass
+
 
 class NoSuitablePositionReport(Exception):
     """
