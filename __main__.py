@@ -32,6 +32,11 @@ def cli_arg_parser():
     livemapparser.add_argument(help=('output directory path, directory '
                                      'to write kml files to'),
                                dest='outputdir')
+    livemaptype = livemapparser.add_mutually_exclusive_group()
+    livemaptype.add_argument(
+        '-a', action='store_true',
+        help='advanced kml map with custom ship icons and headings')
+    livemaptype.add_argument('-b', action='store_true', help='basic kml map')
     fileparser = subparsers.add_parser('file',
                                        help=('read AIS traffic '
                                              'from a capture file'))
@@ -67,7 +72,7 @@ def main():
                             handlers=[logging.StreamHandler()])
     if cliargs.subcommand == 'gui':
         aisgui = gui.BasicGUI()
-        aisgui.display_gui()
+        aisgui.mainloop()
     elif cliargs.subcommand == 'file':
         capturefile.read_from_file(
             cliargs.inputfile, cliargs.outputdir, cliargs.d,
@@ -76,10 +81,18 @@ def main():
             tsvoutput=cliargs.t,
             kmloutput=cliargs.kml, kmzoutput=cliargs.kmz)
     elif cliargs.subcommand == 'livemap':
-        livemap = livekmlmap.LiveKMLMap(cliargs.outputdir)
-        livemap.create_netlink_file()
-        livemap.start_server()
-        livemap.get_nmea_sentences()
+        if cliargs.a:
+            livemap = livekmlmap.AdvancedLiveKMLMap(
+                cliargs.outputdir)
+            livemap.copy_icons()
+        elif cliargs.b:
+            livemap = livekmlmap.LiveKMLMap(cliargs.outputdir)
+        if cliargs.a or cliargs.b:
+            livemap.create_netlink_file()
+            livemap.start_server()
+            livemap.get_nmea_sentences()
+        else:
+            cliparser.print_help()
     else:
         cliparser.print_help()
 

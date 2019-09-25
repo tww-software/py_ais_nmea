@@ -6,9 +6,10 @@ import datetime
 import logging
 import os
 import multiprocessing
-import sys
+import shutil
 
 import ais
+import kml
 import network
 import nmea
 
@@ -35,6 +36,7 @@ class LiveKMLMap():
 </kml>"""
 
     def __init__(self, outputpath):
+        self.outputpath = outputpath
         self.mpq = multiprocessing.Queue()
         self.serverprocess = None
         if not os.path.exists(outputpath):
@@ -100,9 +102,94 @@ class LiveKMLMap():
                     break
 
 
-if __name__ == '__main__':
-    KMLOUTPUT = sys.argv[1]
-    LIVEKMLMAP = LiveKMLMap(KMLOUTPUT)
-    LIVEKMLMAP.create_netlink_file()
-    LIVEKMLMAP.start_server()
-    LIVEKMLMAP.get_nmea_sentences()
+class AdvancedLiveKMLMap(LiveKMLMap):
+    """
+    a more advanced live KML map that also shows ship type and heading
+    """
+
+    def __init__(self, outputpath):
+        super().__init__(outputpath)
+        self.copy_icons()
+
+    def copy_icons(self):
+        """
+        copy icons into the output folder so the kml file can see them
+        """
+        iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                 'static', 'icons')
+        arrowspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                  'static', 'green_arrows')
+        iconsdestination = os.path.join(self.outputpath, 'icons')
+        arrowsdestination = os.path.join(self.outputpath, 'green_arrows')
+        if not os.path.exists(iconsdestination):
+            shutil.copytree(iconspath, iconsdestination)
+        if not os.path.exists(arrowsdestination):
+            shutil.copytree(arrowspath, arrowsdestination)
+
+    def get_nmea_sentences(self):
+        """
+        get the nmea sentences from the network and write to kml file
+        """
+        AISLOGGER.info('live KML map, open %s to track vessels',
+                       os.path.realpath(self.netlinkpath))
+        while True:
+            qdata = self.mpq.get()
+            if qdata:
+                try:
+                    data = qdata.decode('utf-8')
+                    payload = self.nmeatracker.process_sentence(data)
+                    if payload:
+                        currenttime = datetime.datetime.utcnow().strftime(
+                            '%Y/%m/%d %H:%M:%S')
+                        msg = self.aistracker.process_message(
+                            payload, timestamp=currenttime)
+                        AISLOGGER.info(msg.__str__())
+                        if currenttime.endswith('5'):
+                            self.create_detailed_map()
+                except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
+                        ais.UnknownMessageType, ais.InvalidMMSI) as err:
+                    AISLOGGER.debug(str(err))
+                    continue
+                except IndexError:
+                    AISLOGGER.debug('no data on line')
+                    continue
+                except KeyboardInterrupt:
+                    self.stop_server()
+                    break
+
+    def create_detailed_map(self):
+        """
+        created a map with full colour icons
+        """
+        if os.path.exists(self.kmlpath):
+            os.remove(self.kmlpath)
+        kmzoutput = True
+        kmlmap = kml.KMLOutputParser(self.kmlpath)
+        kmlmap.create_kml_header(kmz=kmzoutput)
+        for mmsi in self.aistracker.stations_generator():
+            try:
+                lastpos = self.aistracker.stations[mmsi].get_latest_position()
+            except ais.NoSuitablePositionReport:
+                continue
+            stntype = self.aistracker.stations[mmsi].subtype
+            stninfo = self.aistracker.stations[mmsi].get_station_info()
+            desc = kmlmap.format_kml_placemark_description(stninfo)
+            kmlmap.open_folder(mmsi)
+            try:
+                heading = lastpos['True Heading']
+                if heading != ais.HEADINGUNAVAILABLE:
+                    kmlmap.add_kml_placemark(mmsi, desc,
+                                             str(lastpos['Longitude']),
+                                             str(lastpos['Latitude']),
+                                             heading, kmzoutput)
+            except KeyError:
+                pass
+            posreps = self.aistracker.stations[mmsi].posrep
+            kmlmap.add_kml_placemark_linestring(mmsi, posreps)
+            kmlmap.add_kml_placemark(mmsi, desc,
+                                     str(lastpos['Longitude']),
+                                     str(lastpos['Latitude']),
+                                     stntype, kmzoutput)
+            kmlmap.close_folder()
+        kmlmap.close_kml_file()
+        kmlmap.write_kml_doc_file()
