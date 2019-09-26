@@ -209,7 +209,6 @@ class AISStation():
             '8': 'Portable VHF Transceiver',
             '98': 'Auxiliary craft associated with a parent ship',
             '99': 'Navigation Aid',
-            '00': 'Base Station',
             '111': 'SAR Aircraft',
             '970': 'AIS SART (Search and Rescue Transmitter)',
             '972': 'MOB (Man Overboard) device',
