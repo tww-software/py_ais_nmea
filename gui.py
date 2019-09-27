@@ -126,7 +126,7 @@ class ExportTab(tkinter.ttk.Frame):
         and add an export button next to it
         """
         self.exportoptions['values'] = ('ALL', 'CSV', 'TSV', 'KML',
-                                        'KMZ', 'JSON', 'GEOJSON')
+                                        'KMZ', 'JSON', 'GEOJSON', 'DEBUG')
         self.exportoptions.set('KMZ')
         self.exportoptions.grid(column=1, row=1)
         exportbutton = tkinter.Button(self, text='Export',
@@ -148,7 +148,8 @@ class ExportTab(tkinter.ttk.Frame):
                         'KML': self.export_kml,
                         'KMZ': self.export_kmz,
                         'JSON': self.export_json,
-                        'GEOJSON': self.export_geojson}
+                        'GEOJSON': self.export_geojson,
+                        'DEBUG': self.export_debug}
             option = self.exportoptions.get()
             commands[option]()
 
@@ -224,6 +225,21 @@ class ExportTab(tkinter.ttk.Frame):
                        ("All Files", "*.*")))
         self.tc.window.aistracker.create_geojson_map(outputfile)
 
+    def export_debug(self, outpath=None):
+        """
+        pop open a file browser to allow the user to choose where to save the
+        file and then save file to that location
+        """
+        if not outpath:
+            outpath = tkinter.filedialog.askdirectory()
+        ais.write_json_lines(self.tc.window.messagelist,
+                             os.path.join(outpath,
+                                          'ais-messages.jsonl'))
+        messagecsvlist = capturefile.message_debug_csv_table(
+            self.tc.window.messagelist)
+        ais.write_csv_file(messagecsvlist,
+                           os.path.join(outpath, 'ais-messages.csv'))
+
     def export_all(self):
         """
         export all file formats
@@ -249,6 +265,7 @@ class ExportTab(tkinter.ttk.Frame):
         joutdict['AIS Stations'] = self.tc.window.aistracker.all_station_info()
         ais.write_json_file(joutdict,
                             os.path.join(outpath, 'vessel-data.json'))
+        self.export_debug(outpath)
 
 
 class TextBoxTab(tkinter.ttk.Frame):
@@ -345,6 +362,7 @@ class BasicGUI(tkinter.Tk):
         tkinter.Tk.__init__(self)
         self.nmeatracker = nmea.NMEAtracker()
         self.aistracker = ais.AISTracker()
+        self.messagelist = []
         self.protocol("WM_DELETE_WINDOW", self.quit)
         self.title('AIS NMEA 0183 Decoder')
         self.tabcontrol = TabControl(self)
@@ -421,12 +439,15 @@ class BasicGUI(tkinter.Tk):
         text file they want to process and then process it
         """
         inputfile = tkinter.filedialog.askopenfilename()
-        self.aistracker, self.nmeatracker, _ = \
+        self.aistracker, self.nmeatracker, self.messagelist = \
             capturefile.aistracker_from_file(inputfile, debug=True)
         self.tabcontrol.tab6.stn_options()
         self.tabcontrol.tab1.write_stats()
         self.tabcontrol.tab1.write_stats_verbose()
         self.tabcontrol.tab2.create_ship_table()
+        for message in self.messagelist:
+            self.tabcontrol.tab4.append_text(message['Detailed Description'])
+            self.tabcontrol.tab5.append_text(message['NMEA Payload'])
 
     def update(self):
         """
@@ -447,6 +468,13 @@ class BasicGUI(tkinter.Tk):
                             '%Y/%m/%d %H:%M:%S')
                         msg = self.aistracker.process_message(
                             payload, timestamp=currenttime)
+                        decodedmsg = {}
+                        decodedmsg['NMEA Payload'] = payload
+                        decodedmsg['MMSI'] = msg.mmsi
+                        decodedmsg['Message Type Number'] = msg.msgtype
+                        decodedmsg['Detailed Description'] = msg.__str__()
+                        decodedmsg['Time'] = currenttime
+                        self.messagelist.append(decodedmsg)
                         self.tabcontrol.tab4.append_text(msg.__str__())
                         self.tabcontrol.tab1.write_stats()
                         if currenttime.endswith('5'):
