@@ -152,6 +152,7 @@ class ExportTab(tkinter.ttk.Frame):
                         'DEBUG': self.export_debug}
             option = self.exportoptions.get()
             commands[option]()
+            tkinter.messagebox.showinfo('Export Files', 'Export Successful')
 
     def export_csv(self):
         """
@@ -439,6 +440,7 @@ class BasicGUI(tkinter.Tk):
         text file they want to process and then process it
         """
         inputfile = tkinter.filedialog.askopenfilename()
+        self.config(cursor='watch')
         self.aistracker, self.nmeatracker, self.messagelist = \
             capturefile.aistracker_from_file(inputfile, debug=True)
         self.tabcontrol.tab6.stn_options()
@@ -448,6 +450,7 @@ class BasicGUI(tkinter.Tk):
         for message in self.messagelist:
             self.tabcontrol.tab4.append_text(message['Detailed Description'])
             self.tabcontrol.tab5.append_text(message['NMEA Payload'])
+        self.config(cursor='')
 
     def update(self):
         """
