@@ -1,5 +1,6 @@
 """
-This file contains all the different types of AIS messages that can be decoded.
+This file contains the base class for all the different types of AIS messages
+that can be decoded.
 """
 
 

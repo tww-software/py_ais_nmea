@@ -15,6 +15,35 @@ import nmea
 AISLOGGER = logging.getLogger(__name__)
 
 
+def message_debug_csv_table(debuglist):
+    """
+    format a list of dictionaries into a list of lists
+    suitable for output to a CSV file
+
+    Args:
+        debuglist(list): list of dictionaries
+
+    Returns:
+        table(list): list of lists
+    """
+    table = []
+    headers = []
+    for adict in debuglist:
+        for key in adict:
+            if key not in headers:
+                headers.append(key)
+    table.append(headers)
+    for adict in debuglist:
+        newline = []
+        for header in headers:
+            try:
+                newline.append(adict[header])
+            except KeyError:
+                newline.append('')
+        table.append(newline)
+    return table
+
+
 def open_file_generator(filepath):
     """
     open a file line by line using a generator
@@ -61,8 +90,10 @@ def aistracker_from_file(filepath, debug=False):
                 msg = aistracker.process_message(payload)
                 if debug:
                     decodedmsg = {}
-                    decodedmsg['payload'] = payload
-                    decodedmsg.update(msg.__dict__)
+                    decodedmsg['NMEA Payload'] = payload
+                    decodedmsg['MMSI'] = msg.mmsi
+                    decodedmsg['Message Type Number'] = msg.msgtype
+                    decodedmsg['Detailed Description'] = msg.__str__()
                     messagelist.append(decodedmsg)
         except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                 ais.UnknownMessageType, ais.InvalidMMSI) as err:
@@ -88,7 +119,7 @@ def read_from_file(filepath, outpath, debug=False,
     Args:
         filepath(str): full path to the input file containing NMEA sentences
         outpath(str): path to save to excluding file extensions
-        debug(bool): create a json lines file containing
+        debug(bool): create a json lines file and a csv file containing
                      all the individual messages
                      decoded with the original payloads
         jsonoutput(bool): save output to json file
@@ -141,4 +172,7 @@ def read_from_file(filepath, outpath, debug=False,
         ais.write_json_lines(messagelist,
                              os.path.join(outpath,
                                           'ais-messages.jsonl'))
+        messagecsvlist = message_debug_csv_table(messagelist)
+        ais.write_csv_file(messagecsvlist,
+                           os.path.join(outpath, 'ais-messages.csv'))
     AISLOGGER.info('Finished')

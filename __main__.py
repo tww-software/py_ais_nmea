@@ -52,8 +52,9 @@ def cli_arg_parser():
     outputformats.add_argument('-t', action='store_true', help='tsv output')
     outputformats.add_argument('-d', action='store_true',
                                help=('read AIS traffic from a capture '
-                                     'file then decode and display all'
-                                     ' the messages individually'))
+                                     'file then decode and output all '
+                                     'AIS messages into a csv and json lines '
+                                     'file'))
     return parser
 
 
