@@ -48,8 +48,18 @@ class StatsTab(tkinter.ttk.Frame):
         self.totalstnslabel.grid(column=0, row=3)
         self.totalstns = tkinter.Label(self, text='')
         self.totalstns.grid(column=1, row=3)
-        self.txt = tkinter.scrolledtext.ScrolledText(self)
-        self.txt.grid(column=0, row=4)
+        self.msgstatstxt = tkinter.scrolledtext.ScrolledText(self)
+        self.msgstatstxt.configure(width=50)
+        self.msgstatstxt.grid(column=0, row=4)
+        self.shiptypestxt = tkinter.scrolledtext.ScrolledText(self)
+        self.shiptypestxt.configure(width=50)
+        self.shiptypestxt.grid(column=1, row=4)
+        self.stntypestxt = tkinter.scrolledtext.ScrolledText(self)
+        self.stntypestxt.configure(width=30)
+        self.stntypestxt.grid(column=2, row=4)
+        self.flagstxt = tkinter.scrolledtext.ScrolledText(self)
+        self.flagstxt.configure(width=30)
+        self.flagstxt.grid(column=3, row=4)
 
     def write_stats(self):
         """
@@ -67,11 +77,23 @@ class StatsTab(tkinter.ttk.Frame):
         """
         give a bit more info than write_stats
         """
-        self.txt.delete(1.0, tkinter.END)
-        printablestats = ais.create_summary_text(
-            self.tc.window.aistracker.tracker_stats())
-        self.txt.insert(tkinter.INSERT, '\n\n')
-        self.txt.insert(tkinter.INSERT, printablestats)
+        self.msgstatstxt.delete(1.0, tkinter.END)
+        self.shiptypestxt.delete(1.0, tkinter.END)
+        self.flagstxt.delete(1.0, tkinter.END)
+        self.stntypestxt.delete(1.0, tkinter.END)
+        stats = self.tc.window.aistracker.tracker_stats()
+        self.msgstatstxt.insert(
+            tkinter.INSERT,
+            ais.create_summary_text(stats['Message Stats']))
+        self.shiptypestxt.insert(
+            tkinter.INSERT,
+            ais.create_summary_text(stats['Ship Types']))
+        self.stntypestxt.insert(
+            tkinter.INSERT,
+            ais.create_summary_text(stats['AIS Station Types']))
+        self.flagstxt.insert(
+            tkinter.INSERT,
+            ais.create_summary_text(stats['Country Flags']))
 
 
 class ShipsTableTab(tkinter.ttk.Frame):
@@ -89,6 +111,19 @@ class ShipsTableTab(tkinter.ttk.Frame):
         horizontalscrollbar = tkinter.ttk.Scrollbar(
             self, orient=tkinter.HORIZONTAL, command=self.tree.xview)
         horizontalscrollbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+        self.tree.bind("<Double-1>", self.on_tree_item_doubleclick)
+
+    def on_tree_item_doubleclick(self, event):
+        """
+        if the user double clicks on a row in the tree
+        grab the MMSI of that row and switch to the station information tab
+        (tab6) and display more detailed info
+        """
+        item = self.tree.identify('item', event.x, event.y)
+        clickedmmsi = self.tree.item(item)['values'][0]
+        self.tc.tab6.stnoptions.set(clickedmmsi)
+        self.tc.tab6.show_stn_info()
+        self.tc.select(self.tc.tab6)
 
     def create_ship_table(self):
         """
@@ -299,12 +334,12 @@ class StationInfoTab(tkinter.ttk.Frame):
         tkinter.ttk.Frame.__init__(self, tc)
         self.tc = tc
         self.stnoptions = tkinter.ttk.Combobox(self)
-        self.stnoptions.grid(column=0, row=1)
+        self.stnoptions.pack(side='top')
         stnoptionsbutton = tkinter.Button(self, text='Display Info',
                                           command=self.show_stn_info)
-        stnoptionsbutton.grid(column=1, row=1)
+        stnoptionsbutton.pack(side='top')
         self.stntxt = tkinter.scrolledtext.ScrolledText(self)
-        self.stntxt.grid(column=0, row=2)
+        self.stntxt.pack(side='left', fill='both', expand=tkinter.TRUE)
 
     def stn_options(self):
         """
@@ -366,6 +401,8 @@ class BasicGUI(tkinter.Tk):
         self.messagelist = []
         self.protocol("WM_DELETE_WINDOW", self.quit)
         self.title('AIS NMEA 0183 Decoder')
+        self.statuslabel = tkinter.Label(self, text='', bg='light grey')
+        self.statuslabel.pack(fill=tkinter.X)
         self.tabcontrol = TabControl(self)
         self.tabcontrol.pack(expand=1, fill='both')
         self.top_menu()
@@ -419,6 +456,8 @@ class BasicGUI(tkinter.Tk):
         tkinter.messagebox.showinfo('Network', 'Server Started')
         self.updateguithread = threading.Thread(target=self.update)
         self.updateguithread.start()
+        self.statuslabel.config(text='AIS Server Listening',
+                                fg='black', bg='green2')
 
     def stop_server(self):
         """
@@ -433,24 +472,31 @@ class BasicGUI(tkinter.Tk):
         self.serverprocess = None
         self.updateguithread = None
         tkinter.messagebox.showinfo('Network', 'Server Stopped')
+        self.statuslabel.config(text='', bg='light grey')
 
     def open_file(self):
         """
         pop open a file browser to allow the user to choose which NMEA 0183
         text file they want to process and then process it
         """
-        inputfile = tkinter.filedialog.askopenfilename()
-        self.config(cursor='watch')
-        self.aistracker, self.nmeatracker, self.messagelist = \
-            capturefile.aistracker_from_file(inputfile, debug=True)
-        self.tabcontrol.tab6.stn_options()
-        self.tabcontrol.tab1.write_stats()
-        self.tabcontrol.tab1.write_stats_verbose()
-        self.tabcontrol.tab2.create_ship_table()
-        for message in self.messagelist:
-            self.tabcontrol.tab4.append_text(message['Detailed Description'])
-            self.tabcontrol.tab5.append_text(message['NMEA Payload'])
-        self.config(cursor='')
+        if self.serverrunning:
+            tkinter.messagebox.showwarning(
+                'WARNING', 'Stop Server First')
+        else:
+            inputfile = tkinter.filedialog.askopenfilename()
+            self.aistracker, self.nmeatracker, self.messagelist = \
+                capturefile.aistracker_from_file(inputfile, debug=True)
+            self.tabcontrol.tab6.stn_options()
+            self.tabcontrol.tab1.write_stats()
+            self.tabcontrol.tab1.write_stats_verbose()
+            self.tabcontrol.tab2.create_ship_table()
+            for message in self.messagelist:
+                self.tabcontrol.tab4.append_text(
+                    message['Detailed Description'])
+                self.tabcontrol.tab5.append_text(message['NMEA Payload'])
+            self.statuslabel.config(
+                text='Loaded capture file - {}'.format(inputfile),
+                fg='black', bg='light grey')
 
     def update(self):
         """
@@ -463,9 +509,8 @@ class BasicGUI(tkinter.Tk):
                 if qdata == 'stop':
                     break
                 try:
-                    data = qdata.decode('utf-8')
-                    self.tabcontrol.tab5.append_text(data)
-                    payload = self.nmeatracker.process_sentence(data)
+                    self.tabcontrol.tab5.append_text(qdata)
+                    payload = self.nmeatracker.process_sentence(qdata)
                     if payload:
                         currenttime = datetime.datetime.utcnow().strftime(
                             '%Y/%m/%d %H:%M:%S')
