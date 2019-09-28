@@ -112,6 +112,10 @@ class ShipsTableTab(tkinter.ttk.Frame):
             self, orient=tkinter.HORIZONTAL, command=self.tree.xview)
         horizontalscrollbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)
         self.tree.bind("<Double-1>", self.on_tree_item_doubleclick)
+        self.tree.configure(yscrollcommand=verticalscrollbar.set,
+                            xscrollcommand=horizontalscrollbar.set)
+
+
 
     def on_tree_item_doubleclick(self, event):
         """
