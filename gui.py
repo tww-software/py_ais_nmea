@@ -115,8 +115,6 @@ class ShipsTableTab(tkinter.ttk.Frame):
         self.tree.configure(yscrollcommand=verticalscrollbar.set,
                             xscrollcommand=horizontalscrollbar.set)
 
-
-
     def on_tree_item_doubleclick(self, event):
         """
         if the user double clicks on a row in the tree

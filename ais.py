@@ -234,6 +234,8 @@ class AISStation():
             9: 'SAR Aircraft'}
         if msgobj.msgtype in typesdict:
             self.type = typesdict[msgobj.msgtype]
+        if self.type == 'Base Station':
+            self.subtype = 'Base Station'
 
     def __str__(self):
         try:
