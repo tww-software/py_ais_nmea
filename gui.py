@@ -135,13 +135,14 @@ class ShipsTableTab(tkinter.ttk.Frame):
         self.tree["columns"] = headers
         for column in headers:
             self.tree.column(column, width=200, minwidth=70,
-                             stretch=tkinter.NO)
+                             stretch=tkinter.YES)
             self.tree.heading(column, text=column, anchor=tkinter.W)
         counter = 0
         for line in tabledata:
             self.tree.insert('', counter, values=line)
             counter += 1
         self.tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
+        self.tree['show'] = 'headings'
 
 
 class ExportTab(tkinter.ttk.Frame):
