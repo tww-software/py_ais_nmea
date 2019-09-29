@@ -487,6 +487,10 @@ class BasicGUI(tkinter.Tk):
                 'WARNING', 'Stop Server First')
         else:
             inputfile = tkinter.filedialog.askopenfilename()
+            self.statuslabel.config(
+                text='Loading capture file - {}'.format(inputfile),
+                fg='black', bg='gold')
+            self.update_idletasks()
             self.aistracker, self.nmeatracker, self.messagelist = \
                 capturefile.aistracker_from_file(inputfile, debug=True)
             self.tabcontrol.tab6.stn_options()
