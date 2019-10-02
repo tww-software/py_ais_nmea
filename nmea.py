@@ -7,8 +7,9 @@ import collections
 import re
 
 
-NMEASENTENCEREGEX = re.compile(r'!AI(VDM|VDO),\d,\d,\d?,[AB12],'
-                               '[A-Za-z0-9`:;<=>?@]{1,56},[0-5][*][0-9A-F]{2}')
+NMEASENTENCEREGEX = re.compile(
+    r'!AIVD[MO],\d,\d,\d?,[AB12],[A-Za-z0-9`:;<=>?@]{1,56},'
+    r'[0-5][*][0-9A-F]{2}')
 
 
 def calculate_nmea_checksum(sentence, start='!', seperator=','):

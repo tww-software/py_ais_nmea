@@ -29,8 +29,10 @@ def mpserver(dataqueue, host='127.0.0.1', port=10110):
     while True:
         data, addr = serversock.recvfrom(1024)
         try:
-            decodeddata = data.decode('utf8')
-            if data and nmea.NMEASENTENCEREGEX.match(decodeddata):
-                dataqueue.put(decodeddata)
+            if data:
+                decodeddata = data.decode('utf-8')
+                multi = nmea.NMEASENTENCEREGEX.findall(decodeddata)
+                for part in multi:
+                    dataqueue.put(part)
         except UnicodeDecodeError:
             continue

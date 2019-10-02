@@ -26,9 +26,9 @@ class StatsTab(tkinter.ttk.Frame):
     provide overall statistics for all the AIS Stations we can see
     """
 
-    def __init__(self, tc):
-        tkinter.ttk.Frame.__init__(self, tc)
-        self.tc = tc
+    def __init__(self, tabcontrol):
+        tkinter.ttk.Frame.__init__(self, tabcontrol)
+        self.tabs = tabcontrol
         aismsgtotallabel = tkinter.Label(self, text='Total AIS messages')
         aismsgtotallabel.grid(column=0, row=0)
         self.aismsgtotal = tkinter.Label(self, text='')
@@ -66,12 +66,12 @@ class StatsTab(tkinter.ttk.Frame):
         write the statistics from the ais and nmea trackers
         """
         self.aismsgtotal.configure(
-            text=self.tc.window.aistracker.messagesprocessed)
+            text=self.tabs.window.aistracker.messagesprocessed)
         self.nmeasentencetotal.configure(
-            text=self.tc.window.nmeatracker.sentencecount)
+            text=self.tabs.window.nmeatracker.sentencecount)
         self.nmeamultipartassembled.configure(
-            text=self.tc.window.nmeatracker.reassembled)
-        self.totalstns.configure(text=self.tc.window.aistracker.__len__())
+            text=self.tabs.window.nmeatracker.reassembled)
+        self.totalstns.configure(text=self.tabs.window.aistracker.__len__())
 
     def write_stats_verbose(self):
         """
@@ -81,7 +81,7 @@ class StatsTab(tkinter.ttk.Frame):
         self.shiptypestxt.delete(1.0, tkinter.END)
         self.flagstxt.delete(1.0, tkinter.END)
         self.stntypestxt.delete(1.0, tkinter.END)
-        stats = self.tc.window.aistracker.tracker_stats()
+        stats = self.tabs.window.aistracker.tracker_stats()
         self.msgstatstxt.insert(
             tkinter.INSERT,
             ais.create_summary_text(stats['Message Stats']))
@@ -101,9 +101,9 @@ class ShipsTableTab(tkinter.ttk.Frame):
     tab to display a table of all the AIS Stations we have
     """
 
-    def __init__(self, tc):
-        tkinter.ttk.Frame.__init__(self, tc)
-        self.tc = tc
+    def __init__(self, tabcontrol):
+        tkinter.ttk.Frame.__init__(self, tabcontrol)
+        self.tabs = tabcontrol
         self.tree = tkinter.ttk.Treeview(self)
         verticalscrollbar = tkinter.ttk.Scrollbar(
             self, orient=tkinter.VERTICAL, command=self.tree.yview)
@@ -123,16 +123,16 @@ class ShipsTableTab(tkinter.ttk.Frame):
         """
         item = self.tree.identify('item', event.x, event.y)
         clickedmmsi = self.tree.item(item)['values'][0]
-        self.tc.tab6.stnoptions.set(clickedmmsi)
-        self.tc.tab6.show_stn_info()
-        self.tc.select(self.tc.tab6)
+        self.tabs.tab6.stnoptions.set(clickedmmsi)
+        self.tabs.tab6.show_stn_info()
+        self.tabs.select(self.tabs.tab6)
 
     def create_ship_table(self):
         """
         draw a large table in tab2 of all the AIS stations we have
         """
         self.tree.delete(*self.tree.get_children())
-        tabledata = self.tc.window.aistracker.create_table_data()
+        tabledata = self.tabs.window.aistracker.create_table_data()
         headers = tabledata.pop(0)
         self.tree["columns"] = headers
         for column in headers:
@@ -152,9 +152,9 @@ class ExportTab(tkinter.ttk.Frame):
     the tab in the main window that contains the export file options
     """
 
-    def __init__(self, tc):
-        tkinter.ttk.Frame.__init__(self, tc)
-        self.tc = tc
+    def __init__(self, tabcontrol):
+        tkinter.ttk.Frame.__init__(self, tabcontrol)
+        self.tabs = tabcontrol
         self.exportoptions = tkinter.ttk.Combobox(self)
         self.export_options()
 
@@ -176,7 +176,7 @@ class ExportTab(tkinter.ttk.Frame):
         choose which export command to run from the exportoptions drop down
         in the Export tab
         """
-        if self.tc.window.serverrunning:
+        if self.tabs.window.serverrunning:
             tkinter.messagebox.showwarning(
                 'WARNING', 'Cannot export files whilst server is running')
         else:
@@ -201,7 +201,7 @@ class ExportTab(tkinter.ttk.Frame):
             defaultextension=".csv",
             filetypes=(("comma seperated values", "*.csv"),
                        ("All Files", "*.*")))
-        tabledata = self.tc.window.aistracker.create_table_data()
+        tabledata = self.tabs.window.aistracker.create_table_data()
         ais.write_csv_file(tabledata, outputfile)
 
     def export_tsv(self):
@@ -213,7 +213,7 @@ class ExportTab(tkinter.ttk.Frame):
             defaultextension=".tsv",
             filetypes=(("tab seperated values", "*.tsv"),
                        ("All Files", "*.*")))
-        tabledata = self.tc.window.aistracker.create_table_data()
+        tabledata = self.tabs.window.aistracker.create_table_data()
         ais.write_csv_file(tabledata, outputfile, dialect='excel-tab')
 
     def export_kml(self):
@@ -225,7 +225,7 @@ class ExportTab(tkinter.ttk.Frame):
             defaultextension=".kml",
             filetypes=(("keyhole markup language", "*.kml"),
                        ("All Files", "*.*")))
-        self.tc.window.aistracker.create_kml_map(outputfile, kmzoutput=False)
+        self.tabs.window.aistracker.create_kml_map(outputfile, kmzoutput=False)
 
     def export_kmz(self):
         """
@@ -236,7 +236,7 @@ class ExportTab(tkinter.ttk.Frame):
             defaultextension=".kmz",
             filetypes=(("keyhole markup language KMZ", "*.kmz"),
                        ("All Files", "*.*")))
-        self.tc.window.aistracker.create_kml_map(outputfile, kmzoutput=True)
+        self.tabs.window.aistracker.create_kml_map(outputfile, kmzoutput=True)
 
     def export_json(self):
         """
@@ -248,9 +248,10 @@ class ExportTab(tkinter.ttk.Frame):
             filetypes=(("javascript object notation", "*.json"),
                        ("All Files", "*.*")))
         joutdict = {}
-        joutdict['NMEA Stats'] = self.tc.window.nmeatracker.nmea_stats()
-        joutdict['AIS Stats'] = self.tc.window.aistracker.tracker_stats()
-        joutdict['AIS Stations'] = self.tc.window.aistracker.all_station_info()
+        joutdict['NMEA Stats'] = self.tabs.window.nmeatracker.nmea_stats()
+        joutdict['AIS Stats'] = self.tabs.window.aistracker.tracker_stats()
+        joutdict['AIS Stations'] = self.tabs.window.aistracker. \
+            all_station_info()
         ais.write_json_file(joutdict, outputfile)
 
     def export_geojson(self):
@@ -262,7 +263,7 @@ class ExportTab(tkinter.ttk.Frame):
             defaultextension=".geojson",
             filetypes=(("geo json", "*.geojson"),
                        ("All Files", "*.*")))
-        self.tc.window.aistracker.create_geojson_map(outputfile)
+        self.tabs.window.aistracker.create_geojson_map(outputfile)
 
     def export_debug(self, outpath=None):
         """
@@ -271,11 +272,11 @@ class ExportTab(tkinter.ttk.Frame):
         """
         if not outpath:
             outpath = tkinter.filedialog.askdirectory()
-        ais.write_json_lines(self.tc.window.messagelist,
+        ais.write_json_lines(self.tabs.window.messagelist,
                              os.path.join(outpath,
                                           'ais-messages.jsonl'))
         messagecsvlist = capturefile.message_debug_csv_table(
-            self.tc.window.messagelist)
+            self.tabs.window.messagelist)
         ais.write_csv_file(messagecsvlist,
                            os.path.join(outpath, 'ais-messages.csv'))
 
@@ -284,11 +285,11 @@ class ExportTab(tkinter.ttk.Frame):
         export all file formats
         """
         outpath = tkinter.filedialog.askdirectory()
-        outputdata = self.tc.window.aistracker.create_table_data()
-        self.tc.window.aistracker.create_kml_map(
+        outputdata = self.tabs.window.aistracker.create_table_data()
+        self.tabs.window.aistracker.create_kml_map(
             os.path.join(outpath, 'map.kmz'),
             kmzoutput=True)
-        self.tc.window.aistracker.create_kml_map(
+        self.tabs.window.aistracker.create_kml_map(
             os.path.join(outpath, 'map.kml'),
             kmzoutput=False)
         ais.write_csv_file(outputdata,
@@ -296,12 +297,13 @@ class ExportTab(tkinter.ttk.Frame):
                            dialect='excel-tab')
         ais.write_csv_file(outputdata,
                            os.path.join(outpath, 'vessel-data.csv'))
-        self.tc.window.aistracker.create_geojson_map(
+        self.tabs.window.aistracker.create_geojson_map(
             os.path.join(outpath, 'map.geojson'))
         joutdict = {}
-        joutdict['NMEA Stats'] = self.tc.window.nmeatracker.nmea_stats()
-        joutdict['AIS Stats'] = self.tc.window.aistracker.tracker_stats()
-        joutdict['AIS Stations'] = self.tc.window.aistracker.all_station_info()
+        joutdict['NMEA Stats'] = self.tabs.window.nmeatracker.nmea_stats()
+        joutdict['AIS Stats'] = self.tabs.window.aistracker.tracker_stats()
+        joutdict['AIS Stations'] = self.tabs.window.aistracker. \
+            all_station_info()
         ais.write_json_file(joutdict,
                             os.path.join(outpath, 'vessel-data.json'))
         self.export_debug(outpath)
@@ -316,13 +318,19 @@ class TextBoxTab(tkinter.ttk.Frame):
         update it
     """
 
-    def __init__(self, tc):
-        tkinter.ttk.Frame.__init__(self, tc)
-        self.tc = tc
+    def __init__(self, tabcontrol):
+        tkinter.ttk.Frame.__init__(self, tabcontrol)
+        self.tabs = tabcontrol
         self.aisbox = tkinter.scrolledtext.ScrolledText(self)
         self.aisbox.pack(side='left', fill='both', expand=tkinter.TRUE)
 
     def append_text(self, text):
+        """
+        write text into the box and append a newline after it
+
+        Args:
+            text(str): text to write in the box
+        """
         self.aisbox.insert(tkinter.INSERT, text)
         self.aisbox.insert(tkinter.INSERT, '\n')
         self.aisbox.see(tkinter.END)
@@ -333,9 +341,9 @@ class StationInfoTab(tkinter.ttk.Frame):
     tab to provide detailed information on a single AIS Station
     """
 
-    def __init__(self, tc):
-        tkinter.ttk.Frame.__init__(self, tc)
-        self.tc = tc
+    def __init__(self, tabcontrol):
+        tkinter.ttk.Frame.__init__(self, tabcontrol)
+        self.tabs = tabcontrol
         self.stnoptions = tkinter.ttk.Combobox(self)
         self.stnoptions.pack(side='top')
         stnoptionsbutton = tkinter.Button(self, text='Display Info',
@@ -349,7 +357,7 @@ class StationInfoTab(tkinter.ttk.Frame):
         populate the stations to the station information tab drop down
         """
         self.stnoptions['values'] = list(
-            self.tc.window.aistracker.stations.keys())
+            self.tabs.window.aistracker.stations.keys())
 
     def show_stn_info(self):
         """
@@ -359,7 +367,7 @@ class StationInfoTab(tkinter.ttk.Frame):
         lookupmmsi = self.stnoptions.get()
         if lookupmmsi != '':
             stninfo = ais.create_summary_text(
-                self.tc.window.aistracker.stations[lookupmmsi]
+                self.tabs.window.aistracker.stations[lookupmmsi]
                 .get_station_info())
             self.stntxt.insert(tkinter.INSERT, stninfo)
 
@@ -532,7 +540,8 @@ class BasicGUI(tkinter.Tk):
                         self.messagelist.append(decodedmsg)
                         self.tabcontrol.tab4.append_text(msg.__str__())
                         self.tabcontrol.tab1.write_stats()
-                        if currenttime.endswith('5'):
+                        if (currenttime.endswith('5') or
+                                currenttime.endswith('0')):
                             self.tabcontrol.tab2.create_ship_table()
                             self.tabcontrol.tab1.write_stats_verbose()
                             self.tabcontrol.tab6.stn_options()
