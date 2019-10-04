@@ -53,29 +53,32 @@ class AISStation():
         self.name = ''
         self.posrep = []
         self.details = {}
-        self.flag = self.identify_flag()
+        self.flag = self.identify_flag(mmsi)
         self.sentmsgs = collections.Counter()
 
-    def identify_flag(self):
+    @staticmethod
+    def identify_flag(mmsi):
         """
         try to identify the AIS Station's flag from its MMSI
 
+        Args:
+            mmsi(int): Maritime Mobile Station Identifier
         Returns:
             flag(str): the country the station sails under
         """
-        if (self.mmsi.startswith('111') or
-                self.mmsi.startswith('970') or
-                self.mmsi.startswith('972') or
-                self.mmsi.startswith('974')):
-            mid = self.mmsi[3:6]
-        elif (self.mmsi.startswith('00') or
-              self.mmsi.startswith('99') or
-              self.mmsi.startswith('98')):
-            mid = self.mmsi[2:5]
-        elif self.mmsi.startswith('0'):
-            mid = self.mmsi[1:4]
+        if (mmsi.startswith('111') or
+                mmsi.startswith('970') or
+                mmsi.startswith('972') or
+                mmsi.startswith('974')):
+            mid = mmsi[3:6]
+        elif (mmsi.startswith('00') or
+              mmsi.startswith('99') or
+              mmsi.startswith('98')):
+            mid = mmsi[2:5]
+        elif mmsi.startswith('0'):
+            mid = mmsi[1:4]
         else:
-            mid = self.mmsi[0:3]
+            mid = mmsi[0:3]
         try:
             flag = maritimeidentifiers.MID[mid]
         except KeyError:
@@ -238,23 +241,13 @@ class AISStation():
             self.subtype = 'Base Station'
 
     def __str__(self):
-        try:
-            lastpos = self.get_latest_position()
-            try:
-                posstr = '{},{}'.format(lastpos['Latitude'],
-                                        lastpos['Longitude'])
-            except KeyError:
-                posstr = 'Unknown'
-        except NoSuitablePositionReport:
-            posstr = 'Unknown'
         strtext = ('AIS Station - MMSI: {}, Name: {}, Type: {},'
-                   ' Subtype: {}, Flag: {}, Last Known Position: {},'
-                   ''.format(self.mmsi,
-                             self.name,
-                             self.type,
-                             self.subtype,
-                             self.flag,
-                             posstr))
+                   ' Subtype: {}, Flag: {}'.format(
+                       self.mmsi,
+                       self.name,
+                       self.type,
+                       self.subtype,
+                       self.flag))
         return strtext
 
     def __repr__(self):
@@ -272,7 +265,7 @@ class AISTracker():
         messages(collections.defaultdict): count of the different message types
                                            recieved
         messagesprocessed(int): total count of messages recieved
-        timings(list): timings recieved from AIS base stations
+        timings(list): timings received from AIS base stations
     """
 
     def __init__(self):
@@ -390,7 +383,7 @@ class AISTracker():
     def get_centre_of_map(self):
         """
         find the centre of the map based on what lat lon positions
-        we have recieved
+        we have received
 
         Returns:
             centre(dict): the centre of the map
