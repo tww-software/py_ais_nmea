@@ -164,27 +164,6 @@ class AISStation():
         except (IndexError, AttributeError) as err:
             raise NoSuitablePositionReport('Unknown') from err
 
-    def get_station_info(self):
-        """
-        return the most relevant information about this AIS station as a
-        dictionary
-
-        Returns:
-            stninfo(dict):
-        """
-        stninfo = {}
-        stninfo['MMSI'] = self.mmsi
-        stninfo['Class'] = self.stnclass
-        stninfo['Type'] = self.stntype
-        stninfo['Flag'] = self.flag
-        stninfo['Name'] = self.name
-        stninfo.update(self.details)
-        try:
-            stninfo['Last Known Position'] = self.get_latest_position()
-        except NoSuitablePositionReport:
-            stninfo['Last Known Position'] = 'Unknown'
-        return stninfo
-
     def determine_station_class(self, msgobj):
         """
         try and determine the class of AIS station based on MMSI and what
@@ -232,6 +211,31 @@ class AISStation():
             self.stnclass = typesdict[msgobj.msgtype]
         if self.stnclass == 'Base Station':
             self.stntype = 'Base Station'
+
+    def get_station_info(self, verbose=False):
+        """
+        return the most relevant information about this AIS station as a
+        dictionary
+
+        Returns:
+            stninfo(dict):
+        """
+        stninfo = {}
+        stninfo['MMSI'] = self.mmsi
+        stninfo['Class'] = self.stnclass
+        stninfo['Type'] = self.stntype
+        stninfo['Flag'] = self.flag
+        stninfo['Name'] = self.name
+        stninfo.update(self.details)
+        if verbose:
+            stninfo['Position Reports'] = self.posrep
+            stninfo['Sent Messages'] = dict(self.sentmsgs)
+        else:
+            try:
+                stninfo['Last Known Position'] = self.get_latest_position()
+            except NoSuitablePositionReport:
+                stninfo['Last Known Position'] = 'Unknown'
+        return stninfo
 
     def __str__(self):
         strtext = ('AIS Station - MMSI: {}, Name: {}, Class: {},'
@@ -389,9 +393,13 @@ class AISTracker():
             stats['Times'] = 'No time data available.'
         return stats
 
-    def all_station_info(self):
+    def all_station_info(self, verbose=True):
         """
         get all the station information we have in a dictionary
+
+        Args:
+            verbose(bool): equates directly to the verbose argument for
+                           the AISStation.get_station_info method
 
         Returns:
             allstations(dict): dictionary of all the information the aistracker
@@ -399,7 +407,8 @@ class AISTracker():
         """
         allstations = {}
         for mmsi in self.stations_generator():
-            allstations[mmsi] = self.stations[mmsi].get_station_info()
+            allstations[mmsi] = self.stations[mmsi].get_station_info(
+                verbose=True)
         return allstations
 
     def create_kml_map(self, outputfile, kmzoutput=True):

@@ -148,7 +148,7 @@ def read_from_file(filepath, outpath, debug=False,
         joutdict = {}
         joutdict['NMEA Stats'] = sentencestats
         joutdict['AIS Stats'] = stnstats
-        joutdict['AIS Stations'] = aistracker.all_station_info()
+        joutdict['AIS Stations'] = aistracker.all_station_info(verbose=True)
         ais.write_json_file(joutdict,
                             os.path.join(outpath, 'vessel-data.json'))
     if geojsonoutput:
