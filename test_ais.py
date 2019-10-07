@@ -7,7 +7,7 @@ Unit tests for the AIS Decoder
 # pylint: disable=no-name-in-module
 # pylint: disable=invalid-name
 
-import collections
+
 import datetime
 import os
 import unittest
@@ -115,7 +115,7 @@ class BinaryTests(unittest.TestCase):
         testdata = nmeatracker.process_sentence(testsentence)
         testbinarystr = binary.ais_sentence_payload_binary(testdata)
         with self.assertRaises(binary.NoBinaryData):
-            cog = binary.decode_sixbit_integer(testbinarystr[116:128]) / 10
+            _ = binary.decode_sixbit_integer(testbinarystr[116:128]) / 10
 
 
 class NMEATests(unittest.TestCase):
@@ -321,19 +321,19 @@ class AISStationTestsRealData(unittest.TestCase):
             self.aisteststn.find_position_information(posmsg)
         self.assertEqual(len(posreps), len(self.aisteststn.posrep))
 
-    def test_find_station_name_and_subtype(self):
+    def test_find_station_name_and_type(self):
         """
         get the name and ship type from a Type 5 Static Data Report
         """
         t5payload = ('53P;Rul2<10S89PgN20l4p4pp4r222222222220'
                      '`8@N==57nN9A3mAk0Dp8888888888880')
         expect = {'name': 'MANANNAN',
-                  'subtype': 'High speed craft (HSC), all ships of this type'}
+                  'stntype': 'High speed craft (HSC), all ships of this type'}
         t5binary = binary.ais_sentence_payload_binary(t5payload)
         t5obj = messages.t5.Type5StaticAndVoyageData(t5binary)
-        self.aisteststn.find_station_name_and_subtype(t5obj)
+        self.aisteststn.find_station_name_and_type(t5obj)
         found = {'name': self.aisteststn.name,
-                 'subtype': self.aisteststn.subtype}
+                 'stntype': self.aisteststn.stntype}
         self.assertDictEqual(expect, found)
 
 
