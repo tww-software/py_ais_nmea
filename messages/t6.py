@@ -89,4 +89,4 @@ class Type6BinaryMessage(messages.aismessage.AISMessage):
         Returns:
             msgdetails(dict): most relevant information of this message
         """
-        return self.msgdetails
+        return {self.msgsubtype: self.msgdetails}

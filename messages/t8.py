@@ -189,7 +189,7 @@ class Type8BinaryBroadcastMessage(messages.aismessage.AISMessage):
         Returns:
             self.msgdetails(dict): most relevant information of this message
         """
-        return self.msgdetails
+        return {self.msgsubtype: self.msgdetails}
 
     def __str__(self):
         """
