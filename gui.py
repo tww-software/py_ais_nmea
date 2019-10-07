@@ -12,6 +12,7 @@ import tkinter.filedialog
 import tkinter.messagebox
 import tkinter.scrolledtext
 import tkinter.ttk
+import queue
 
 import ais
 import capturefile
@@ -397,6 +398,17 @@ class TabControl(tkinter.ttk.Notebook):
         self.add(self.tab6, text='Station Information')
 
 
+class NetworkSettingsWindow(tkinter.Toplevel):
+    """
+    window to configure network settings
+    """
+
+    def __init__(self, window):
+        tkinter.Toplevel.__init__(self, window)
+        self.window = window
+        self.title = 'Network Settings'
+        
+
 class BasicGUI(tkinter.Tk):
     """
     a basic GUI using tkinter to control the program
@@ -419,8 +431,10 @@ class BasicGUI(tkinter.Tk):
         self.top_menu()
         self.mpq = multiprocessing.Queue()
         self.updateguithread = None
+        self.refreshguithread = None
         self.serverprocess = None
         self.serverrunning = False
+        self.stopevent = threading.Event()
 
     def top_menu(self):
         """
@@ -465,8 +479,10 @@ class BasicGUI(tkinter.Tk):
             target=network.mpserver, args=[self.mpq])
         self.serverprocess.start()
         tkinter.messagebox.showinfo('Network', 'Server Started')
-        self.updateguithread = threading.Thread(target=self.update)
+        self.updateguithread = threading.Thread(target=self.update, args=(self.stopevent,))
         self.updateguithread.start()
+        self.refreshguithread = threading.Thread(target=self.refresh, args=(self.stopevent,))
+        self.refreshguithread.start()
         self.statuslabel.config(text='AIS Server Listening',
                                 fg='black', bg='green2')
 
@@ -475,15 +491,16 @@ class BasicGUI(tkinter.Tk):
         stop the server
         """
         self.serverrunning = False
-        mplock = multiprocessing.Lock()
-        with mplock:
-            self.mpq.put('stop')
-        self.updateguithread.join()
         self.serverprocess.terminate()
+        self.stopevent.set()
+        self.updateguithread.join(timeout=1)
+        self.refreshguithread.join(timeout=1)
         self.serverprocess = None
         self.updateguithread = None
+        self.refreshguithread = None
         tkinter.messagebox.showinfo('Network', 'Server Stopped')
         self.statuslabel.config(text='', bg='light grey')
+        self.stopevent.clear()
 
     def open_file(self):
         """
@@ -513,16 +530,16 @@ class BasicGUI(tkinter.Tk):
                 text='Loaded capture file - {}'.format(inputfile),
                 fg='black', bg='light grey')
 
-    def update(self):
+    def update(self, stopevent):
         """
-        update the GUI in another thread whist the server is running and
-        recieving packets
+        update the nmea and ais trackers from the network
+
+        run in another thread whist the server is running and
+        recieving packets, get NMEA sentences from the queue and process them
         """
-        while True:
+        while not stopevent.is_set():
             qdata = self.mpq.get()
             if qdata:
-                if qdata == 'stop':
-                    break
                 try:
                     self.tabcontrol.tab5.append_text(qdata)
                     payload = self.nmeatracker.process_sentence(qdata)
@@ -540,12 +557,6 @@ class BasicGUI(tkinter.Tk):
                         self.messagelist.append(decodedmsg)
                         self.tabcontrol.tab4.append_text(msg.__str__())
                         self.tabcontrol.tab1.write_stats()
-                        if (currenttime.endswith('5') or
-                                currenttime.endswith('0')):
-                            self.tabcontrol.tab2.create_ship_table()
-                            self.tabcontrol.tab1.write_stats_verbose()
-                            self.tabcontrol.tab6.stn_options()
-                            self.tabcontrol.tab6.show_stn_info()
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                         ais.UnknownMessageType, ais.InvalidMMSI) as err:
                     AISLOGGER.debug(str(err))
@@ -554,16 +565,32 @@ class BasicGUI(tkinter.Tk):
                     AISLOGGER.debug('no data on line')
                     continue
 
+    def refresh(self, stopevent):
+        """
+        refresh and update the gui every 10 seconds, run in another thread
+        """   
+        while not stopevent.is_set():
+            currenttime = datetime.datetime.utcnow().strftime(
+                '%Y/%m/%d %H:%M:%S')
+            if currenttime.endswith('5'):
+                self.tabcontrol.tab2.create_ship_table()
+                self.tabcontrol.tab1.write_stats_verbose()
+                self.tabcontrol.tab6.stn_options()
+                self.tabcontrol.tab6.show_stn_info()
+
+
+
     def quit(self):
         """
         open a confirmation box asking if the user wants to quit if yes then
-        exit the program with exit code of 0
+        stop the server and exit the program
         """
         res = tkinter.messagebox.askyesno('Exiting Program', 'Are you sure?')
         if res:
             if self.serverrunning:
                 self.stop_server()
             self.destroy()
+
 
 
 if __name__ == '__main__':
