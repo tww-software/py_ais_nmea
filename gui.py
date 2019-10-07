@@ -12,7 +12,6 @@ import tkinter.filedialog
 import tkinter.messagebox
 import tkinter.scrolledtext
 import tkinter.ttk
-import queue
 
 import ais
 import capturefile
@@ -407,7 +406,7 @@ class NetworkSettingsWindow(tkinter.Toplevel):
         tkinter.Toplevel.__init__(self, window)
         self.window = window
         self.title = 'Network Settings'
-        
+
 
 class BasicGUI(tkinter.Tk):
     """
@@ -479,9 +478,13 @@ class BasicGUI(tkinter.Tk):
             target=network.mpserver, args=[self.mpq])
         self.serverprocess.start()
         tkinter.messagebox.showinfo('Network', 'Server Started')
-        self.updateguithread = threading.Thread(target=self.update, args=(self.stopevent,))
+        self.updateguithread = threading.Thread(
+            target=self.updategui, args=(self.stopevent,))
+        self.updateguithread.setDaemon(True)
         self.updateguithread.start()
-        self.refreshguithread = threading.Thread(target=self.refresh, args=(self.stopevent,))
+        self.refreshguithread = threading.Thread(
+            target=self.refreshgui, args=(self.stopevent,))
+        self.refreshguithread.setDaemon(True)
         self.refreshguithread.start()
         self.statuslabel.config(text='AIS Server Listening',
                                 fg='black', bg='green2')
@@ -530,7 +533,7 @@ class BasicGUI(tkinter.Tk):
                 text='Loaded capture file - {}'.format(inputfile),
                 fg='black', bg='light grey')
 
-    def update(self, stopevent):
+    def updategui(self, stopevent):
         """
         update the nmea and ais trackers from the network
 
@@ -565,10 +568,10 @@ class BasicGUI(tkinter.Tk):
                     AISLOGGER.debug('no data on line')
                     continue
 
-    def refresh(self, stopevent):
+    def refreshgui(self, stopevent):
         """
         refresh and update the gui every 10 seconds, run in another thread
-        """   
+        """
         while not stopevent.is_set():
             currenttime = datetime.datetime.utcnow().strftime(
                 '%Y/%m/%d %H:%M:%S')
@@ -577,8 +580,6 @@ class BasicGUI(tkinter.Tk):
                 self.tabcontrol.tab1.write_stats_verbose()
                 self.tabcontrol.tab6.stn_options()
                 self.tabcontrol.tab6.show_stn_info()
-
-
 
     def quit(self):
         """
@@ -590,7 +591,6 @@ class BasicGUI(tkinter.Tk):
             if self.serverrunning:
                 self.stop_server()
             self.destroy()
-
 
 
 if __name__ == '__main__':
