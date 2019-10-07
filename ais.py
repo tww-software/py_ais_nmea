@@ -33,8 +33,8 @@ class AISStation():
     Attributes:
         mmsi(str): Maritime Mobile Station Identifier - uniquely identifies the
                    AIS station on the network
-        type(str): the main type of station it is classA/B/Base Station etc
-        subtype(str): the type of ship or navigation aid
+        stnclass(str): is the station Class A/B/Base Station etc
+        stntype(str): the type of ship or navigation aid
         name(str): the name of the station
         posrep(list): list of dictionaries each item is a position report
         details(dict): extra information about the AIS Station
@@ -48,8 +48,8 @@ class AISStation():
 
     def __init__(self, mmsi):
         self.mmsi = mmsi
-        self.type = 'Unknown'
-        self.subtype = 'Unknown'
+        self.stnclass = 'Unknown'
+        self.stntype = 'Unknown'
         self.name = ''
         self.posrep = []
         self.details = {}
@@ -102,9 +102,9 @@ class AISStation():
             raise NoSuitablePositionReport('do not have a suitable LAT/LON')
         self.posrep.append(currentpos)
 
-    def find_station_name_and_subtype(self, msgobj):
+    def find_station_name_and_type(self, msgobj):
         """
-        Try to identify the AIS stations name and subtype
+        Try to identify the AIS stations name and type
 
         Note:
             The station name is given in message types 5, 19, 21 and 24
@@ -113,16 +113,16 @@ class AISStation():
             msgobj(messages.aismessage.AISMessage): message object
         """
         if msgobj.msgtype == 5 or msgobj.msgtype == 19:
-            self.subtype = msgobj.shiptype
+            self.stntype = msgobj.shiptype
             self.name = msgobj.name
         elif msgobj.msgtype == 21:
-            self.subtype = msgobj.aidtype
+            self.stntype = msgobj.aidtype
             self.name = msgobj.name
         elif msgobj.msgtype == 24:
             if msgobj.partno == 0:
                 self.name = msgobj.name
             if msgobj.partno == 1:
-                self.subtype = msgobj.shiptype
+                self.stntype = msgobj.shiptype
 
     def find_position_information(self, msgobj, timestamp=None):
         """
@@ -174,27 +174,20 @@ class AISStation():
         """
         stninfo = {}
         stninfo['MMSI'] = self.mmsi
-        stninfo['Type'] = self.type
-        stninfo['Sub Type'] = self.subtype
+        stninfo['Class'] = self.stnclass
+        stninfo['Type'] = self.stntype
         stninfo['Flag'] = self.flag
         stninfo['Name'] = self.name
-        usefulinfo = ['Callsign', 'IMO number',
-                      'RAIM in use', 'EPFD Fix type', 'Position Accuracy',
-                      'Destination', 'ETA']
-        for item in usefulinfo:
-            try:
-                stninfo[item] = self.details[item]
-            except KeyError:
-                stninfo[item] = ''
+        stninfo.update(self.details)
         try:
             stninfo['Last Known Position'] = self.get_latest_position()
         except NoSuitablePositionReport:
             stninfo['Last Known Position'] = 'Unknown'
         return stninfo
 
-    def determine_station_type(self, msgobj):
+    def determine_station_class(self, msgobj):
         """
-        try and determine the type of AIS station based on MMSI and what
+        try and determine the class of AIS station based on MMSI and what
         message we recieved from it
 
         Note:
@@ -218,35 +211,35 @@ class AISStation():
             '974': 'EPIRB (Emergency Position Indicating Radio Beacon)'}
         for prefix in mmsitypes:
             if self.mmsi.startswith(prefix):
-                self.type = mmsitypes[prefix]
-                self.subtype = mmsitypes[prefix]
+                self.stnclass = mmsitypes[prefix]
+                self.stntype = mmsitypes[prefix]
                 return
         typesdict = {
             4: 'Base Station',
             11: 'Base Station',
             21: 'Navigation Aid',
-            1: 'Class A',
-            2: 'Class A',
-            3: 'Class A',
-            5: 'Class A',
-            27: 'Class A',
-            14: 'Class B',
-            18: 'Class B',
-            19: 'Class B',
-            24: 'Class B',
+            1: 'A',
+            2: 'A',
+            3: 'A',
+            5: 'A',
+            27: 'A',
+            14: 'B',
+            18: 'B',
+            19: 'B',
+            24: 'B',
             9: 'SAR Aircraft'}
         if msgobj.msgtype in typesdict:
-            self.type = typesdict[msgobj.msgtype]
-        if self.type == 'Base Station':
-            self.subtype = 'Base Station'
+            self.stnclass = typesdict[msgobj.msgtype]
+        if self.stnclass == 'Base Station':
+            self.stntype = 'Base Station'
 
     def __str__(self):
-        strtext = ('AIS Station - MMSI: {}, Name: {}, Type: {},'
-                   ' Subtype: {}, Flag: {}'.format(
+        strtext = ('AIS Station - MMSI: {}, Name: {}, Class: {},'
+                   ' Type: {}, Flag: {}'.format(
                        self.mmsi,
                        self.name,
-                       self.type,
-                       self.subtype,
+                       self.stnclass,
+                       self.stntype,
                        self.flag))
         return strtext
 
@@ -277,60 +270,6 @@ class AISTracker():
     def __len__(self):
         return len(self.stations)
 
-    def __str__(self):
-        try:
-            times = 'from {} to {}'.format(
-                self.timings[0],
-                self.timings[len(self.timings) - 1])
-        except IndexError:
-            times = 'No time data available.'
-        strtext = ('AIS Tracker - tracking {} vessels'
-                   ' , processed {} messages,'
-                   ' {}'
-                   '').format(str(self.__len__()),
-                              str(self.messagesprocessed),
-                              times)
-        return strtext
-
-    def __repr__(self):
-        reprstr = '{}()'.format(self.__class__.__name__)
-        return reprstr
-
-    def position_log(self):
-        """
-        try to use timing data to map out when we recieved signals
-        a new AISTracker object is created for each timestamp and the geojson
-        saved as a value in position log, timestamps are the keys
-
-        Returns:
-            positionlog(dict): keys are timestamps,
-                               values are dicts containing:
-                                   geojson map,
-                                   latlon for the centre of the map
-                                   the number of stations seen
-        """
-        positionlog = {}
-        for time in self.timings:
-            timestampaistracker = AISTracker()
-            for station in self.stations_generator():
-                for posrep in self.stations[station].posrep:
-                    if posrep['Time'] == time:
-                        if station not in timestampaistracker.stations:
-                            newstn = AISStation(station)
-                            newstn.type = self.stations[station].type
-                            newstn.subtype = self.stations[station].subtype
-                            newstn.name = self.stations[station].name
-                            newstn.details = self.stations[station].details
-                            timestampaistracker.stations[station] = newstn
-                        timestampaistracker.stations[
-                            station].posrep.append(posrep)
-            geojsonparser = timestampaistracker.create_geojson_map()
-            positionlog[time] = {
-                'geojson': geojsonparser.main["features"],
-                'mapcentre': timestampaistracker.get_centre_of_map(),
-                'stations': len(timestampaistracker.stations)}
-        return positionlog
-
     def process_message(self, data, timestamp=None):
         """
         determine what type of AIS message it is
@@ -359,11 +298,11 @@ class AISTracker():
         self.messages[allmessages.MSGDESCRIPTIONS[msgtype]] += 1
         if msgobj.mmsi not in self.stations:
             self.stations[msgobj.mmsi] = AISStation(msgobj.mmsi)
-        if self.stations[msgobj.mmsi].type == 'Unknown':
-            self.stations[msgobj.mmsi].determine_station_type(msgobj)
-        if (self.stations[msgobj.mmsi].subtype == 'Unknown' or
+        if self.stations[msgobj.mmsi].stnclass == 'Unknown':
+            self.stations[msgobj.mmsi].determine_station_class(msgobj)
+        if (self.stations[msgobj.mmsi].stntype == 'Unknown' or
                 self.stations[msgobj.mmsi].name == ''):
-            self.stations[msgobj.mmsi].find_station_name_and_subtype(msgobj)
+            self.stations[msgobj.mmsi].find_station_name_and_type(msgobj)
         if timestamp:
             if timestamp not in self.timings:
                 self.timings.append(timestamp)
@@ -413,28 +352,6 @@ class AISTracker():
         for stn in self.stations:
             yield stn
 
-    def sort_mmsi_by_catagory(self):
-        """
-        sort MMSIs by type, subtype, flag etc
-        so its easy to find all the MMSIs that fall under a certain catagory
-        e.g. all the vessels that are Tugs
-
-        Returns:
-            organised(dict): dictionary with lists of MMSIs for each catagory
-        """
-        organised = {}
-        stntypes = collections.defaultdict(list)
-        subtypes = collections.defaultdict(list)
-        flags = collections.defaultdict(list)
-        for mmsi in self.stations_generator():
-            stntypes[self.stations[mmsi].type].append(mmsi)
-            subtypes[self.stations[mmsi].subtype].append(mmsi)
-            flags[self.stations[mmsi].flag].append(mmsi)
-        organised['Flags'] = flags
-        organised['Subtypes'] = subtypes
-        organised['Stationtypes'] = stntypes
-        return organised
-
     def tracker_stats(self):
         """
         calculate statistics for this tracker object and return them
@@ -447,20 +364,20 @@ class AISTracker():
         stats = {}
 
         flagcount = collections.Counter()
+        stnclasscount = collections.Counter()
         stntypescount = collections.Counter()
-        subtypescount = collections.Counter()
         for mmsi in self.stations_generator():
-            stntypescount[self.stations[mmsi].type] += 1
-            subtypescount[self.stations[mmsi].subtype] += 1
+            stnclasscount[self.stations[mmsi].stnclass] += 1
+            stntypescount[self.stations[mmsi].stntype] += 1
             flagcount[self.stations[mmsi].flag] += 1
         stats['Total Unique Stations'] = self.__len__()
         stats['Total Messages Processed'] = \
             self.messagesprocessed
         stats['Message Stats'] = self.messages
         stats['AIS Station Types'] = \
-            stntypescount
+            stnclasscount
         stats['Ship Types'] = \
-            subtypescount
+            stntypescount
         stats['Country Flags'] = \
             flagcount
         try:
@@ -505,7 +422,7 @@ class AISTracker():
                 lastpos = self.stations[mmsi].get_latest_position()
             except NoSuitablePositionReport:
                 continue
-            stntype = self.stations[mmsi].subtype
+            stntype = self.stations[mmsi].stntype
             stninfo = self.stations[mmsi].get_station_info()
             desc = kmlmap.format_kml_placemark_description(stninfo)
             kmlmap.open_folder(mmsi)
@@ -553,7 +470,7 @@ class AISTracker():
             currentproperties.update(
                 self.stations[mmsi].get_station_info())
             currentproperties['Icon'] = \
-                icons.ICONS[self.stations[mmsi].subtype]
+                icons.ICONS[self.stations[mmsi].stntype]
             try:
                 currentproperties['Heading'] = lastpos['True Heading']
             except KeyError:
@@ -585,7 +502,7 @@ class AISTracker():
                             in the csv file
         """
         csvtable = []
-        csvheader = ['MMSI', 'Type', 'Sub Type', 'Flag', 'Name', 'Callsign',
+        csvheader = ['MMSI', 'Class', 'Type', 'Flag', 'Name', 'Callsign',
                      'IMO number', 'RAIM in use', 'EPFD Fix type',
                      'Position Accuracy', 'Total Messages', 'Latitude',
                      'Longitude', 'CoG', 'Speed (knots)', 'Navigation Status',
@@ -605,9 +522,31 @@ class AISTracker():
                 except (NoSuitablePositionReport, TypeError, KeyError):
                     stninfo[item] = ''
             for item in csvheader:
-                line.append(stninfo[item])
+                try:
+                    line.append(stninfo[item])
+                except KeyError:
+                    line.append('')
             csvtable.append(line)
         return csvtable
+
+    def __str__(self):
+        try:
+            times = 'from {} to {}'.format(
+                self.timings[0],
+                self.timings[len(self.timings) - 1])
+        except IndexError:
+            times = 'No time data available.'
+        strtext = ('AIS Tracker - tracking {} vessels'
+                   ' , processed {} messages,'
+                   ' {}'
+                   '').format(str(self.__len__()),
+                              str(self.messagesprocessed),
+                              times)
+        return strtext
+
+    def __repr__(self):
+        reprstr = '{}()'.format(self.__class__.__name__)
+        return reprstr
 
 
 class UnknownMessageType(Exception):
