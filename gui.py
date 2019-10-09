@@ -406,6 +406,52 @@ class NetworkSettingsWindow(tkinter.Toplevel):
         tkinter.Toplevel.__init__(self, window)
         self.window = window
         self.title = 'Network Settings'
+        serverhostlabel = tkinter.Label(self, text='Server IP')
+        serverhostlabel.grid(column=0, row=0)
+        self.serverhost = tkinter.Entry(self)
+        self.serverhost.insert(0, self.window.netsettings['Server IP'])
+        self.serverhost.grid(column=1, row=0)
+        serverportlabel = tkinter.Label(self, text='Server Port')
+        serverportlabel.grid(column=0, row=1)
+        self.serverport = tkinter.Entry(self)
+        self.serverport.insert(0, self.window.netsettings['Server Port'])
+        self.serverport.grid(column=1, row=1)
+        self.chk = tkinter.Checkbutton(
+            self, text='forward NMEA Sentences to a remote host',
+            var=self.window.forwardsentences)
+        self.chk.grid(column=0, row=2)
+        remotehostlabel = tkinter.Label(self, text='Remote Server IP')
+        remotehostlabel.grid(column=0, row=3)
+        self.remotehost = tkinter.Entry(self)
+        self.remotehost.insert(0, self.window.netsettings['Remote Server IP'])
+        self.remotehost.grid(column=1, row=3)
+        remoteportlabel = tkinter.Label(self, text='Remote Server Port')
+        remoteportlabel.grid(column=0, row=4)
+        self.remoteport = tkinter.Entry(self)
+        self.remoteport.insert(
+            0, self.window.netsettings['Remote Server Port'])
+        self.remoteport.grid(column=1, row=4)
+        savesettingsbutton = tkinter.Button(
+            self, text='Save Settings', command=self.save_settings)
+        savesettingsbutton.grid(column=0, row=5)
+
+    def save_settings(self):
+        """
+        get the settings from the form
+        """
+        if self.window.serverrunning:
+            tkinter.messagebox.showwarning(
+                'Network Settings',
+                'cannot change settings whilst server is running')
+        else:
+            self.window.netsettings['Server IP'] = self.serverhost.get()
+            self.window.netsettings['Server Port'] = int(self.serverport.get())
+            self.window.netsettings['Remote Server IP'] = self.remotehost.get()
+            self.window.netsettings['Remote Server Port'] = int(
+                self.remoteport.get())
+            tkinter.messagebox.showinfo(
+                'Network Settings', 'Network Settings Saved')
+        self.destroy()
 
 
 class BasicGUI(tkinter.Tk):
@@ -415,6 +461,12 @@ class BasicGUI(tkinter.Tk):
     Attributes:
 
     """
+
+    netsettings = {
+        'Server IP': '127.0.0.1',
+        'Server Port': 10110,
+        'Remote Server IP': '127.0.0.1',
+        'Remote Server Port': 10111}
 
     def __init__(self):
         tkinter.Tk.__init__(self)
@@ -434,6 +486,9 @@ class BasicGUI(tkinter.Tk):
         self.serverprocess = None
         self.serverrunning = False
         self.stopevent = threading.Event()
+        self.forwardsentences = tkinter.BooleanVar()
+        self.forwardsentences.set(0)
+        self.toplevel = None
 
     def top_menu(self):
         """
@@ -446,6 +501,8 @@ class BasicGUI(tkinter.Tk):
         menu.add_cascade(label='File', menu=openfileitem)
         networkitem = tkinter.Menu(menu, tearoff=0)
         networkitem.add_command(
+            label='Settings', command=self.network_settings)
+        networkitem.add_command(
             label='Start Network Server', command=self.start_server)
         networkitem.add_command(
             label='Stop Network Server', command=self.stop_server)
@@ -455,6 +512,12 @@ class BasicGUI(tkinter.Tk):
         helpitem.add_command(label='About', command=self.about)
         menu.add_cascade(label='Help', menu=helpitem)
         self.config(menu=menu)
+
+    def network_settings(self):
+        """
+        open the network settings window
+        """
+        self.toplevel = NetworkSettingsWindow(self)
 
     @staticmethod
     def about():
@@ -474,8 +537,19 @@ class BasicGUI(tkinter.Tk):
         start the server
         """
         self.serverrunning = True
-        self.serverprocess = multiprocessing.Process(
-            target=network.mpserver, args=[self.mpq])
+        if self.forwardsentences.get() == 1:
+            print('forwarding sentences')
+            self.serverprocess = multiprocessing.Process(
+                target=network.mpserver,
+                args=[self.mpq, self.netsettings['Server IP'],
+                      self.netsettings['Server Port'],
+                      self.netsettings['Remote Server IP'],
+                      self.netsettings['Remote Server Port']])
+        else:
+            self.serverprocess = multiprocessing.Process(
+                target=network.mpserver,
+                args=[self.mpq, self.netsettings['Server IP'],
+                      self.netsettings['Server Port']])
         self.serverprocess.start()
         tkinter.messagebox.showinfo('Network', 'Server Started')
         self.updateguithread = threading.Thread(
