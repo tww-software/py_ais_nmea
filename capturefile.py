@@ -26,7 +26,7 @@ def debug_output(messagedict):
     csvlist = []
     jsonlines = []
     headers = ['NMEA Payload', 'MMSI', 'Message Type Number',
-               'Detailed Description']
+               'Received Time', 'Detailed Description']
     csvlist.append(headers)
     for payload in messagedict:
         message = {}
@@ -35,6 +35,7 @@ def debug_output(messagedict):
         jsonlines.append(message)
         singlemsg = [payload, messagedict[payload].mmsi,
                      messagedict[payload].msgtype,
+                     messagedict[payload].rxtime,
                      messagedict[payload].__str__()]
         csvlist.append(singlemsg)
     return (jsonlines, csvlist)

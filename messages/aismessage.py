@@ -198,6 +198,7 @@ class AISMessage():
             self.description = MSGDESCRIPTIONS[self.msgtype]
         except KeyError:
             self.description = 'Unknown'
+        self.rxtime = 'N/A'
 
     def __str__(self):
         """

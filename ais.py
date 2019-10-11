@@ -278,6 +278,13 @@ class AISTracker():
         """
         determine what type of AIS message it is
 
+        Note:
+            the timestamp can be given as an argument for each message to be
+            processed or timings can be approximated from the last type 4/11
+            base station report timestamp received. for the latter option it is
+            preferred that you have a nearby base station transmitting the
+            correct time on a regular interval
+
         Args:
             data(str): full message payload from 1 or more NMEA sentences
             timestamp(datetime.datetime): time this message was recieved
@@ -308,6 +315,7 @@ class AISTracker():
                 self.stations[msgobj.mmsi].name == ''):
             self.stations[msgobj.mmsi].find_station_name_and_type(msgobj)
         if timestamp:
+            msgobj.rxtime = timestamp
             if timestamp not in self.timings:
                 self.timings.append(timestamp)
         else:
