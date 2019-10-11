@@ -15,33 +15,29 @@ import nmea
 AISLOGGER = logging.getLogger(__name__)
 
 
-def message_debug_csv_table(debuglist):
+def debug_output(messagedict):
     """
-    format a list of dictionaries into a list of lists
-    suitable for output to a CSV file
+    prepare output to jsonlines and csv
 
     Args:
-        debuglist(list): list of dictionaries
-
-    Returns:
-        table(list): list of lists
+        messagedict(dict): keys are payloads values are the
+                           corresponding AISMessage objects
     """
-    table = []
-    headers = []
-    for adict in debuglist:
-        for key in adict:
-            if key not in headers:
-                headers.append(key)
-    table.append(headers)
-    for adict in debuglist:
-        newline = []
-        for header in headers:
-            try:
-                newline.append(adict[header])
-            except KeyError:
-                newline.append('')
-        table.append(newline)
-    return table
+    csvlist = []
+    jsonlines = []
+    headers = ['NMEA Payload', 'MMSI', 'Message Type Number',
+               'Detailed Description']
+    csvlist.append(headers)
+    for payload in messagedict:
+        message = {}
+        message['payload'] = payload
+        message.update(messagedict[payload].__dict__)
+        jsonlines.append(message)
+        singlemsg = [payload, messagedict[payload].mmsi,
+                     messagedict[payload].msgtype,
+                     messagedict[payload].__str__()]
+        csvlist.append(singlemsg)
+    return (jsonlines, csvlist)
 
 
 def open_file_generator(filepath):
@@ -66,21 +62,21 @@ def aistracker_from_file(filepath, debug=False):
     open a file, read all nmea sentences and return an ais.AISTracker object
 
     Note:
-        if debug is set then individual messages are saved into the messagelist
+        if debug is set then individual messages are saved into the messagedict
 
     Args:
         filepath(str): full path to nmea file
         debug(bool): save all message payloads and decoded attributes into
-                     messagelist
+                     messagedict
 
     Returns:
         aistracker(ais.AISTracker): object that keeps track of all the
                                     ships we have seen
         nmeatracker(nmea.NMEAtracker): object that organises the nmea sentences
-        messagelist(list): list of dicts, each dict has the nmea payload
-                           and decoded attributes from the message object
+        messagedict(dict): keys are payloads values are the
+                           corresponding AISMessage objects
     """
-    messagelist = []
+    messagedict = {}
     aistracker = ais.AISTracker()
     nmeatracker = nmea.NMEAtracker()
     for line in open_file_generator(filepath):
@@ -89,12 +85,7 @@ def aistracker_from_file(filepath, debug=False):
             if payload:
                 msg = aistracker.process_message(payload)
                 if debug:
-                    decodedmsg = {}
-                    decodedmsg['NMEA Payload'] = payload
-                    decodedmsg['MMSI'] = msg.mmsi
-                    decodedmsg['Message Type Number'] = msg.msgtype
-                    decodedmsg['Detailed Description'] = msg.__str__()
-                    messagelist.append(decodedmsg)
+                    messagedict[payload] = msg
         except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                 ais.UnknownMessageType, ais.InvalidMMSI) as err:
             AISLOGGER.debug(str(err))
@@ -102,7 +93,7 @@ def aistracker_from_file(filepath, debug=False):
         except IndexError:
             AISLOGGER.debug('no data on line')
             continue
-    return (aistracker, nmeatracker, messagelist)
+    return (aistracker, nmeatracker, messagedict)
 
 
 def read_from_file(filepath, outpath, debug=False,
@@ -133,7 +124,7 @@ def read_from_file(filepath, outpath, debug=False,
         os.makedirs(outpath)
     AISLOGGER.info('processed output will be saved in %s', outpath)
     AISLOGGER.info('reading nmea sentences from - %s', filepath)
-    aistracker, nmeatracker, messagelist = aistracker_from_file(
+    aistracker, nmeatracker, messagedict = aistracker_from_file(
         filepath, debug=debug)
     stnstats = aistracker.tracker_stats()
     sentencestats = nmeatracker.nmea_stats()
@@ -169,10 +160,10 @@ def read_from_file(filepath, outpath, debug=False,
         aistracker.create_kml_map(os.path.join(outpath, 'map.kmz'),
                                   kmzoutput=True)
     if debug:
-        ais.write_json_lines(messagelist,
+        jsonlineslist, messagecsvlist = debug_output(messagedict)
+        ais.write_json_lines(jsonlineslist,
                              os.path.join(outpath,
                                           'ais-messages.jsonl'))
-        messagecsvlist = message_debug_csv_table(messagelist)
         ais.write_csv_file(messagecsvlist,
                            os.path.join(outpath, 'ais-messages.csv'))
     AISLOGGER.info('Finished')

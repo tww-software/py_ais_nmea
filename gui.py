@@ -272,11 +272,11 @@ class ExportTab(tkinter.ttk.Frame):
         """
         if not outpath:
             outpath = tkinter.filedialog.askdirectory()
-        ais.write_json_lines(self.tabs.window.messagelist,
+        jsonlines, messagecsvlist = capturefile.debug_output(
+            self.tabs.window.messagedict)
+        ais.write_json_lines(jsonlines,
                              os.path.join(outpath,
                                           'ais-messages.jsonl'))
-        messagecsvlist = capturefile.message_debug_csv_table(
-            self.tabs.window.messagelist)
         ais.write_csv_file(messagecsvlist,
                            os.path.join(outpath, 'ais-messages.csv'))
 
@@ -472,7 +472,7 @@ class BasicGUI(tkinter.Tk):
         tkinter.Tk.__init__(self)
         self.nmeatracker = nmea.NMEAtracker()
         self.aistracker = ais.AISTracker()
-        self.messagelist = []
+        self.messagedict = {}
         self.protocol("WM_DELETE_WINDOW", self.quit)
         self.title('AIS NMEA 0183 Decoder')
         self.statuslabel = tkinter.Label(self, text='', bg='light grey')
@@ -593,16 +593,16 @@ class BasicGUI(tkinter.Tk):
                 text='Loading capture file - {}'.format(inputfile),
                 fg='black', bg='gold')
             self.update_idletasks()
-            self.aistracker, self.nmeatracker, self.messagelist = \
+            self.aistracker, self.nmeatracker, self.messagedict = \
                 capturefile.aistracker_from_file(inputfile, debug=True)
             self.tabcontrol.tab6.stn_options()
             self.tabcontrol.tab1.write_stats()
             self.tabcontrol.tab1.write_stats_verbose()
             self.tabcontrol.tab2.create_ship_table()
-            for message in self.messagelist:
+            for payload in self.messagedict:
                 self.tabcontrol.tab4.append_text(
-                    message['Detailed Description'])
-                self.tabcontrol.tab5.append_text(message['NMEA Payload'])
+                    self.messagedict[payload].__str__())
+                self.tabcontrol.tab5.append_text(payload)
             self.statuslabel.config(
                 text='Loaded capture file - {}'.format(inputfile),
                 fg='black', bg='light grey')
@@ -618,20 +618,14 @@ class BasicGUI(tkinter.Tk):
             qdata = self.mpq.get()
             if qdata:
                 try:
-                    self.tabcontrol.tab5.append_text(qdata)
                     payload = self.nmeatracker.process_sentence(qdata)
                     if payload:
                         currenttime = datetime.datetime.utcnow().strftime(
                             '%Y/%m/%d %H:%M:%S')
                         msg = self.aistracker.process_message(
                             payload, timestamp=currenttime)
-                        decodedmsg = {}
-                        decodedmsg['NMEA Payload'] = payload
-                        decodedmsg['MMSI'] = msg.mmsi
-                        decodedmsg['Message Type Number'] = msg.msgtype
-                        decodedmsg['Detailed Description'] = msg.__str__()
-                        decodedmsg['Time'] = currenttime
-                        self.messagelist.append(decodedmsg)
+                        self.messagedict[payload] = msg
+                        self.tabcontrol.tab5.append_text(payload)
                         self.tabcontrol.tab4.append_text(msg.__str__())
                         self.tabcontrol.tab1.write_stats()
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
