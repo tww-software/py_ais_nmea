@@ -155,7 +155,7 @@ class ExportTab(tkinter.ttk.Frame):
     def __init__(self, tabcontrol):
         tkinter.ttk.Frame.__init__(self, tabcontrol)
         self.tabs = tabcontrol
-        self.exportoptions = tkinter.ttk.Combobox(self)
+        self.exportoptions = tkinter.ttk.Combobox(self, state='readonly')
         self.export_options()
 
     def export_options(self):
