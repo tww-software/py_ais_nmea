@@ -349,6 +349,9 @@ class StationInfoTab(tkinter.ttk.Frame):
         stnoptionsbutton = tkinter.Button(self, text='Display Info',
                                           command=self.show_stn_info)
         stnoptionsbutton.pack(side='top')
+        stnoptionsbutton = tkinter.Button(self, text='JSON',
+                                          command=self.export_json)
+        stnoptionsbutton.pack(side='bottom')
         self.stntxt = tkinter.scrolledtext.ScrolledText(self)
         self.stntxt.pack(side='left', fill='both', expand=tkinter.TRUE)
 
@@ -370,6 +373,23 @@ class StationInfoTab(tkinter.ttk.Frame):
                 self.tabs.window.aistracker.stations[lookupmmsi]
                 .get_station_info())
             self.stntxt.insert(tkinter.INSERT, stninfo)
+
+    def export_json(self):
+        """
+        export JSON for a single AIS station
+        pop open a file browser to allow the user to choose where to save the
+        file and then save file to that location
+        """
+        outputfile = tkinter.filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=(("javascript object notation", "*.json"),
+                       ("All Files", "*.*")))
+        lookupmmsi = self.stnoptions.get()
+        if lookupmmsi != '':
+            stninfo = self.tabs.window.aistracker.stations[lookupmmsi]. \
+                get_station_info(verbose=True)
+            ais.write_json_file(stninfo, outputfile)
+            tkinter.messagebox.showinfo('Export Files', 'Export Successful')
 
 
 class TabControl(tkinter.ttk.Notebook):
