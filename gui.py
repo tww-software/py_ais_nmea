@@ -349,9 +349,14 @@ class StationInfoTab(tkinter.ttk.Frame):
         stnoptionsbutton = tkinter.Button(self, text='Display Info',
                                           command=self.show_stn_info)
         stnoptionsbutton.pack(side='top')
-        stnoptionsbutton = tkinter.Button(self, text='JSON',
+        lowerbuttons = tkinter.Frame(self)
+        exportjsonbutton = tkinter.Button(lowerbuttons, text='JSON',
                                           command=self.export_json)
-        stnoptionsbutton.pack(side='bottom')
+        exportjsonbutton.grid(column=0, row=0)
+        exportkmzbutton = tkinter.Button(lowerbuttons, text='KMZ',
+                                  command=self.export_kmz)
+        exportkmzbutton.grid(column=1, row=0)
+        lowerbuttons.pack(side='bottom')
         self.stntxt = tkinter.scrolledtext.ScrolledText(self)
         self.stntxt.pack(side='left', fill='both', expand=tkinter.TRUE)
 
@@ -373,6 +378,22 @@ class StationInfoTab(tkinter.ttk.Frame):
                 self.tabs.window.aistracker.stations[lookupmmsi]
                 .get_station_info())
             self.stntxt.insert(tkinter.INSERT, stninfo)
+
+    def export_kmz(self):
+        """
+        export KMZ for a single AIS station
+        pop open a file browser to allow the user to choose where to save the
+        file and then save file to that location
+        """
+        outputfile = tkinter.filedialog.asksaveasfilename(
+            defaultextension=".kmz",
+            filetypes=(("keyhole markup language KMZ", "*.kmz"),
+                       ("All Files", "*.*")))
+        lookupmmsi = self.stnoptions.get()
+        if lookupmmsi != '':
+            stninfo = self.tabs.window.aistracker.stations[lookupmmsi]. \
+                create_kml_map(outputfile, kmzoutput=True)
+            tkinter.messagebox.showinfo('Export Files', 'Export Successful')
 
     def export_json(self):
         """

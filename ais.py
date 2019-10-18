@@ -251,6 +251,49 @@ class AISStation():
         reprstr = '{}()'.format(self.__class__.__name__)
         return reprstr
 
+    def create_kml_map(self, outputfile, kmzoutput=True):
+        """
+        create a KML map of this stations positions
+
+        Args:
+            outputfile(str): full path to output to
+            kmzoutput(bool): whether to create a kmz with custom icons (True)
+                             or a basic kml file (False)
+        """
+        if kmzoutput:
+            docpath = os.path.join(os.path.dirname(outputfile), 'doc.kml')
+        else:
+            docpath = os.path.join(outputfile)
+        kmlmap = kml.KMLOutputParser(docpath)
+        kmlmap.create_kml_header(kmz=kmzoutput)
+        stninfo = self.get_station_info()
+        kmlmap.open_folder(self.mmsi)
+        for pos in self.posrep:
+            stninfo['Last Known Position'] = pos
+            desc = kmlmap.format_kml_placemark_description(stninfo)
+            try:
+                heading = pos['True Heading']
+                if heading != HEADINGUNAVAILABLE and kmzoutput:
+                    kmlmap.add_kml_placemark(self.mmsi, desc,
+                                             str(pos['Longitude']),
+                                             str(pos['Latitude']),
+                                             heading, kmzoutput)
+            except KeyError:
+                pass
+            try:
+                kmlmap.add_kml_placemark(self.mmsi, desc,
+                                         str(pos['Longitude']),
+                                         str(pos['Latitude']),
+                                         self.stntype, kmzoutput)
+            except KeyError:
+                pass
+        kmlmap.add_kml_placemark_linestring(self.mmsi, self.posrep)
+        kmlmap.close_folder()
+        kmlmap.close_kml_file()
+        kmlmap.write_kml_doc_file()
+        if kmzoutput:
+            kml.make_kmz(outputfile)
+
 
 class AISTracker():
     """
