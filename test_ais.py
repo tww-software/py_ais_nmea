@@ -468,6 +468,14 @@ class AISTrackerTests(unittest.TestCase):
         msg = self.process_sentence(testsentence)
         self.assertIsInstance(msg, messages.t13.Type13SafetyAcknowlegement)
 
+    def test_safety_broadcast(self):
+        """
+        Test to see if a particular message type is recognised
+        """
+        testsentence = '>37POV1@E=B0Hn05<4hV10i>04<d'
+        msg = self.process_sentence(testsentence)
+        self.assertIsInstance(msg, messages.t14.Type14SafetyBroadcastMessage)
+
     def test_interrogation(self):
         """
         Test to see if a particular message type is recognised

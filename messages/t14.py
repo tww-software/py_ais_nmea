@@ -5,11 +5,11 @@ import messages.aismessage
 
 class Type14SafetyBroadcastMessage(messages.aismessage.AISMessage):
     """
-    NO REAL LIFE TEST DATA FOUND YET!
+    Safety Broadcast Message
     """
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.msgtext = binary.decode_sixbit_ascii(msgbinar[40:968]).rstrip()
+        self.msgtext = binary.decode_sixbit_ascii(msgbinary[40:968]).rstrip()
 
     def __str__(self):
         """

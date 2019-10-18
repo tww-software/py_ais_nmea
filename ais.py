@@ -349,7 +349,6 @@ class AISTracker():
                 'Unknown message type {} - {}'.format(msgtype, data))
         if msgobj.mmsi == '000000000':
             raise InvalidMMSI('Invalid MMSI - 000000000')
-        self.messages[allmessages.MSGDESCRIPTIONS[msgtype]] += 1
         if msgobj.mmsi not in self.stations:
             self.stations[msgobj.mmsi] = AISStation(msgobj.mmsi)
         if self.stations[msgobj.mmsi].stnclass == 'Unknown':
@@ -372,6 +371,7 @@ class AISTracker():
                 timestamp = 'N/A'
         self.stations[msgobj.mmsi].find_position_information(msgobj, timestamp)
         self.messagesprocessed += 1
+        self.messages[allmessages.MSGDESCRIPTIONS[msgtype]] += 1
         return msgobj
 
     def get_centre_of_map(self):
