@@ -357,7 +357,6 @@ class AISTracker():
                 self.stations[msgobj.mmsi].name == ''):
             self.stations[msgobj.mmsi].find_station_name_and_type(msgobj)
         if timestamp:
-            msgobj.rxtime = timestamp
             if timestamp not in self.timings:
                 self.timings.append(timestamp)
         else:
@@ -369,6 +368,7 @@ class AISTracker():
                 timestamp = self.timings[len(self.timings) - 1]
             except IndexError:
                 timestamp = 'N/A'
+        msgobj.rxtime = timestamp
         self.stations[msgobj.mmsi].find_position_information(msgobj, timestamp)
         self.messagesprocessed += 1
         self.messages[allmessages.MSGDESCRIPTIONS[msgtype]] += 1
@@ -571,13 +571,17 @@ class AISTracker():
             geojsonmap.save_to_file(outputfile)
         return geojsonmap
 
-    def create_table_data(self):
+    def create_table_data(self, mmsilist=None):
         """
         creates a table of data we have on all vessels
 
         Note:
             this is a list of lists meant for output to a csv file
             use the function write_csv_file to do this
+
+        Args:
+            mmsilist(list): list of MMSIs as strings if this is specified
+                            we will only display info on these MMSIs
 
         Returns:
             csvtable(list): (lists of lists) each list is a line
@@ -592,7 +596,11 @@ class AISTracker():
         lastposheader = ['Latitude', 'Longitude', 'CoG', 'Speed (knots)',
                          'Navigation Status', 'Time']
         csvtable.append(csvheader)
-        for mmsi in self.stations_generator():
+        if mmsilist:
+            stations = mmsilist
+        else:
+            stations = self.stations_generator()
+        for mmsi in stations:
             stninfo = self.stations[mmsi].get_station_info()
             line = []
             stninfo['Total Messages'] = 0

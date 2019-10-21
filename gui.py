@@ -7,6 +7,7 @@ import logging
 import multiprocessing
 import os
 import threading
+import time
 import tkinter
 import tkinter.filedialog
 import tkinter.messagebox
@@ -309,6 +310,47 @@ class ExportTab(tkinter.ttk.Frame):
         self.export_debug(outpath)
 
 
+class AISMessageTab(tkinter.ttk.Frame):
+    """
+    tab to display all the NMEA Sentences and descriptions + times
+
+    Note:
+        basically a tab with a table inside
+    """
+
+    def __init__(self, tabcontrol):
+        tkinter.ttk.Frame.__init__(self, tabcontrol)
+        self.tabs = tabcontrol
+        self.counter = 0
+        self.tree = tkinter.ttk.Treeview(self)
+        verticalscrollbar = tkinter.ttk.Scrollbar(
+            self, orient=tkinter.VERTICAL, command=self.tree.yview)
+        verticalscrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+        horizontalscrollbar = tkinter.ttk.Scrollbar(
+            self, orient=tkinter.HORIZONTAL, command=self.tree.xview)
+        horizontalscrollbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+        self.tree.configure(yscrollcommand=verticalscrollbar.set,
+                            xscrollcommand=horizontalscrollbar.set)
+        self.create_message_table()
+
+    def create_message_table(self):
+        """
+        draw a large table in tab5 of all the NMEA sentences we have
+        """
+        headers = ['NMEA', 'AIS', 'MMSI', 'Timestamp']
+        self.tree["columns"] = headers
+        for column in headers:
+            self.tree.column(column, width=200, minwidth=70,
+                             stretch=tkinter.YES)
+            self.tree.heading(column, text=column, anchor=tkinter.W)
+        self.tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
+        self.tree['show'] = 'headings'
+
+    def add_new_line(self, line):
+        self.tree.insert('', self.counter, values=line)
+        self.counter += 1
+
+
 class TextBoxTab(tkinter.ttk.Frame):
     """
     tab to display all the AIS messages or NMEA Sentences
@@ -332,7 +374,7 @@ class TextBoxTab(tkinter.ttk.Frame):
             text(str): text to write in the box
         """
         self.aisbox.insert(tkinter.INSERT, text)
-        self.aisbox.insert(tkinter.INSERT, '\n')
+        self.aisbox.insert(tkinter.INSERT, '\n\n')
         self.aisbox.see(tkinter.END)
 
 
@@ -432,7 +474,7 @@ class TabControl(tkinter.ttk.Notebook):
         self.add(self.tab3, text='Export')
         self.tab4 = TextBoxTab(self)
         self.add(self.tab4, text='AIS Messages')
-        self.tab5 = TextBoxTab(self)
+        self.tab5 = AISMessageTab(self)
         self.add(self.tab5, text='NMEA Sentences')
         self.tab6 = StationInfoTab(self)
         self.add(self.tab6, text='Station Information')
@@ -641,9 +683,12 @@ class BasicGUI(tkinter.Tk):
             self.tabcontrol.tab1.write_stats_verbose()
             self.tabcontrol.tab2.create_ship_table()
             for payload in self.messagedict:
+                latestmsg = [payload, self.messagedict[payload].description,
+                             self.messagedict[payload].mmsi,
+                             self.messagedict[payload].rxtime]
                 self.tabcontrol.tab4.append_text(
                     self.messagedict[payload].__str__())
-                self.tabcontrol.tab5.append_text(payload)
+                self.tabcontrol.tab5.add_new_line(latestmsg)
             self.statuslabel.config(
                 text='Loaded capture file - {}'.format(inputfile),
                 fg='black', bg='light grey')
@@ -666,8 +711,10 @@ class BasicGUI(tkinter.Tk):
                         msg = self.aistracker.process_message(
                             payload, timestamp=currenttime)
                         self.messagedict[payload] = msg
-                        self.tabcontrol.tab5.append_text(payload)
                         self.tabcontrol.tab4.append_text(msg.__str__())
+                        latestmsg = [payload, msg.description,
+                                     msg.mmsi, currenttime]
+                        self.tabcontrol.tab5.add_new_line(latestmsg)
                         self.tabcontrol.tab1.write_stats()
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                         ais.UnknownMessageType, ais.InvalidMMSI) as err:
@@ -689,6 +736,7 @@ class BasicGUI(tkinter.Tk):
                 self.tabcontrol.tab1.write_stats_verbose()
                 self.tabcontrol.tab6.stn_options()
                 self.tabcontrol.tab6.show_stn_info()
+                time.sleep(1)
 
     def quit(self):
         """
