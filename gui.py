@@ -354,7 +354,7 @@ class StationInfoTab(tkinter.ttk.Frame):
                                           command=self.export_json)
         exportjsonbutton.grid(column=0, row=0)
         exportkmzbutton = tkinter.Button(lowerbuttons, text='KMZ',
-                                  command=self.export_kmz)
+                                         command=self.export_kmz)
         exportkmzbutton.grid(column=1, row=0)
         lowerbuttons.pack(side='bottom')
         self.stntxt = tkinter.scrolledtext.ScrolledText(self)
@@ -391,7 +391,7 @@ class StationInfoTab(tkinter.ttk.Frame):
                        ("All Files", "*.*")))
         lookupmmsi = self.stnoptions.get()
         if lookupmmsi != '':
-            stninfo = self.tabs.window.aistracker.stations[lookupmmsi]. \
+            self.tabs.window.aistracker.stations[lookupmmsi]. \
                 create_kml_map(outputfile, kmzoutput=True)
             tkinter.messagebox.showinfo('Export Files', 'Export Successful')
 

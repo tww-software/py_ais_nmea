@@ -626,8 +626,8 @@ class AISTrackerTimingTests(unittest.TestCase):
         base station reports that have been recieved.
         """
         expected = {
-            "Started": "2018/09/09 14:07:14",
-            "Finished": "2018/09/09 14:20:06"}
+            "Started": "2018/09/09 14:07:14 (estimated)",
+            "Finished": "2018/09/09 14:20:06 (estimated)"}
         timings = [
             '402=aeQv:Df7>whRv`NPsHg005hL',
             '402=a`1v:Df:@Oi>SjNu0si02H9i',
@@ -654,6 +654,16 @@ class AISTrackerTimingTests(unittest.TestCase):
             self.aistracker.process_message(
                 data, timestamp=currenttime)
         self.assertEqual(times, self.aistracker.timings)
+
+    def test_str_no_times_no_ships(self):
+        """
+        get the str for the AIS object on an empty tracker
+        there should be no time data
+        """
+        teststr = ('AIS Tracker - tracking 0 vessels' 
+                   ' , processed 0 messages, No time data available.')
+        actualstr = self.aistracker.__str__()
+        self.assertEqual(teststr, actualstr)
 
 
 class GeoJSONTests(unittest.TestCase):

@@ -167,7 +167,7 @@ class AISStation():
     def determine_station_class(self, msgobj):
         """
         try and determine the class of AIS station based on MMSI and what
-        message we recieved from it
+        message we received from it
 
         Note:
             message types 4 and 11 are only transmitted by
@@ -330,7 +330,7 @@ class AISTracker():
 
         Args:
             data(str): full message payload from 1 or more NMEA sentences
-            timestamp(datetime.datetime): time this message was recieved
+            timestamp(str): time this message was recieved
 
         Raises:
             UnknownMessageType: if the message type is not in the
@@ -364,7 +364,7 @@ class AISTracker():
             if msgtype in (4, 11):
                 if msgobj.timestamp != '0/00/00 24:60:60':
                     if timestamp not in self.timings:
-                        self.timings.append(msgobj.timestamp)
+                        self.timings.append(msgobj.timestamp + ' (estimated)')
             try:
                 timestamp = self.timings[len(self.timings) - 1]
             except IndexError:
@@ -459,8 +459,30 @@ class AISTracker():
         allstations = {}
         for mmsi in self.stations_generator():
             allstations[mmsi] = self.stations[mmsi].get_station_info(
-                verbose=True)
+                verbose=verbose)
         return allstations
+
+    def sort_mmsi_by_catagory(self):
+        """
+        sort MMSIs by type, subtype, flag etc
+        so its easy to find all the MMSIs that fall under a certain catagory
+        e.g. all the vessels that are Tugs
+
+        Returns:
+            organised(dict): dictionary with lists of MMSIs for each catagory
+        """
+        organised = {}
+        stnclasses = collections.defaultdict(list)
+        stntypes = collections.defaultdict(list)
+        flags = collections.defaultdict(list)
+        for mmsi in self.stations_generator():
+            stnclasses[self.stations[mmsi].stnclass].append(mmsi)
+            stntypes[self.stations[mmsi].stntype].append(mmsi)
+            flags[self.stations[mmsi].flag].append(mmsi)
+        organised['Flags'] = flags
+        organised['Class'] = stnclasses
+        organised['Types'] = stntypes
+        return organised
 
     def create_kml_map(self, outputfile, kmzoutput=True):
         """
