@@ -349,6 +349,7 @@ class AISMessageTab(tkinter.ttk.Frame):
     def add_new_line(self, line):
         self.tree.insert('', self.counter, values=line)
         self.counter += 1
+        self.tree.yview_moveto(1)
 
 
 class TextBoxTab(tkinter.ttk.Frame):
