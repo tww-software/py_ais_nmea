@@ -300,6 +300,29 @@ class AISStationTestsRealData(unittest.TestCase):
     def setUp(self):
         self.aisteststn = ais.AISStation('235070199')
 
+    def test_get_station_info(self):
+        """
+        test for getting useful info from the station object
+
+        this will be pretty empty as we havn't added any position reports or
+        voyage data yet!
+        """
+        stninfodict = self.aisteststn.get_station_info(verbose=True)
+        expected = {'MMSI': '235070199', 'Class': 'Unknown', 'Type': 'Unknown',
+                    'Flag': 'United Kingdom', 'Name': '',
+                    'Position Reports': [],
+                    'Sent Messages': {}}
+        self.assertDictEqual(stninfodict, expected)
+
+    def test_stn_str(self):
+        """
+        test object str format
+        """
+        expected = ('AIS Station - MMSI: 235070199, Name: , Class: Unknown,' 
+                    ' Type: Unknown, Flag: United Kingdom')
+        teststr = self.aisteststn.__str__()
+        self.assertEqual(expected, teststr)
+                    
     def test_identify_flag(self):
         """
         we can identify the flag from the MMSI
@@ -527,13 +550,21 @@ class AISTrackerTests(unittest.TestCase):
         msg = self.process_sentence(testsentence)
         self.assertIsInstance(msg, messages.t21.Type21AidToNavigation)
 
-    def test_static_data_report(self):
+    def test_static_data_report_typeA(self):
         """
         Test to see if a particular message type is recognised
         """
         testsentence = 'H3P7uLAT58tp400000000000000'
         msg = self.process_sentence(testsentence)
-        self.assertIsInstance(msg, messages.t24.Type24StaticDataReport)
+        self.assertEqual(msg.name, 'YARONA')
+
+    def test_static_data_report_typeB(self):
+        """
+        Test to see if a particular message type is recognised
+        """
+        testsentence = 'H3P7uLDT4I138D0FA=;l001`0310'
+        msg = self.process_sentence(testsentence)
+        self.assertEqual(msg.callsign, 'VQMK4')
 
     def test_long_range_AIS_report(self):
         """
