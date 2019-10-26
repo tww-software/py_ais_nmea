@@ -3,11 +3,13 @@ module to deal with getting NMEA 0183 sentences from the network
 """
 
 import logging
+import logging.handlers
 import socket
 
 import nmea
 
 AISLOGGER = logging.getLogger(__name__)
+SENTENCELOGGER = logging.getLogger('sentences')
 
 
 def network_send(sentence, rhost, rport):
@@ -23,8 +25,24 @@ def network_send(sentence, rhost, rport):
     sock.sendto(sentence, (rhost, rport))
 
 
+def setup_logger(outputpath):
+    """
+    setup the logger to save NMEA sentences to a file
+
+    Args:
+        outputpath(str): path to save to
+    """
+    logformatstr = '%(message)s'
+    logformatter = logging.Formatter(fmt=logformatstr)
+    rotatinghandler = logging.handlers.RotatingFileHandler(
+        outputpath, maxBytes=1000000)
+    rotatinghandler.setFormatter(logformatter)
+    SENTENCELOGGER.addHandler(rotatinghandler)
+    SENTENCELOGGER.propagate = False
+    
+
 def mpserver(dataqueue, host='127.0.0.1', port=10110,
-             remotehost=None, remoteport=None):
+             remotehost=None, remoteport=None, logpath=None):
     """
     listen for and put data onto the queue
     can also forward sentences to a remote server if specified
@@ -39,10 +57,13 @@ def mpserver(dataqueue, host='127.0.0.1', port=10110,
         port(int): UDP port to listen on
         remotehost(str): ip of server to forward NMEA sentences to
         remoteport(int): port of remote server
+        logpath(str): full file path to save nmea logs to
     """
     serversock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     serversock.bind((host, port))
     AISLOGGER.info('listening on ip %s port %s', host, port)
+    if logpath and logpath != '':
+        setup_logger(logpath)
     while True:
         data, addr = serversock.recvfrom(1024)
         try:
@@ -51,6 +72,8 @@ def mpserver(dataqueue, host='127.0.0.1', port=10110,
                 multi = nmea.NMEASENTENCEREGEX.findall(decodeddata)
                 for part in multi:
                     dataqueue.put(part)
+                    if logpath:
+                        SENTENCELOGGER.info(part)
                     if remotehost and remoteport:
                         network_send(data, remotehost, remoteport)
         except UnicodeDecodeError:

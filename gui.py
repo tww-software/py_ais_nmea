@@ -50,17 +50,14 @@ class StatsTab(tkinter.ttk.Frame):
         self.totalstns = tkinter.Label(self, text='')
         self.totalstns.grid(column=1, row=3)
         self.msgstatstxt = tkinter.scrolledtext.ScrolledText(self)
-        self.msgstatstxt.configure(width=50)
+        self.msgstatstxt.configure(width=60)
         self.msgstatstxt.grid(column=0, row=4)
         self.shiptypestxt = tkinter.scrolledtext.ScrolledText(self)
-        self.shiptypestxt.configure(width=50)
+        self.shiptypestxt.configure(width=60)
         self.shiptypestxt.grid(column=1, row=4)
-        self.stntypestxt = tkinter.scrolledtext.ScrolledText(self)
-        self.stntypestxt.configure(width=30)
-        self.stntypestxt.grid(column=2, row=4)
         self.flagstxt = tkinter.scrolledtext.ScrolledText(self)
-        self.flagstxt.configure(width=30)
-        self.flagstxt.grid(column=3, row=4)
+        self.flagstxt.configure(width=40)
+        self.flagstxt.grid(column=2, row=4)
 
     def write_stats(self):
         """
@@ -81,7 +78,6 @@ class StatsTab(tkinter.ttk.Frame):
         self.msgstatstxt.delete(1.0, tkinter.END)
         self.shiptypestxt.delete(1.0, tkinter.END)
         self.flagstxt.delete(1.0, tkinter.END)
-        self.stntypestxt.delete(1.0, tkinter.END)
         stats = self.tabs.window.aistracker.tracker_stats()
         self.msgstatstxt.insert(
             tkinter.INSERT,
@@ -89,9 +85,6 @@ class StatsTab(tkinter.ttk.Frame):
         self.shiptypestxt.insert(
             tkinter.INSERT,
             ais.create_summary_text(stats['Ship Types']))
-        self.stntypestxt.insert(
-            tkinter.INSERT,
-            ais.create_summary_text(stats['AIS Station Types']))
         self.flagstxt.insert(
             tkinter.INSERT,
             ais.create_summary_text(stats['Country Flags']))
@@ -120,20 +113,20 @@ class ShipsTableTab(tkinter.ttk.Frame):
         """
         if the user double clicks on a row in the tree
         grab the MMSI of that row and switch to the station information tab
-        (tab6) and display more detailed info
+        (stninfotab) and display more detailed info
         """
         item = self.tree.identify('item', event.x, event.y)
         clickedmmsi = self.tree.item(item)['values'][0]
-        self.tabs.tab6.stnoptions.set(clickedmmsi)
-        self.tabs.tab6.show_stn_info()
-        self.tabs.select(self.tabs.tab6)
+        self.tabs.stninfotab.stnoptions.set(clickedmmsi)
+        self.tabs.stninfotab.show_stn_info()
+        self.tabs.select(self.tabs.stninfotab)
 
     def create_ship_table(self):
         """
-        draw a large table in tab2 of all the AIS stations we have
+        draw a large table in shipstab of all the AIS stations we have
         """
         self.tree.delete(*self.tree.get_children())
-        tabledata = self.tabs.window.aistracker.create_table_data()
+        tabledata = self.tabs.window.aistracker.create_nav_table()
         headers = tabledata.pop(0)
         self.tree["columns"] = headers
         for column in headers:
@@ -146,6 +139,7 @@ class ShipsTableTab(tkinter.ttk.Frame):
             counter += 1
         self.tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
         self.tree['show'] = 'headings'
+        self.tree.yview_moveto(1)
 
 
 class ExportTab(tkinter.ttk.Frame):
@@ -190,8 +184,11 @@ class ExportTab(tkinter.ttk.Frame):
                         'GEOJSON': self.export_geojson,
                         'DEBUG': self.export_debug}
             option = self.exportoptions.get()
-            commands[option]()
-            tkinter.messagebox.showinfo('Export Files', 'Export Successful')
+            try:
+                commands[option]()
+                tkinter.messagebox.showinfo('Export Files', 'Export Successful')
+            except Exception as err:
+                tkinter.messagebox.showerror('Export Files', str(err))
 
     def export_csv(self):
         """
@@ -335,7 +332,7 @@ class AISMessageTab(tkinter.ttk.Frame):
 
     def create_message_table(self):
         """
-        draw a large table in tab5 of all the NMEA sentences we have
+        draw a large table in messagetab of all the NMEA sentences we have
         """
         headers = ['NMEA', 'AIS', 'MMSI', 'Timestamp']
         self.tree["columns"] = headers
@@ -434,9 +431,14 @@ class StationInfoTab(tkinter.ttk.Frame):
                        ("All Files", "*.*")))
         lookupmmsi = self.stnoptions.get()
         if lookupmmsi != '':
-            self.tabs.window.aistracker.stations[lookupmmsi]. \
-                create_kml_map(outputfile, kmzoutput=True)
-            tkinter.messagebox.showinfo('Export Files', 'Export Successful')
+            try:
+                self.tabs.window.aistracker.stations[lookupmmsi]. \
+                    create_kml_map(outputfile, kmzoutput=True)
+                tkinter.messagebox.showinfo(
+                    'Export Files', 'Export Successful')
+            except Exception as err:
+                tkinter.messagebox.showerror('Export Files', str(err))
+
 
     def export_json(self):
         """
@@ -450,10 +452,14 @@ class StationInfoTab(tkinter.ttk.Frame):
                        ("All Files", "*.*")))
         lookupmmsi = self.stnoptions.get()
         if lookupmmsi != '':
-            stninfo = self.tabs.window.aistracker.stations[lookupmmsi]. \
-                get_station_info(verbose=True)
-            ais.write_json_file(stninfo, outputfile)
-            tkinter.messagebox.showinfo('Export Files', 'Export Successful')
+            try:
+                stninfo = self.tabs.window.aistracker.stations[lookupmmsi]. \
+                    get_station_info(verbose=True)
+                ais.write_json_file(stninfo, outputfile)
+                tkinter.messagebox.showinfo(
+                    'Export Files', 'Export Successful')
+            except Exception as err:
+                tkinter.messagebox.showerror('Export Files', str(err))
 
 
 class TabControl(tkinter.ttk.Notebook):
@@ -467,18 +473,16 @@ class TabControl(tkinter.ttk.Notebook):
     def __init__(self, window):
         tkinter.ttk.Notebook.__init__(self, window)
         self.window = window
-        self.tab1 = StatsTab(self)
-        self.add(self.tab1, text='Stats')
-        self.tab2 = ShipsTableTab(self)
-        self.add(self.tab2, text='Ships')
-        self.tab3 = ExportTab(self)
-        self.add(self.tab3, text='Export')
-        self.tab4 = TextBoxTab(self)
-        self.add(self.tab4, text='AIS Messages')
-        self.tab5 = AISMessageTab(self)
-        self.add(self.tab5, text='NMEA Sentences')
-        self.tab6 = StationInfoTab(self)
-        self.add(self.tab6, text='Station Information')
+        self.statstab = StatsTab(self)
+        self.add(self.statstab, text='Stats')
+        self.shipstab = ShipsTableTab(self)
+        self.add(self.shipstab, text='Ships')
+        self.exporttab = ExportTab(self)
+        self.add(self.exporttab, text='Export')
+        self.messagetab = AISMessageTab(self)
+        self.add(self.messagetab, text='Message Log')
+        self.stninfotab = StationInfoTab(self)
+        self.add(self.stninfotab, text='Station Information')
 
 
 class NetworkSettingsWindow(tkinter.Toplevel):
@@ -515,9 +519,24 @@ class NetworkSettingsWindow(tkinter.Toplevel):
         self.remoteport.insert(
             0, self.window.netsettings['Remote Server Port'])
         self.remoteport.grid(column=1, row=4)
+        loglabel = tkinter.Label(self, text='Log NMEA Sentences')
+        loglabel.grid(column=0, row=6)
+        self.logpath = tkinter.Entry(self)
+        self.logpath.insert(0, self.window.netsettings['Log File Path'])
+        self.logpath.grid(column=0, row=7)
+        logpathbutton = tkinter.Button(
+            self, text='Choose Log Path', command=self.set_log_path)
+        logpathbutton.grid(column=1, row=7)
         savesettingsbutton = tkinter.Button(
             self, text='Save Settings', command=self.save_settings)
-        savesettingsbutton.grid(column=0, row=5)
+        savesettingsbutton.grid(column=0, row=8)
+
+    def set_log_path(self):
+        outputfile = tkinter.filedialog.asksaveasfilename(
+        defaultextension=".txt",
+        filetypes=(("nmea text file", "*.txt"),
+                   ("All Files", "*.*")))
+        self.logpath.insert(0, outputfile)
 
     def save_settings(self):
         """
@@ -533,6 +552,7 @@ class NetworkSettingsWindow(tkinter.Toplevel):
             self.window.netsettings['Remote Server IP'] = self.remotehost.get()
             self.window.netsettings['Remote Server Port'] = int(
                 self.remoteport.get())
+            self.window.netsettings['Log File Path'] = self.logpath.get()
             tkinter.messagebox.showinfo(
                 'Network Settings', 'Network Settings Saved')
         self.destroy()
@@ -550,7 +570,8 @@ class BasicGUI(tkinter.Tk):
         'Server IP': '127.0.0.1',
         'Server Port': 10110,
         'Remote Server IP': '127.0.0.1',
-        'Remote Server Port': 10111}
+        'Remote Server Port': 10111,
+        'Log File Path': ''}
 
     def __init__(self):
         tkinter.Tk.__init__(self)
@@ -628,12 +649,14 @@ class BasicGUI(tkinter.Tk):
                 args=[self.mpq, self.netsettings['Server IP'],
                       self.netsettings['Server Port'],
                       self.netsettings['Remote Server IP'],
-                      self.netsettings['Remote Server Port']])
+                      self.netsettings['Remote Server Port']],
+                kwargs={'logpath': self.netsettings['Log File Path']})
         else:
             self.serverprocess = multiprocessing.Process(
                 target=network.mpserver,
                 args=[self.mpq, self.netsettings['Server IP'],
-                      self.netsettings['Server Port']])
+                      self.netsettings['Server Port']],
+                kwargs={'logpath': self.netsettings['Log File Path']})
         self.serverprocess.start()
         tkinter.messagebox.showinfo('Network', 'Server Started')
         self.updateguithread = threading.Thread(
@@ -679,17 +702,15 @@ class BasicGUI(tkinter.Tk):
             self.update_idletasks()
             self.aistracker, self.nmeatracker, self.messagedict = \
                 capturefile.aistracker_from_file(inputfile, debug=True)
-            self.tabcontrol.tab6.stn_options()
-            self.tabcontrol.tab1.write_stats()
-            self.tabcontrol.tab1.write_stats_verbose()
-            self.tabcontrol.tab2.create_ship_table()
+            self.tabcontrol.stninfotab.stn_options()
+            self.tabcontrol.statstab.write_stats()
+            self.tabcontrol.statstab.write_stats_verbose()
+            self.tabcontrol.shipstab.create_ship_table()
             for payload in self.messagedict:
                 latestmsg = [payload, self.messagedict[payload].description,
                              self.messagedict[payload].mmsi,
                              self.messagedict[payload].rxtime]
-                self.tabcontrol.tab4.append_text(
-                    self.messagedict[payload].__str__())
-                self.tabcontrol.tab5.add_new_line(latestmsg)
+                self.tabcontrol.messagetab.add_new_line(latestmsg)
             self.statuslabel.config(
                 text='Loaded capture file - {}'.format(inputfile),
                 fg='black', bg='light grey')
@@ -712,11 +733,10 @@ class BasicGUI(tkinter.Tk):
                         msg = self.aistracker.process_message(
                             payload, timestamp=currenttime)
                         self.messagedict[payload] = msg
-                        self.tabcontrol.tab4.append_text(msg.__str__())
                         latestmsg = [payload, msg.description,
                                      msg.mmsi, currenttime]
-                        self.tabcontrol.tab5.add_new_line(latestmsg)
-                        self.tabcontrol.tab1.write_stats()
+                        self.tabcontrol.messagetab.add_new_line(latestmsg)
+                        self.tabcontrol.statstab.write_stats()
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                         ais.UnknownMessageType, ais.InvalidMMSI) as err:
                     AISLOGGER.debug(str(err))
@@ -733,10 +753,10 @@ class BasicGUI(tkinter.Tk):
             currenttime = datetime.datetime.utcnow().strftime(
                 '%Y/%m/%d %H:%M:%S')
             if currenttime.endswith('5'):
-                self.tabcontrol.tab2.create_ship_table()
-                self.tabcontrol.tab1.write_stats_verbose()
-                self.tabcontrol.tab6.stn_options()
-                self.tabcontrol.tab6.show_stn_info()
+                self.tabcontrol.shipstab.create_ship_table()
+                self.tabcontrol.statstab.write_stats_verbose()
+                self.tabcontrol.stninfotab.stn_options()
+                self.tabcontrol.stninfotab.show_stn_info()
                 time.sleep(1)
 
     def quit(self):

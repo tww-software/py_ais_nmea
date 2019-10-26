@@ -571,6 +571,49 @@ class AISTracker():
             geojsonmap.save_to_file(outputfile)
         return geojsonmap
 
+    def create_nav_table(self, mmsilist=None):
+        """
+        creates a table of data we have on all vessels
+
+        Note:
+            this is a list of lists meant for output to a live updating GUI
+
+        Args:
+            mmsilist(list): list of MMSIs as strings if this is specified
+                            we will only display info on these MMSIs
+
+        Returns:
+            csvtable(list): (lists of lists) each list is a line
+                            in the table
+        """
+        csvtable = []
+        csvheader = ['MMSI', 'Name', 'Callsign', 'Type', 'Flag',
+                     'Latitude','Longitude', 'CoG', 'Speed (knots)',
+                     'Navigation Status', 'Turn Rate',
+                     'Time', 'Destination', 'ETA']
+        lastposheader = ['Latitude', 'Longitude', 'CoG', 'Speed (knots)',
+                         'Navigation Status', 'Turn Rate', 'Time']
+        csvtable.append(csvheader)
+        if mmsilist:
+            stations = mmsilist
+        else:
+            stations = self.stations_generator()
+        for mmsi in stations:
+            stninfo = self.stations[mmsi].get_station_info()
+            line = []
+            for item in lastposheader:
+                try:
+                    stninfo[item] = (stninfo['Last Known Position'][item])
+                except (NoSuitablePositionReport, TypeError, KeyError):
+                    stninfo[item] = ''
+            for item in csvheader:
+                try:
+                    line.append(stninfo[item])
+                except KeyError:
+                    line.append('')
+            csvtable.append(line)
+        return csvtable
+
     def create_table_data(self, mmsilist=None):
         """
         creates a table of data we have on all vessels
@@ -590,11 +633,13 @@ class AISTracker():
         csvtable = []
         csvheader = ['MMSI', 'Class', 'Type', 'Flag', 'Name', 'Callsign',
                      'IMO number', 'RAIM in use', 'EPFD Fix type',
-                     'Position Accuracy', 'Total Messages', 'Latitude',
-                     'Longitude', 'CoG', 'Speed (knots)', 'Navigation Status',
-                     'Time', 'Destination', 'ETA']
-        lastposheader = ['Latitude', 'Longitude', 'CoG', 'Speed (knots)',
-                         'Navigation Status', 'Time']
+                     'Position Accuracy', 'Total Messages', 'First Known Latitude',
+                     'First Known Longitude', 'First Known Navigation Status',
+                     'First Known Time', 'Last Known Latitude',
+                     'Last Known Longitude', 'Last Known Navigation Status',
+                     'Last Known Time', 'Destination', 'ETA']
+        posheaders = ['Latitude', 'Longitude',
+                      'Navigation Status', 'Time']
         csvtable.append(csvheader)
         if mmsilist:
             stations = mmsilist
@@ -606,11 +651,20 @@ class AISTracker():
             stninfo['Total Messages'] = 0
             for i in self.stations[mmsi].sentmsgs:
                 stninfo['Total Messages'] += self.stations[mmsi].sentmsgs[i]
-            for item in lastposheader:
+            try:
+                firstpos = self.stations[mmsi].posrep[0]
+            except IndexError:
+                firstpos = {}           
+            for item in posheaders:
                 try:
-                    stninfo[item] = (stninfo['Last Known Position'][item])
+                    stninfo['First Known ' + item] = (firstpos[item])
                 except (NoSuitablePositionReport, TypeError, KeyError):
-                    stninfo[item] = ''
+                    stninfo['First Known ' + item] = ''
+            for item in posheaders:
+                try:
+                    stninfo['Last Known ' + item] = (stninfo['Last Known Position'][item])
+                except (NoSuitablePositionReport, TypeError, KeyError):
+                    stninfo['Last Known ' + item] = ''
             for item in csvheader:
                 try:
                     line.append(stninfo[item])
