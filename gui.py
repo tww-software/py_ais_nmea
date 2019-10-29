@@ -186,7 +186,8 @@ class ExportTab(tkinter.ttk.Frame):
             option = self.exportoptions.get()
             try:
                 commands[option]()
-                tkinter.messagebox.showinfo('Export Files', 'Export Successful')
+                tkinter.messagebox.showinfo(
+                    'Export Files', 'Export Successful')
             except Exception as err:
                 tkinter.messagebox.showerror('Export Files', str(err))
 
@@ -329,6 +330,18 @@ class AISMessageTab(tkinter.ttk.Frame):
         self.tree.configure(yscrollcommand=verticalscrollbar.set,
                             xscrollcommand=horizontalscrollbar.set)
         self.create_message_table()
+        self.tree.bind("<Double-1>", self.on_tree_item_doubleclick)
+
+    def on_tree_item_doubleclick(self, event):
+        """
+        open a message box with further details when a user double clicks a
+        message
+        """
+        item = self.tree.identify('item', event.x, event.y)
+        clickednmea = self.tree.item(item)['values'][0]
+        messagewindow = MessageWindow(self.tabs.window)
+        messagewindow.msgdetailsbox.append_text(
+            self.tabs.window.messagedict[clickednmea].__str__())
 
     def create_message_table(self):
         """
@@ -485,6 +498,19 @@ class TabControl(tkinter.ttk.Notebook):
         self.add(self.stninfotab, text='Station Information')
 
 
+class MessageWindow(tkinter.Toplevel):
+    """
+    window to display details of individual AIS messages
+    """
+
+    def __init__(self, window):
+        tkinter.Toplevel.__init__(self, window)
+        self.window = window
+        self.transient(self.window)
+        self.msgdetailsbox = TextBoxTab(self)
+        self.msgdetailsbox.pack()
+
+
 class NetworkSettingsWindow(tkinter.Toplevel):
     """
     window to configure network settings
@@ -530,6 +556,7 @@ class NetworkSettingsWindow(tkinter.Toplevel):
         savesettingsbutton = tkinter.Button(
             self, text='Save Settings', command=self.save_settings)
         savesettingsbutton.grid(column=0, row=8)
+        self.transient(self.window)
 
     def set_log_path(self):
         outputfile = tkinter.filedialog.asksaveasfilename(
