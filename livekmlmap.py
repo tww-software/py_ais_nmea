@@ -7,6 +7,7 @@ import logging
 import os
 import multiprocessing
 import shutil
+import time
 
 import ais
 import kml
@@ -79,8 +80,7 @@ class LiveKMLMap():
             qdata = self.mpq.get()
             if qdata:
                 try:
-                    data = qdata.decode('utf-8')
-                    payload = self.nmeatracker.process_sentence(data)
+                    payload = self.nmeatracker.process_sentence(qdata)
                     if payload:
                         currenttime = datetime.datetime.utcnow().strftime(
                             '%Y/%m/%d %H:%M:%S')
@@ -90,6 +90,7 @@ class LiveKMLMap():
                         if currenttime.endswith('5'):
                             self.aistracker.create_kml_map(
                                 self.kmlpath, kmzoutput=False)
+                            time.sleep(1)
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                         ais.UnknownMessageType, ais.InvalidMMSI) as err:
                     AISLOGGER.debug(str(err))
@@ -136,8 +137,7 @@ class AdvancedLiveKMLMap(LiveKMLMap):
             qdata = self.mpq.get()
             if qdata:
                 try:
-                    data = qdata.decode('utf-8')
-                    payload = self.nmeatracker.process_sentence(data)
+                    payload = self.nmeatracker.process_sentence(qdata)
                     if payload:
                         currenttime = datetime.datetime.utcnow().strftime(
                             '%Y/%m/%d %H:%M:%S')
@@ -146,6 +146,7 @@ class AdvancedLiveKMLMap(LiveKMLMap):
                         AISLOGGER.info(msg.__str__())
                         if currenttime.endswith('5'):
                             self.create_detailed_map()
+                            time.sleep(1)
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                         ais.UnknownMessageType, ais.InvalidMMSI) as err:
                     AISLOGGER.debug(str(err))
@@ -171,7 +172,7 @@ class AdvancedLiveKMLMap(LiveKMLMap):
                 lastpos = self.aistracker.stations[mmsi].get_latest_position()
             except ais.NoSuitablePositionReport:
                 continue
-            stntype = self.aistracker.stations[mmsi].subtype
+            stntype = self.aistracker.stations[mmsi].stntype
             stninfo = self.aistracker.stations[mmsi].get_station_info()
             desc = kmlmap.format_kml_placemark_description(stninfo)
             kmlmap.open_folder(mmsi)
