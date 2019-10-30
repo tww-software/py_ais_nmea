@@ -118,6 +118,8 @@ class ShipsTableTab(tkinter.ttk.Frame):
         item = self.tree.identify('item', event.x, event.y)
         clickedmmsi = self.tree.item(item)['values'][0]
         self.tabs.stninfotab.stnoptions.set(clickedmmsi)
+        if len(clickedmmsi) == 7:
+            clickedmmsi = '00' + clickedmmsi
         self.tabs.stninfotab.show_stn_info()
         self.tabs.select(self.tabs.stninfotab)
 
@@ -340,13 +342,15 @@ class AISMessageTab(tkinter.ttk.Frame):
         item = self.tree.identify('item', event.x, event.y)
         clickednmea = self.tree.item(item)['values'][0]
         messagewindow = MessageWindow(self.tabs.window)
-        messagewindow.msgdetailsbox.append_text(
-            self.tabs.window.messagedict[clickednmea].__str__())
+        msgsummary = ais.create_summary_text(
+            self.tabs.window.messagedict[clickednmea].__dict__)
+        messagewindow.msgdetailsbox.append_text(msgsummary)
 
     def create_message_table(self):
         """
         draw a large table in messagetab of all the NMEA sentences we have
         """
+        self.tree.delete(*self.tree.get_children())
         headers = ['NMEA', 'AIS', 'MMSI', 'Timestamp']
         self.tree["columns"] = headers
         for column in headers:
@@ -733,6 +737,7 @@ class BasicGUI(tkinter.Tk):
             self.tabcontrol.statstab.write_stats()
             self.tabcontrol.statstab.write_stats_verbose()
             self.tabcontrol.shipstab.create_ship_table()
+            self.tabcontrol.messagetab.create_message_table()
             for payload in self.messagedict:
                 latestmsg = [payload, self.messagedict[payload].description,
                              self.messagedict[payload].mmsi,
