@@ -660,6 +660,42 @@ class BasicGUI(tkinter.Tk):
         self.toplevel = None
         self.livemap = None
 
+    def clear_gui(self):
+        """
+        clear the gui of all data
+        """
+        res = tkinter.messagebox.askyesno('Clearing GUI', 'Are you sure?')
+        if res:
+            if self.serverrunning:
+                tkinter.messagebox.showwarning(
+                    'WARNING', 'Cannot clear GUI whilst server is running')
+            else:
+                self.statuslabel.config(text='', bg='light grey')
+                self.tabcontrol.statstab.aismsgtotal.configure(text='')
+                self.tabcontrol.statstab.nmeasentencetotal.configure(text='')
+                self.tabcontrol.statstab.nmeamultipartassembled.configure(
+                    text='')
+                self.tabcontrol.statstab.totalstns.configure(text='')
+                self.tabcontrol.statstab.starttime.configure(text='')
+                self.tabcontrol.statstab.latesttime.configure(text='')
+                self.tabcontrol.statstab.msgstatstxt.delete(1.0, tkinter.END)
+                self.tabcontrol.statstab.shiptypestxt.delete(1.0, tkinter.END)
+                self.tabcontrol.statstab.flagstxt.delete(1.0, tkinter.END)
+                self.tabcontrol.shipstab.tree.delete(
+                    *self.tabcontrol.shipstab.tree.get_children())
+                self.tabcontrol.messagetab.tree.delete(
+                    *self.tabcontrol.messagetab.tree.get_children())
+                self.tabcontrol.stninfotab.stnoptions['values'] = []
+                self.aistracker.stations.clear()
+                self.aistracker.messages.clear()
+                self.aistracker.timings.clear()
+                self.aistracker.messagesprocessed = 0
+                self.nmeatracker.multiparts.clear()
+                self.nmeatracker.channelcounter.clear()
+                self.nmeatracker.sentencecount = 0
+                self.nmeatracker.reassembled = 0
+                self.messagedict.clear()
+
     def top_menu(self):
         """
         format and add the top menu to the main window
@@ -667,6 +703,7 @@ class BasicGUI(tkinter.Tk):
         menu = tkinter.Menu(self)
         openfileitem = tkinter.Menu(menu, tearoff=0)
         openfileitem.add_command(label='Open', command=self.open_file)
+        openfileitem.add_command(label='Clear GUI', command=self.clear_gui)
         openfileitem.add_command(label='Quit', command=self.quit)
         menu.add_cascade(label='File', menu=openfileitem)
         networkitem = tkinter.Menu(menu, tearoff=0)
