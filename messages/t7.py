@@ -12,15 +12,25 @@ class Type7BinaryAcknowlegement(messages.aismessage.AISMessage):
         senders(list): filtered list of senders to acknowlege
     """
 
+    fields = {'MMSI 1':{'start': 40, 'end': 70},
+              'MMSI 2':{'start': 72, 'end': 102},
+              'MMSI 3':{'start': 104, 'end': 134},
+              'MMSI 4':{'start': 136, 'end': 166}}
+
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
-        self.mmsi1 = self.decode_sixbit_integer(msgbinary[40:70])
-        self.mmsi2 = self.decode_sixbit_integer(msgbinary[72:102])
-        self.mmsi3 = self.decode_sixbit_integer(msgbinary[104:134])
-        self.mmsi4 = self.decode_sixbit_integer(msgbinary[136:166])
-        self.senders = self.filter_senders()
+        senders = []
+        for field in self.fields:
+            try:
+                sentmmsi = self.decode_sixbit_integer(
+                    msgbinary[self.fields[field]['start']:self.fields[field]['end']])
+                senders.append(sentmmsi)
+            except IndexError:
+                pass
+        self.senders = self.filter_senders(senders)
 
-    def filter_senders(self):
+    @staticmethod
+    def filter_senders(senders):
         """
         remove any 'unavailable' items from the senders list
         so only actual MMSIs are displayed
@@ -28,10 +38,9 @@ class Type7BinaryAcknowlegement(messages.aismessage.AISMessage):
         Returns:
             senders2(list): list of sender MMSIs
         """
-        senders = [self.mmsi1, self.mmsi2, self.mmsi3, self.mmsi4]
         senders2 = []
         for mmsi in senders:
-            if mmsi != 'unavailable':
+            if mmsi != 0:
                 senders2.append(str(mmsi))
         return senders2
 

@@ -384,9 +384,9 @@ class AISTracker():
         """
         lats = []
         lons = []
-        for mmsi in self.stations_generator():
+        for stn in self.stations_generator():
             try:
-                lastpos = self.stations[mmsi].get_latest_position()
+                lastpos = stn.get_latest_position()
             except NoSuitablePositionReport:
                 continue
             lats.append(lastpos['Latitude'])
@@ -404,8 +404,9 @@ class AISTracker():
         Yields:
             stn(AISStation): ais station object
         """
-        for stn in self.stations:
-            yield stn
+        mmsilist = list(self.stations.keys())
+        for stn in mmsilist:
+            yield self.stations[stn]
 
     def tracker_stats(self):
         """
@@ -421,10 +422,10 @@ class AISTracker():
         flagcount = collections.Counter()
         stnclasscount = collections.Counter()
         stntypescount = collections.Counter()
-        for mmsi in self.stations_generator():
-            stnclasscount[self.stations[mmsi].stnclass] += 1
-            stntypescount[self.stations[mmsi].stntype] += 1
-            flagcount[self.stations[mmsi].flag] += 1
+        for stn in self.stations_generator():
+            stnclasscount[stn.stnclass] += 1
+            stntypescount[stn.stntype] += 1
+            flagcount[stn.flag] += 1
         stats['Total Unique Stations'] = self.__len__()
         stats['Total Messages Processed'] = \
             self.messagesprocessed
@@ -457,8 +458,8 @@ class AISTracker():
                                currently has on all vessels it has recorded
         """
         allstations = {}
-        for mmsi in self.stations_generator():
-            allstations[mmsi] = self.stations[mmsi].get_station_info(
+        for stn in self.stations_generator():
+            allstations[stn.mmsi] = stn.get_station_info(
                 verbose=verbose)
         return allstations
 
@@ -475,16 +476,16 @@ class AISTracker():
         stnclasses = collections.defaultdict(list)
         stntypes = collections.defaultdict(list)
         flags = collections.defaultdict(list)
-        for mmsi in self.stations_generator():
-            stnclasses[self.stations[mmsi].stnclass].append(mmsi)
-            stntypes[self.stations[mmsi].stntype].append(mmsi)
-            flags[self.stations[mmsi].flag].append(mmsi)
+        for stn in self.stations_generator():
+            stnclasses[stn.stnclass].append(stn.mmsi)
+            stntypes[stn.stntype].append(stn.mmsi)
+            flags[stn.flag].append(stn.mmsi)
         organised['Flags'] = flags
         organised['Class'] = stnclasses
         organised['Types'] = stntypes
         return organised
 
-    def create_kml_map(self, outputfile, kmzoutput=True):
+    def create_kml_map(self, outputfile, kmzoutput=True, linestring=True):
         """
         create a KML map of all the vessels we have on record
 
@@ -499,27 +500,28 @@ class AISTracker():
             docpath = os.path.join(outputfile)
         kmlmap = kml.KMLOutputParser(docpath)
         kmlmap.create_kml_header(kmz=kmzoutput)
-        for mmsi in self.stations_generator():
+        for stn in self.stations_generator():
             try:
-                lastpos = self.stations[mmsi].get_latest_position()
+                lastpos = stn.get_latest_position()
             except NoSuitablePositionReport:
                 continue
-            stntype = self.stations[mmsi].stntype
-            stninfo = self.stations[mmsi].get_station_info()
+            stntype = stn.stntype
+            stninfo = stn.get_station_info()
             desc = kmlmap.format_kml_placemark_description(stninfo)
-            kmlmap.open_folder(mmsi)
+            kmlmap.open_folder(stn.mmsi)
             try:
                 heading = lastpos['True Heading']
                 if heading != HEADINGUNAVAILABLE and kmzoutput:
-                    kmlmap.add_kml_placemark(mmsi, desc,
+                    kmlmap.add_kml_placemark(stn.mmsi, desc,
                                              str(lastpos['Longitude']),
                                              str(lastpos['Latitude']),
                                              heading, kmzoutput)
             except KeyError:
                 pass
-            posreps = self.stations[mmsi].posrep
-            kmlmap.add_kml_placemark_linestring(mmsi, posreps)
-            kmlmap.add_kml_placemark(mmsi, desc,
+            if linestring:
+                posreps = stn.posrep
+                kmlmap.add_kml_placemark_linestring(stn.mmsi, posreps)
+            kmlmap.add_kml_placemark(stn.mmsi, desc,
                                      str(lastpos['Longitude']),
                                      str(lastpos['Latitude']),
                                      stntype, kmzoutput)
@@ -542,17 +544,17 @@ class AISTracker():
                                                processing
         """
         geojsonmap = geojson.GeoJsonParser()
-        for mmsi in self.stations_generator():
+        for stn in self.stations_generator():
             try:
-                lastpos = self.stations[mmsi].get_latest_position()
+                lastpos = stn.get_latest_position()
             except NoSuitablePositionReport:
                 continue
-            currentmmsi = self.stations[mmsi].mmsi
+            currentmmsi = stn.mmsi
             currentproperties = {}
             currentproperties.update(
-                self.stations[mmsi].get_station_info())
+                stn.get_station_info())
             currentproperties['Icon'] = \
-                icons.ICONS[self.stations[mmsi].stntype]
+                icons.ICONS[stn.stntype]
             try:
                 currentproperties['Heading'] = lastpos['True Heading']
             except KeyError:
@@ -560,7 +562,7 @@ class AISTracker():
             lastlat = lastpos['Latitude']
             lastlon = lastpos['Longitude']
             currentcoords = []
-            for pos in self.stations[mmsi].posrep:
+            for pos in stn.posrep:
                 currentcoords.append([pos['Longitude'], pos['Latitude']])
             geojsonmap.add_station_info(currentmmsi,
                                         currentproperties,
@@ -598,8 +600,8 @@ class AISTracker():
             stations = mmsilist
         else:
             stations = self.stations_generator()
-        for mmsi in stations:
-            stninfo = self.stations[mmsi].get_station_info()
+        for stn in stations:
+            stninfo = stn.get_station_info()
             line = []
             for item in lastposheader:
                 try:
@@ -645,14 +647,14 @@ class AISTracker():
             stations = mmsilist
         else:
             stations = self.stations_generator()
-        for mmsi in stations:
-            stninfo = self.stations[mmsi].get_station_info()
+        for stn in stations:
+            stninfo = stn.get_station_info()
             line = []
             stninfo['Total Messages'] = 0
-            for i in self.stations[mmsi].sentmsgs:
-                stninfo['Total Messages'] += self.stations[mmsi].sentmsgs[i]
+            for i in stn.sentmsgs:
+                stninfo['Total Messages'] += stn.sentmsgs[i]
             try:
-                firstpos = self.stations[mmsi].posrep[0]
+                firstpos = stn.posrep[0]
             except IndexError:
                 firstpos = {}           
             for item in posheaders:

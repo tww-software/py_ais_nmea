@@ -16,6 +16,8 @@ import tkinter.ttk
 
 import ais
 import capturefile
+import livekmlmap
+import os
 import nmea
 import network
 
@@ -44,20 +46,28 @@ class StatsTab(tkinter.ttk.Frame):
         nmeamultipartassembledlabel.grid(column=0, row=2)
         self.nmeamultipartassembled = tkinter.Label(self, text='')
         self.nmeamultipartassembled.grid(column=1, row=2)
-        self.totalstnslabel = tkinter.Label(
+        totalstnslabel = tkinter.Label(
             self, text='Total Unique Stations')
-        self.totalstnslabel.grid(column=0, row=3)
+        totalstnslabel.grid(column=0, row=3)
         self.totalstns = tkinter.Label(self, text='')
         self.totalstns.grid(column=1, row=3)
+        starttimelabel = tkinter.Label(self, text='Start Time')
+        starttimelabel.grid(column=0, row=4)
+        self.starttime = tkinter.Label(self, text='')
+        self.starttime.grid(column=1, row=4)
+        latesttimelabel = tkinter.Label(self, text='Latest Time')
+        latesttimelabel.grid(column=0, row=5)
+        self.latesttime = tkinter.Label(self, text='')
+        self.latesttime.grid(column=1, row=5)
         self.msgstatstxt = tkinter.scrolledtext.ScrolledText(self)
         self.msgstatstxt.configure(width=60)
-        self.msgstatstxt.grid(column=0, row=4)
+        self.msgstatstxt.grid(column=0, row=6)
         self.shiptypestxt = tkinter.scrolledtext.ScrolledText(self)
         self.shiptypestxt.configure(width=60)
-        self.shiptypestxt.grid(column=1, row=4)
+        self.shiptypestxt.grid(column=1, row=6)
         self.flagstxt = tkinter.scrolledtext.ScrolledText(self)
         self.flagstxt.configure(width=40)
-        self.flagstxt.grid(column=2, row=4)
+        self.flagstxt.grid(column=2, row=6)
 
     def write_stats(self):
         """
@@ -70,6 +80,12 @@ class StatsTab(tkinter.ttk.Frame):
         self.nmeamultipartassembled.configure(
             text=self.tabs.window.nmeatracker.reassembled)
         self.totalstns.configure(text=self.tabs.window.aistracker.__len__())
+        try:
+            self.latesttime.configure(
+                text=self.tabs.window.aistracker.timings[
+                    len(self.tabs.window.aistracker.timings) - 1])
+        except IndexError:
+            self.latesttime.configure(text='Unavailable')
 
     def write_stats_verbose(self):
         """
@@ -116,10 +132,10 @@ class ShipsTableTab(tkinter.ttk.Frame):
         (stninfotab) and display more detailed info
         """
         item = self.tree.identify('item', event.x, event.y)
-        clickedmmsi = self.tree.item(item)['values'][0]
-        self.tabs.stninfotab.stnoptions.set(clickedmmsi)
+        clickedmmsi = str(self.tree.item(item)['values'][0])
         if len(clickedmmsi) == 7:
             clickedmmsi = '00' + clickedmmsi
+        self.tabs.stninfotab.stnoptions.set(clickedmmsi)
         self.tabs.stninfotab.show_stn_info()
         self.tabs.select(self.tabs.stninfotab)
 
@@ -141,7 +157,6 @@ class ShipsTableTab(tkinter.ttk.Frame):
             counter += 1
         self.tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
         self.tree['show'] = 'headings'
-        self.tree.yview_moveto(1)
 
 
 class ExportTab(tkinter.ttk.Frame):
@@ -191,6 +206,7 @@ class ExportTab(tkinter.ttk.Frame):
                 tkinter.messagebox.showinfo(
                     'Export Files', 'Export Successful')
             except Exception as err:
+                AISLOGGER.exception('export error')
                 tkinter.messagebox.showerror('Export Files', str(err))
 
     def export_csv(self):
@@ -431,10 +447,14 @@ class StationInfoTab(tkinter.ttk.Frame):
         self.stntxt.delete(1.0, tkinter.END)
         lookupmmsi = self.stnoptions.get()
         if lookupmmsi != '':
-            stninfo = ais.create_summary_text(
-                self.tabs.window.aistracker.stations[lookupmmsi]
-                .get_station_info())
-            self.stntxt.insert(tkinter.INSERT, stninfo)
+            try:
+                stninfo = ais.create_summary_text(
+                    self.tabs.window.aistracker.stations[lookupmmsi]
+                    .get_station_info())
+                self.stntxt.insert(tkinter.INSERT, stninfo)
+            except KeyError:
+                tkinter.messagebox.showerror(
+                    'Station Info', 'no data for MMSI - {}'.format(lookupmmsi))
 
     def export_kmz(self):
         """
@@ -455,7 +475,6 @@ class StationInfoTab(tkinter.ttk.Frame):
                     'Export Files', 'Export Successful')
             except Exception as err:
                 tkinter.messagebox.showerror('Export Files', str(err))
-
 
     def export_json(self):
         """
@@ -557,9 +576,17 @@ class NetworkSettingsWindow(tkinter.Toplevel):
         logpathbutton = tkinter.Button(
             self, text='Choose Log Path', command=self.set_log_path)
         logpathbutton.grid(column=1, row=7)
+        loglabel = tkinter.Label(self, text='Ouput Live KMZ Map')
+        loglabel.grid(column=0, row=8)
+        self.kmzpath = tkinter.Entry(self)
+        self.kmzpath.insert(0, self.window.netsettings['KMZ File Path'])
+        self.kmzpath.grid(column=0, row=9)
+        kmzpathbutton = tkinter.Button(
+            self, text='Choose KMZ Path', command=self.set_kmz_path)
+        kmzpathbutton.grid(column=1, row=9)
         savesettingsbutton = tkinter.Button(
             self, text='Save Settings', command=self.save_settings)
-        savesettingsbutton.grid(column=0, row=8)
+        savesettingsbutton.grid(column=0, row=10)
         self.transient(self.window)
 
     def set_log_path(self):
@@ -568,6 +595,10 @@ class NetworkSettingsWindow(tkinter.Toplevel):
         filetypes=(("nmea text file", "*.txt"),
                    ("All Files", "*.*")))
         self.logpath.insert(0, outputfile)
+
+    def set_kmz_path(self):
+        outputdir = tkinter.filedialog.askdirectory()
+        self.kmzpath.insert(0, outputdir)
 
     def save_settings(self):
         """
@@ -584,6 +615,7 @@ class NetworkSettingsWindow(tkinter.Toplevel):
             self.window.netsettings['Remote Server Port'] = int(
                 self.remoteport.get())
             self.window.netsettings['Log File Path'] = self.logpath.get()
+            self.window.netsettings['KMZ File Path'] = self.kmzpath.get()
             tkinter.messagebox.showinfo(
                 'Network Settings', 'Network Settings Saved')
         self.destroy()
@@ -602,7 +634,8 @@ class BasicGUI(tkinter.Tk):
         'Server Port': 10110,
         'Remote Server IP': '127.0.0.1',
         'Remote Server Port': 10111,
-        'Log File Path': ''}
+        'Log File Path': '',
+        'KMZ File Path': ''}
 
     def __init__(self):
         tkinter.Tk.__init__(self)
@@ -625,6 +658,7 @@ class BasicGUI(tkinter.Tk):
         self.forwardsentences = tkinter.BooleanVar()
         self.forwardsentences.set(0)
         self.toplevel = None
+        self.livemap = None
 
     def top_menu(self):
         """
@@ -673,6 +707,12 @@ class BasicGUI(tkinter.Tk):
         start the server
         """
         self.serverrunning = True
+        self.tabcontrol.statstab.starttime.configure(
+            text=datetime.datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S'))
+        if self.netsettings['KMZ File Path'] != '':
+            self.livemap = livekmlmap.AdvancedLiveKMLMap(
+                self.netsettings['KMZ File Path'])
+            self.livemap.create_netlink_file()
         if self.forwardsentences.get() == 1:
             print('forwarding sentences')
             self.serverprocess = multiprocessing.Process(
@@ -698,8 +738,10 @@ class BasicGUI(tkinter.Tk):
             target=self.refreshgui, args=(self.stopevent,))
         self.refreshguithread.setDaemon(True)
         self.refreshguithread.start()
-        self.statuslabel.config(text='AIS Server Listening',
-                                fg='black', bg='green2')
+        self.statuslabel.config(
+            text='AIS Server Listening on {} port {}'.format(
+                self.netsettings['Server IP'], self.netsettings['Server Port']),
+            fg='black', bg='green2')
 
     def stop_server(self):
         """
@@ -734,6 +776,12 @@ class BasicGUI(tkinter.Tk):
             self.aistracker, self.nmeatracker, self.messagedict = \
                 capturefile.aistracker_from_file(inputfile, debug=True)
             self.tabcontrol.stninfotab.stn_options()
+            try:
+                self.tabcontrol.statstab.starttime.configure(
+                    text=self.aistracker.timings[0])
+            except IndexError:
+                self.tabcontrol.statstab.starttime.configure(
+                    text='Unavailable')
             self.tabcontrol.statstab.write_stats()
             self.tabcontrol.statstab.write_stats_verbose()
             self.tabcontrol.shipstab.create_ship_table()
@@ -762,8 +810,13 @@ class BasicGUI(tkinter.Tk):
                     if payload:
                         currenttime = datetime.datetime.utcnow().strftime(
                             '%Y/%m/%d %H:%M:%S')
-                        msg = self.aistracker.process_message(
-                            payload, timestamp=currenttime)
+                        try:
+                            msg = self.aistracker.process_message(
+                                payload, timestamp=currenttime)
+                        except (IndexError, KeyError) as err:
+                            errmsg = '%s - error with - %s'.format(
+                                str(err), payload)
+                            AISLOGGER.error(errmsg)
                         self.messagedict[payload] = msg
                         latestmsg = [payload, msg.description,
                                      msg.mmsi, currenttime]
@@ -789,6 +842,9 @@ class BasicGUI(tkinter.Tk):
                 self.tabcontrol.statstab.write_stats_verbose()
                 self.tabcontrol.stninfotab.stn_options()
                 self.tabcontrol.stninfotab.show_stn_info()
+                if self.livemap:
+                    self.livemap.create_detailed_map(
+                        aistracker=self.aistracker)
                 time.sleep(1)
 
     def quit(self):

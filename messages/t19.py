@@ -42,8 +42,11 @@ class Type19ExtendedReportClassB(messages.aismessage.AISMessage):
         self.timestampsecond = self.decode_sixbit_integer(
             msgbinary[133:139])
         self.name = binary.decode_sixbit_ascii(msgbinary[143:263]).rstrip()
-        self.shiptype = self.shiptypes[self.decode_sixbit_integer(
-            msgbinary[263:271])]
+        try:
+            self.shiptype = self.shiptypes[self.decode_sixbit_integer(
+                msgbinary[263:271])]
+        except KeyError:
+            self.shiptype = 'Unknown'
         tobow = self.decode_sixbit_integer(msgbinary[271:280])
         tostern = self.decode_sixbit_integer(msgbinary[280:289])
         toport = self.decode_sixbit_integer(msgbinary[289:295])

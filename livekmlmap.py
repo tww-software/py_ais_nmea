@@ -89,7 +89,8 @@ class LiveKMLMap():
                         AISLOGGER.info(msg.__str__())
                         if currenttime.endswith('5'):
                             self.aistracker.create_kml_map(
-                                self.kmlpath, kmzoutput=False)
+                                self.kmlpath, kmzoutput=False,
+                                linestring=False)
                             time.sleep(1)
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                         ais.UnknownMessageType, ais.InvalidMMSI) as err:
@@ -158,36 +159,41 @@ class AdvancedLiveKMLMap(LiveKMLMap):
                     self.stop_server()
                     break
 
-    def create_detailed_map(self):
+    def create_detailed_map(self, aistracker=None):
         """
         created a map with full colour icons
+
+        Args:
+            aistracker(ais.AISTracker): ais tracker object if we are calling
+                                        this externally and not using the
+                                        get_nmea_sentences method
         """
+        if not aistracker:
+            aistracker = self.aistracker
         if os.path.exists(self.kmlpath):
             os.remove(self.kmlpath)
         kmzoutput = True
         kmlmap = kml.KMLOutputParser(self.kmlpath)
         kmlmap.create_kml_header(kmz=kmzoutput)
-        for mmsi in self.aistracker.stations_generator():
+        for stn in aistracker.stations_generator():
             try:
-                lastpos = self.aistracker.stations[mmsi].get_latest_position()
+                lastpos = stn.get_latest_position()
             except ais.NoSuitablePositionReport:
                 continue
-            stntype = self.aistracker.stations[mmsi].stntype
-            stninfo = self.aistracker.stations[mmsi].get_station_info()
+            stntype = stn.stntype
+            stninfo = stn.get_station_info()
             desc = kmlmap.format_kml_placemark_description(stninfo)
-            kmlmap.open_folder(mmsi)
+            kmlmap.open_folder(stn.mmsi)
             try:
                 heading = lastpos['True Heading']
                 if heading != ais.HEADINGUNAVAILABLE:
-                    kmlmap.add_kml_placemark(mmsi, desc,
+                    kmlmap.add_kml_placemark(stn.mmsi, desc,
                                              str(lastpos['Longitude']),
                                              str(lastpos['Latitude']),
                                              heading, kmzoutput)
             except KeyError:
                 pass
-            posreps = self.aistracker.stations[mmsi].posrep
-            kmlmap.add_kml_placemark_linestring(mmsi, posreps)
-            kmlmap.add_kml_placemark(mmsi, desc,
+            kmlmap.add_kml_placemark(stn.mmsi, desc,
                                      str(lastpos['Longitude']),
                                      str(lastpos['Latitude']),
                                      stntype, kmzoutput)

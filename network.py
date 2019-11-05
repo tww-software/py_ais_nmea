@@ -39,7 +39,8 @@ def setup_logger(outputpath):
     rotatinghandler.setFormatter(logformatter)
     SENTENCELOGGER.addHandler(rotatinghandler)
     SENTENCELOGGER.propagate = False
-    
+    AISLOGGER.info('saving NMEA sentences to %s', outputpath)
+
 
 def mpserver(dataqueue, host='127.0.0.1', port=10110,
              remotehost=None, remoteport=None, logpath=None):
