@@ -590,7 +590,7 @@ class AISTracker():
         """
         csvtable = []
         csvheader = ['MMSI', 'Name', 'Callsign', 'Type', 'Flag',
-                     'Latitude','Longitude', 'CoG', 'Speed (knots)',
+                     'Latitude', 'Longitude', 'CoG', 'Speed (knots)',
                      'Navigation Status', 'Turn Rate',
                      'Time', 'Destination', 'ETA']
         lastposheader = ['Latitude', 'Longitude', 'CoG', 'Speed (knots)',
@@ -635,7 +635,8 @@ class AISTracker():
         csvtable = []
         csvheader = ['MMSI', 'Class', 'Type', 'Flag', 'Name', 'Callsign',
                      'IMO number', 'RAIM in use', 'EPFD Fix type',
-                     'Position Accuracy', 'Total Messages', 'First Known Latitude',
+                     'Position Accuracy', 'Total Messages',
+                     'First Known Latitude',
                      'First Known Longitude', 'First Known Navigation Status',
                      'First Known Time', 'Last Known Latitude',
                      'Last Known Longitude', 'Last Known Navigation Status',
@@ -656,7 +657,7 @@ class AISTracker():
             try:
                 firstpos = stn.posrep[0]
             except IndexError:
-                firstpos = {}           
+                firstpos = {}
             for item in posheaders:
                 try:
                     stninfo['First Known ' + item] = (firstpos[item])
@@ -664,7 +665,8 @@ class AISTracker():
                     stninfo['First Known ' + item] = ''
             for item in posheaders:
                 try:
-                    stninfo['Last Known ' + item] = (stninfo['Last Known Position'][item])
+                    stninfo['Last Known ' + item] = \
+                        (stninfo['Last Known Position'][item])
                 except (NoSuitablePositionReport, TypeError, KeyError):
                     stninfo['Last Known ' + item] = ''
             for item in csvheader:

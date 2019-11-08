@@ -66,7 +66,7 @@ def mpserver(dataqueue, host='127.0.0.1', port=10110,
     if logpath and logpath != '':
         setup_logger(logpath)
     while True:
-        data, addr = serversock.recvfrom(1024)
+        data, _ = serversock.recvfrom(1024)
         try:
             if data:
                 decodeddata = data.decode('utf-8')

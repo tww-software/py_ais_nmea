@@ -115,7 +115,7 @@ class BinaryTests(unittest.TestCase):
         testdata = nmeatracker.process_sentence(testsentence)
         testbinarystr = binary.ais_sentence_payload_binary(testdata)
         with self.assertRaises(binary.NoBinaryData):
-            _ = binary.decode_sixbit_integer(testbinarystr[116:128]) / 10
+            binary.decode_sixbit_integer(testbinarystr[116:128]) / 10
 
 
 class NMEATests(unittest.TestCase):
@@ -318,11 +318,11 @@ class AISStationTestsRealData(unittest.TestCase):
         """
         test object str format
         """
-        expected = ('AIS Station - MMSI: 235070199, Name: , Class: Unknown,' 
+        expected = ('AIS Station - MMSI: 235070199, Name: , Class: Unknown,'
                     ' Type: Unknown, Flag: United Kingdom')
         teststr = self.aisteststn.__str__()
         self.assertEqual(expected, teststr)
-                    
+
     def test_identify_flag(self):
         """
         we can identify the flag from the MMSI
@@ -691,7 +691,7 @@ class AISTrackerTimingTests(unittest.TestCase):
         get the str for the AIS object on an empty tracker
         there should be no time data
         """
-        teststr = ('AIS Tracker - tracking 0 vessels' 
+        teststr = ('AIS Tracker - tracking 0 vessels'
                    ' , processed 0 messages, No time data available.')
         actualstr = self.aistracker.__str__()
         self.assertEqual(teststr, actualstr)
@@ -886,7 +886,7 @@ class TextSummaryFormattingTests(unittest.TestCase):
             'NMEA Stats': {'Total Sentences Processed': 17,
                            'Multipart Messages Reassembled': 2,
                            'Messages Recieved on Channel': {'A': 13, 'B': 4}}}
-        expectedstr = """
+        expectedstr = r"""
    AIS Stats: 
       Total Unique Stations: 2
       Total Messages Processed: 15

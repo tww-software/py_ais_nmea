@@ -17,7 +17,6 @@ import tkinter.ttk
 import ais
 import capturefile
 import livekmlmap
-import os
 import nmea
 import network
 
@@ -377,6 +376,9 @@ class AISMessageTab(tkinter.ttk.Frame):
         self.tree['show'] = 'headings'
 
     def add_new_line(self, line):
+        """
+        add a new line to the tree table and scroll down to it
+        """
         self.tree.insert('', self.counter, values=line)
         self.counter += 1
         self.tree.yview_moveto(1)
@@ -590,13 +592,19 @@ class NetworkSettingsWindow(tkinter.Toplevel):
         self.transient(self.window)
 
     def set_log_path(self):
+        """
+        open a dialogue box to choose where we save NMEA sentences to
+        """
         outputfile = tkinter.filedialog.asksaveasfilename(
-        defaultextension=".txt",
-        filetypes=(("nmea text file", "*.txt"),
-                   ("All Files", "*.*")))
+            defaultextension=".txt",
+            filetypes=(("nmea text file", "*.txt"),
+                       ("All Files", "*.*")))
         self.logpath.insert(0, outputfile)
 
     def set_kmz_path(self):
+        """
+        open a dialogue box to choose where we save KMZ data to
+        """
         outputdir = tkinter.filedialog.askdirectory()
         self.kmzpath.insert(0, outputdir)
 
@@ -777,7 +785,8 @@ class BasicGUI(tkinter.Tk):
         self.refreshguithread.start()
         self.statuslabel.config(
             text='AIS Server Listening on {} port {}'.format(
-                self.netsettings['Server IP'], self.netsettings['Server Port']),
+                self.netsettings['Server IP'],
+                self.netsettings['Server Port']),
             fg='black', bg='green2')
 
     def stop_server(self):
