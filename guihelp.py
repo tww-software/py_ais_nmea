@@ -9,6 +9,23 @@ import tkinter.scrolledtext
 import tkinter.ttk
 
 
+INTRO = """
+This program is designed to decode AIS NMEA 0183 sentences.
+
+Sentences can be either read from a text file or direct from the network.
+
+To read NMEA sentences from a file:
+1. go to File > Open
+2. browse to the file to open and click 'Open'
+
+To read NMEA sentences from the network:
+1. go to Network > Settings
+2. configure the settings,
+   (select 'Network Settings' from the above drop down for details)
+3. click the 'Save Settings' button to make changes
+4. go to Network > Start Network Server
+"""
+
 LICENCE = """
 MIT License
 
@@ -33,6 +50,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+
+NETWORKSETTINGS = """
+Settings for the network server.
+
+In server mode the program will listen for incomming AIS NMEA 0183 sentences
+from the network
+
+Server IP - ip of the interface to listen on, set to 0.0.0.0 for all interfaces
+Server Port - UDP port to listen on
+
+To forward on the NMEA sentences to another network host, check the box
+'forward NMEA sentences to a remote host' and set the 'Remote Server IP' and
+'Remote Server Port'
+
+To log NMEA sentences to a text file click 'Choose Log Path' and select a
+location and filename
+
+To display AIS locations onto a live kmz map click 'Choose KMZ Path' and select
+a output directory. Open 'netlink.kml' in Google Earth to view AIS locations.
+This is an experimental feature.
+
+You must click 'Save Settings' for changes to take effect!
+"""
 
 
 STATS = """
@@ -81,22 +121,25 @@ about that message.
 
 
 STNINFO = """
-Display detailed information about an AIS Station and its last known location
+Display detailed information about an AIS Station and it's last known location.
 
 KMZ maps of the vessels location and JSON data of all known positions can be
 exported from here using the buttons at the bottom of the tab.
 """
+
 
 class HelpTab(tkinter.ttk.Frame):
     """
     tab to provide a help description
     """
 
-    help = {'Stats Tab': STATS,
+    help = {'Introduction': INTRO,
+            'Stats Tab': STATS,
             'Ships Tab': SHIPS,
             'Export Tab': EXPORT,
             'Message Log Tab': MSGLOG,
             'Station Information Tab': STNINFO,
+            'Network Settings': NETWORKSETTINGS,
             'Licence': LICENCE}
 
     def __init__(self, window):
@@ -104,13 +147,13 @@ class HelpTab(tkinter.ttk.Frame):
         self.helpoptions = tkinter.ttk.Combobox(self, state='readonly')
         self.helpoptions.pack(side='top')
         helpoptionsbutton = tkinter.Button(self, text='Display Info',
-                                          command=self.show_help)
+                                           command=self.show_help)
         helpoptionsbutton.pack(side='top')
         self.helptxt = tkinter.scrolledtext.ScrolledText(self)
         self.helptxt.pack(side='left', fill='both', expand=tkinter.TRUE)
         self.helpoptions['values'] = list(self.help.keys())
         self.helptxt.delete(1.0, tkinter.END)
-        self.helptxt.insert(tkinter.INSERT, self.help['Licence'])
+        self.helptxt.insert(tkinter.INSERT, self.help['Introduction'])
 
     def show_help(self):
         """
