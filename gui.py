@@ -16,6 +16,7 @@ import tkinter.ttk
 
 import ais
 import capturefile
+import guihelp
 import livekmlmap
 import nmea
 import network
@@ -734,18 +735,18 @@ class BasicGUI(tkinter.Tk):
         """
         self.toplevel = NetworkSettingsWindow(self)
 
-    @staticmethod
-    def about():
+    def about(self):
         """
         display version, licence and who created it
         """
-        tkinter.messagebox.showinfo('About', 'Created by Thomas W Whittam')
+        messagewindow = MessageWindow(self)
+        messagewindow.msgdetailsbox.append_text(guihelp.LICENCE)
 
     def help(self):
         """
         display the help window
         """
-        tkinter.messagebox.showinfo('Help', 'No help for you')
+        guihelp.HelpWindow(self)
 
     def start_server(self):
         """
