@@ -820,8 +820,12 @@ class BasicGUI(tkinter.Tk):
                 text='Loading capture file - {}'.format(inputfile),
                 fg='black', bg='gold')
             self.update_idletasks()
-            self.aistracker, self.nmeatracker, self.messagedict = \
-                capturefile.aistracker_from_file(inputfile, debug=True)
+            try:
+                self.aistracker, self.nmeatracker, self.messagedict = \
+                    capturefile.aistracker_from_file(inputfile, debug=True)
+            except (FileNotFoundError, TypeError):
+                self.statuslabel.config(text='', bg='light grey')
+                return
             self.tabcontrol.stninfotab.stn_options()
             try:
                 self.tabcontrol.statstab.starttime.configure(
