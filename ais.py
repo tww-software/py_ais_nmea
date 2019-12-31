@@ -63,6 +63,7 @@ class AISStation():
 
         Args:
             mmsi(int): Maritime Mobile Station Identifier
+
         Returns:
             flag(str): the country the station sails under
         """
@@ -493,6 +494,7 @@ class AISTracker():
             outputfile(str): full path to output to
             kmzoutput(bool): whether to create a kmz with custom icons (True)
                              or a basic kml file (False)
+            linestring(bool): display a line showing where the vessel has been
         """
         if kmzoutput:
             docpath = os.path.join(os.path.dirname(outputfile), 'doc.kml')

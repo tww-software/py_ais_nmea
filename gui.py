@@ -27,6 +27,9 @@ AISLOGGER = logging.getLogger(__name__)
 class StatsTab(tkinter.ttk.Frame):
     """
     provide overall statistics for all the AIS Stations we can see
+
+    Args:
+        tabcontrol(tkinter.ttk.Notebook): ttk notebook to add this tab to
     """
 
     def __init__(self, tabcontrol):
@@ -109,6 +112,9 @@ class StatsTab(tkinter.ttk.Frame):
 class ShipsTableTab(tkinter.ttk.Frame):
     """
     tab to display a table of all the AIS Stations we have
+
+    Args:
+        tabcontrol(tkinter.ttk.Notebook): ttk notebook to add this tab to
     """
 
     def __init__(self, tabcontrol):
@@ -162,6 +168,9 @@ class ShipsTableTab(tkinter.ttk.Frame):
 class ExportTab(tkinter.ttk.Frame):
     """
     the tab in the main window that contains the export file options
+
+    Args:
+        tabcontrol(tkinter.ttk.Notebook): ttk notebook to add this tab to
     """
 
     def __init__(self, tabcontrol):
@@ -332,6 +341,9 @@ class AISMessageTab(tkinter.ttk.Frame):
 
     Note:
         basically a tab with a table inside
+
+    Args:
+        tabcontrol(tkinter.ttk.Notebook): ttk notebook to add this tab to
     """
 
     def __init__(self, tabcontrol):
@@ -392,6 +404,9 @@ class TextBoxTab(tkinter.ttk.Frame):
     Note:
         basically a tab with a big text box on it that autoscrolls as you
         update it
+
+    Args:
+        tabcontrol(tkinter.ttk.Notebook): ttk notebook to add this tab to
     """
 
     def __init__(self, tabcontrol):
@@ -415,6 +430,9 @@ class TextBoxTab(tkinter.ttk.Frame):
 class StationInfoTab(tkinter.ttk.Frame):
     """
     tab to provide detailed information on a single AIS Station
+
+    Args:
+        tabcontrol(tkinter.ttk.Notebook): ttk notebook to add this tab to
     """
 
     def __init__(self, tabcontrol):
@@ -507,6 +525,9 @@ class TabControl(tkinter.ttk.Notebook):
 
     Note:
         tabs are numbered left to right
+
+    Args:
+        window(tkinter.Tk): the main window this spawns from
     """
 
     def __init__(self, window):
@@ -527,6 +548,9 @@ class TabControl(tkinter.ttk.Notebook):
 class MessageWindow(tkinter.Toplevel):
     """
     window to display details of individual AIS messages
+
+    Args:
+        window(tkinter.Tk): the main window this spawns from
     """
 
     def __init__(self, window):
@@ -540,6 +564,9 @@ class MessageWindow(tkinter.Toplevel):
 class NetworkSettingsWindow(tkinter.Toplevel):
     """
     window to configure network settings
+
+    Args:
+        window(tkinter.Tk): the main window this spawns from
     """
 
     def __init__(self, window):
@@ -635,7 +662,22 @@ class BasicGUI(tkinter.Tk):
     a basic GUI using tkinter to control the program
 
     Attributes:
-
+        nmeatracker(nmea.NMEAtracker): deals with the NMEA sentences
+        aistracker(ais.AISTracker): decodes the AIS messages
+        messagedict(dict): stores all the messages
+        statuslabel(tkinter.Label): forms the status bar at the top of the
+                                    main window
+        mpq(multiprocessing.Queue): used to communicate with the
+                                      server process
+        updateguithread(threading.Thread): updates the GUI, is None on init
+        refreshguithread(threading.Thread):refreshes the GUI, is None on init
+        serverprocess(multiprocessing.Process): process that listens for AIS
+            sentences on the network, is None on init
+        serverrunning(bool): true if the server is running
+        stopevent(threading.Event): stop even to stop the threads
+        forwardsentences(tkinter.BooleanVar): should sentences be
+                                              forwarded to another server
+        livemap(bool): should a live KML map be created
     """
 
     netsettings = {
@@ -666,7 +708,6 @@ class BasicGUI(tkinter.Tk):
         self.stopevent = threading.Event()
         self.forwardsentences = tkinter.BooleanVar()
         self.forwardsentences.set(0)
-        self.toplevel = None
         self.livemap = None
 
     def clear_gui(self):
@@ -733,7 +774,7 @@ class BasicGUI(tkinter.Tk):
         """
         open the network settings window
         """
-        self.toplevel = NetworkSettingsWindow(self)
+        NetworkSettingsWindow(self)
 
     def about(self):
         """
@@ -852,6 +893,9 @@ class BasicGUI(tkinter.Tk):
 
         run in another thread whist the server is running and
         recieving packets, get NMEA sentences from the queue and process them
+
+        Args:
+            stopevent(threading.Event): a threading stop event
         """
         while not stopevent.is_set():
             qdata = self.mpq.get()
@@ -884,6 +928,9 @@ class BasicGUI(tkinter.Tk):
     def refreshgui(self, stopevent):
         """
         refresh and update the gui every 10 seconds, run in another thread
+
+        Args:
+            stopevent(threading.Event): a threading stop event
         """
         while not stopevent.is_set():
             currenttime = datetime.datetime.utcnow().strftime(

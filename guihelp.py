@@ -54,21 +54,22 @@ SOFTWARE.
 NETWORKSETTINGS = """
 Settings for the network server.
 
-In server mode the program will listen for incomming AIS NMEA 0183 sentences
-from the network
+In server mode the program will listen for incoming AIS NMEA 0183 sentences
+from the network.
 
 Server IP - ip of the interface to listen on, set to 0.0.0.0 for all interfaces
 Server Port - UDP port to listen on
 
 To forward on the NMEA sentences to another network host, check the box
-'forward NMEA sentences to a remote host' and set the 'Remote Server IP' and
-'Remote Server Port'
+'forward NMEA sentences to a remote host', then set the 'Remote Server IP' and
+'Remote Server Port'.
 
-To log NMEA sentences to a text file click 'Choose Log Path' and select a
-location and filename
+To log NMEA sentences to a text file, click 'Choose Log Path' and select a
+location and filename.
 
-To display AIS locations onto a live kmz map click 'Choose KMZ Path' and select
-a output directory. Open 'netlink.kml' in Google Earth to view AIS locations.
+To display AIS locations onto a live kmz map, click 'Choose KMZ Path' and
+select an output directory.
+Open 'netlink.kml' in Google Earth to view AIS locations.
 This is an experimental feature.
 
 You must click 'Save Settings' for changes to take effect!
@@ -100,8 +101,8 @@ This tab allows you to export all the data the AIS decoder currently has.
 The export options are:
 
 -ALL     - export all the file types below to a directory
--CSV     - Comma Seperated Values file containing similar data to the Ships tab
--TSV     - Tab Seperated Values file containing similar data to the Ships tab
+-CSV     - Comma Separated Values file containing similar data to the Ships tab
+-TSV     - Tab Separated Values file containing similar data to the Ships tab
 -KML     - plain KML file with no custom icons (default icons will be used)
 -KMZ     - Keyhole Markup Language Map with custom icons
 -JSON    - JSON file containing stats and all the vessels with position reports
@@ -121,7 +122,7 @@ about that message.
 
 
 STNINFO = """
-Display detailed information about an AIS Station and it's last known location.
+Display detailed information about an AIS Station and its last known location.
 
 KMZ maps of the vessels location and JSON data of all known positions can be
 exported from here using the buttons at the bottom of the tab.
@@ -131,6 +132,9 @@ exported from here using the buttons at the bottom of the tab.
 class HelpTab(tkinter.ttk.Frame):
     """
     tab to provide a help description
+
+    Args:
+        window(tkinter.Toplevel): the help window to attach this frame to
     """
 
     help = {'Introduction': INTRO,
@@ -173,6 +177,9 @@ class HelpTab(tkinter.ttk.Frame):
 class HelpWindow(tkinter.Toplevel):
     """
     main help window
+
+    Args:
+        window(tkinter.Tk): the main window to spawn from
     """
 
     def __init__(self, window):
