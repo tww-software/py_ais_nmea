@@ -1,0 +1,4 @@
+include README.md
+include LICENCE.txt
+include static/icons/*.png
+include static/green_arrows/*.png
