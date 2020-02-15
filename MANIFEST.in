@@ -1,0 +1,4 @@
+include pyaisnmea/README.md
+include pyaisnmea/LICENCE.txt
+include pyaisnmea/static/icons/*.png
+include pyaisnmea/static/green_arrows/*.png
