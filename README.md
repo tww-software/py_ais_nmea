@@ -30,6 +30,9 @@ Sentences can be either read from a text file or direct from the network.
 1. go to File > Open
 2. browse to the file to open and click 'Open'
 
+A sample NMEA 0183 text file has been included for testing. It is called 'sample_nmea.txt'.
+This text file contains 10296 NMEA sentences and 10027 AIS messages of 12 different types.
+
 ### To read NMEA sentences from the network:
 1. go to Network > Settings
 2. configure the settings,
