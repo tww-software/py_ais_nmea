@@ -277,7 +277,8 @@ class AISStation():
             try:
                 heading = pos['True Heading']
                 if heading != HEADINGUNAVAILABLE and kmzoutput:
-                    kmlmap.add_kml_placemark(self.mmsi, desc,
+                    hdesc = 'TRUE HEADING - {}'.format(heading)
+                    kmlmap.add_kml_placemark(self.mmsi + ' TH', hdesc,
                                              str(pos['Longitude']),
                                              str(pos['Latitude']),
                                              heading, kmzoutput)
@@ -516,7 +517,8 @@ class AISTracker():
             try:
                 heading = lastpos['True Heading']
                 if heading != HEADINGUNAVAILABLE and kmzoutput:
-                    kmlmap.add_kml_placemark(stn.mmsi, desc,
+                    hdesc = 'TRUE HEADING - {}'.format(heading)
+                    kmlmap.add_kml_placemark(stn.mmsi + ' TH', hdesc,
                                              str(lastpos['Longitude']),
                                              str(lastpos['Latitude']),
                                              heading, kmzoutput)
