@@ -271,7 +271,9 @@ class AISStation():
         kmlmap.create_kml_header(kmz=kmzoutput)
         stninfo = self.get_station_info()
         kmlmap.open_folder(self.mmsi)
+        posnumber = 1
         for pos in self.posrep:
+            kmlmap.open_folder(posnumber)
             stninfo['Last Known Position'] = pos
             desc = kmlmap.format_kml_placemark_description(stninfo)
             try:
@@ -301,6 +303,8 @@ class AISStation():
                                          self.stntype, kmzoutput)
             except KeyError:
                 pass
+            kmlmap.close_folder()
+            posnumber += 1
         kmlmap.add_kml_placemark_linestring(self.mmsi, self.posrep)
         kmlmap.close_folder()
         kmlmap.close_kml_file()
