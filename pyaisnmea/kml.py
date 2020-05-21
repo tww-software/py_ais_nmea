@@ -56,7 +56,7 @@ class KMLOutputParser():
 <ListStyle>
 </ListStyle>
 </Style>"""
-        self.arrowtemplate = """
+        self.greenarrowtemplate = """
 <Style id="%s">
 <IconStyle>
 <scale>2.8</scale>
@@ -111,7 +111,8 @@ class KMLOutputParser():
                                                 icons.ICONS[icontype])
                 self.kmldoc.append(iconkml)
             for heading in range(0, 360):
-                iconkml = self.arrowtemplate % (heading, str(heading) + '.png')
+                iconkml = self.greenarrowtemplate % (
+                    str(heading) + 'TH', str(heading) + '.png')
                 self.kmldoc.append(iconkml)
 
     def add_kml_placemark(self, placemarkname, description, lon, lat, style,

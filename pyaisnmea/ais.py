@@ -281,7 +281,7 @@ class AISStation():
                     kmlmap.add_kml_placemark(self.mmsi + ' TH', hdesc,
                                              str(pos['Longitude']),
                                              str(pos['Latitude']),
-                                             heading, kmzoutput)
+                                             str(heading) + 'TH', kmzoutput)
             except KeyError:
                 pass
             try:
@@ -521,7 +521,7 @@ class AISTracker():
                     kmlmap.add_kml_placemark(stn.mmsi + ' TH', hdesc,
                                              str(lastpos['Longitude']),
                                              str(lastpos['Latitude']),
-                                             heading, kmzoutput)
+                                             str(heading)  + 'TH', kmzoutput)
             except KeyError:
                 pass
             if linestring:
