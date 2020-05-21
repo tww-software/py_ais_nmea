@@ -285,6 +285,16 @@ class AISStation():
             except KeyError:
                 pass
             try:
+                cog = int(pos['CoG'])
+                if cog != COGUNAVAILABLE and kmzoutput:
+                    hdesc = 'COURSE OVER GROUND - {}'.format(cog)
+                    kmlmap.add_kml_placemark(self.mmsi + ' CoG', hdesc,
+                                             str(pos['Longitude']),
+                                             str(pos['Latitude']),
+                                             str(cog) + 'CoG', kmzoutput)
+            except KeyError:
+                pass
+            try:
                 kmlmap.add_kml_placemark(self.mmsi, desc,
                                          str(pos['Longitude']),
                                          str(pos['Latitude']),

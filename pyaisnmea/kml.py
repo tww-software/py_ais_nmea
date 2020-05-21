@@ -68,6 +68,18 @@ class KMLOutputParser():
 <ListStyle>
 </ListStyle>
 </Style>"""
+        self.orangearrowtemplate = """
+<Style id="%s">
+<IconStyle>
+<scale>2.8</scale>
+<Icon>
+<href>orange_arrows/%s</href>
+</Icon>
+<hotSpot x="20" y="2" xunits="pixels" yunits="pixels"/>
+</IconStyle>
+<ListStyle>
+</ListStyle>
+</Style>"""
 
     @staticmethod
     def format_kml_placemark_description(placemarkdict):
@@ -111,9 +123,12 @@ class KMLOutputParser():
                                                 icons.ICONS[icontype])
                 self.kmldoc.append(iconkml)
             for heading in range(0, 360):
-                iconkml = self.greenarrowtemplate % (
+                thiconkml = self.greenarrowtemplate % (
                     str(heading) + 'TH', str(heading) + '.png')
-                self.kmldoc.append(iconkml)
+                cogiconkml = self.orangearrowtemplate % (
+                    str(heading) + 'CoG', str(heading) + '.png')
+                self.kmldoc.append(thiconkml)
+                self.kmldoc.append(cogiconkml)
 
     def add_kml_placemark(self, placemarkname, description, lon, lat, style,
                           kmz=True):
@@ -193,8 +208,10 @@ def make_kmz(kmzoutputfilename):
     docpath = os.path.join(os.path.dirname(kmzoutputfilename), 'doc.kml')
     iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                              'static', 'icons')
-    arrowspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+    greenarrowspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                               'static', 'green_arrows')
+    orangearrowspath = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), 'static', 'orange_arrows')
     with zipfile.ZipFile(kmzoutputfilename,
                          'w', zipfile.ZIP_DEFLATED, False) as kmz:
         try:
@@ -203,9 +220,12 @@ def make_kmz(kmzoutputfilename):
             for icon in os.listdir(iconspath):
                 kmz.write(os.path.join(iconspath, icon),
                           os.path.join('icons', icon))
-            for arrow in os.listdir(arrowspath):
-                kmz.write(os.path.join(arrowspath, arrow),
+            for arrow in os.listdir(greenarrowspath):
+                kmz.write(os.path.join(greenarrowspath, arrow),
                           os.path.join('green_arrows', arrow))
+            for arrow in os.listdir(orangearrowspath):
+                kmz.write(os.path.join(orangearrowspath, arrow),
+                          os.path.join('orange_arrows', arrow))
             os.remove(docpath)
         except Exception as err:
             print('zip error')
