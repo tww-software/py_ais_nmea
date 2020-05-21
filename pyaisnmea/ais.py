@@ -534,6 +534,16 @@ class AISTracker():
                                              str(heading)  + 'TH', kmzoutput)
             except KeyError:
                 pass
+            try:
+                cog = int(lastpos['CoG'])
+                if cog != COGUNAVAILABLE and kmzoutput:
+                    hdesc = 'COURSE OVER GROUND - {}'.format(cog)
+                    kmlmap.add_kml_placemark(stn.mmsi + ' CoG', hdesc,
+                                             str(lastpos['Longitude']),
+                                             str(lastpos['Latitude']),
+                                             str(cog) + 'CoG', kmzoutput)
+            except KeyError:
+                pass
             if linestring:
                 posreps = stn.posrep
                 kmlmap.add_kml_placemark_linestring(stn.mmsi, posreps)
