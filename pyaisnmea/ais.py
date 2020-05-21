@@ -116,6 +116,8 @@ class AISStation():
         if msgobj.msgtype == 5 or msgobj.msgtype == 19:
             self.stntype = msgobj.shiptype
             self.name = msgobj.name
+        elif msgobj.msgtype == 9:
+            self.stntype = 'SAR Aircraft'
         elif msgobj.msgtype == 21:
             self.stntype = msgobj.aidtype
             self.name = msgobj.name
