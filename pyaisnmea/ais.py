@@ -101,6 +101,14 @@ class AISStation():
         if (currentpos['Latitude'] == LATITUDEUNAVAILABLE or
                 currentpos['Longitude'] == LONGITUDEUNAVAILABLE):
             raise NoSuitablePositionReport('do not have a suitable LAT/LON')
+        try:
+            currentpos['Destination'] = self.details['Destination']
+        except KeyError:
+            pass
+        try:
+            currentpos['ETA'] = self.details['ETA']
+        except KeyError:
+            pass
         self.posrep.append(currentpos)
 
     def find_station_name_and_type(self, msgobj):
