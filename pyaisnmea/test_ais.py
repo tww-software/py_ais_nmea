@@ -282,7 +282,7 @@ class AISStationTests(unittest.TestCase):
 
     def test_no_longitude_no_latitiude(self):
         """
-        submit a position report with no longitude
+        submit a position report with no longitude or latitude
         """
         with self.assertRaises(ais.NoSuitablePositionReport):
             posrep = [91.0, 181.0]
@@ -574,6 +574,56 @@ class AISTrackerTests(unittest.TestCase):
             msg, t27.Type27LongRangeAISPositionReport)
 
 
+class AISTrackerandStationTests(unittest.TestCase):
+    """
+    use an AIS Tracker object to feed in real AIS data and test the AIS
+    Station Objects are processing them correctly
+    """
+    def setUp(self):
+        self.aistracker = ais.AISTracker()
+
+    def feed_in_sentences_to_tracker(self, sentences):
+        """
+        feed sentences into the ais tracker object
+
+        Args:
+            sentences(list): list of sentences as strings
+        """
+        for sentence in sentences:
+            self.aistracker.process_message(sentence)
+
+    def test_identify_SAR_aircraft_from_msgtype(self):
+        """
+        Can we identify an SAR aircraft if the MMSI is not in the expected
+        format
+        """
+        sentences = ['93fK5Slj1VOGD`hMS1iHR2P205k<',
+                     '93fK5SlmQTOG@f`MRWJHIr020@HE',
+                     '93fK5Slmi`OG8P<MQjApQJ020<0w',
+                     '93fK5SlmiVOG1ivMQ49`PGh208C0']
+        self.feed_in_sentences_to_tracker(sentences)
+        stn = self.aistracker.stations['250004879']
+        self.assertEqual(stn.stntype, 'SAR Aircraft')
+
+    def test_destination_changes(self):
+        """
+        feed in two type 5 messages with different ETA and Destinations
+        """
+        sentences = ['13P;Ruh1E1wemoRNrlDsEa9l8pRQ',
+                     ('53P;Rul2<10S89PgN20l4p4pp4r222222222220`'
+                      '8@N==5J?09A3mAk0Dp8888888888880'),
+                     '13P;Ruh1DqweQ>pNsH=cE97l8Uhl',
+                     ('53P;Rul2<10S89PgN20l4p4pp4r222222222220`'
+                      '8@N==5Jc09B1FDj0CH8888888888880'),
+                     '13P;Rum000wcR72Nvtnq;3IL8RjH']
+        self.feed_in_sentences_to_tracker(sentences)
+        stn = self.aistracker.stations['235070199']
+        destinations = [
+            stn.posrep[1]['Destination'], stn.posrep[2]['Destination']]
+        expected = ['DOUGLAS', 'HEYSHAM']
+        self.assertListEqual(destinations, expected)
+
+
 class Type8BinaryMessageTests(unittest.TestCase):
     """
     test being able to distinquish between different types of Type 8 messages
@@ -823,6 +873,19 @@ class IconTests(unittest.TestCase):
         exists = 0
         iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                  'static', 'green_arrows')
+        for heading in range(0, 360):
+            if os.path.exists(os.path.join(iconspath,
+                                           str(heading) + '.png')):
+                exists += 1
+        self.assertEqual(360, exists)
+
+    def test_orange_arrows(self):
+        """
+        check that we have the orange arrows to represent CoG
+        """
+        exists = 0
+        iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                 'static', 'orange_arrows')
         for heading in range(0, 360):
             if os.path.exists(os.path.join(iconspath,
                                            str(heading) + '.png')):
