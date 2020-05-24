@@ -262,6 +262,32 @@ class AISStation():
         reprstr = '{}()'.format(self.__class__.__name__)
         return reprstr
 
+    def create_positions_csv(self, outputfile, dialect='excel'):
+        """
+        create a CSV file of all the position reports for this station
+
+        Args:
+            outputfile(str): path to output CSV file to
+            dialect(str): excel for CSV, excel-tab for TSV
+        """
+        positionlines = []
+        stndata = [self.mmsi, self.name, self.stnclass,
+                   self.stntype, self.flag]
+        header = ['Time', 'Latitude', 'Longitude', 'CoG',
+                  'True Heading','Speed (knots)', 'Navigation Status',
+                  'Turn Rate', 'Special Maneuver', 'Destination', 'ETA']
+        positionlines.append(stndata)
+        positionlines.append(header)
+        for posrep in self.posrep:
+            posrepline = []
+            for item in header:
+                try:
+                    posrepline.append(posrep[item])
+                except KeyError:
+                    posrepline.append('')
+            positionlines.append(posrepline)
+        write_csv_file(positionlines, outputfile, dialect='excel')
+
     def create_kml_map(self, outputfile, kmzoutput=True):
         """
         create a KML map of this stations positions

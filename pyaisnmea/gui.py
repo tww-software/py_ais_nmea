@@ -450,6 +450,9 @@ class StationInfoTab(tkinter.ttk.Frame):
         exportkmzbutton = tkinter.Button(lowerbuttons, text='KMZ',
                                          command=self.export_kmz)
         exportkmzbutton.grid(column=1, row=0)
+        exportcsvbutton = tkinter.Button(lowerbuttons, text='CSV',
+                                         command=self.export_csv)
+        exportcsvbutton.grid(column=2, row=0)
         lowerbuttons.pack(side='bottom')
         self.stntxt = tkinter.scrolledtext.ScrolledText(self)
         self.stntxt.pack(side='left', fill='both', expand=tkinter.TRUE)
@@ -518,6 +521,25 @@ class StationInfoTab(tkinter.ttk.Frame):
             except Exception as err:
                 tkinter.messagebox.showerror('Export Files', str(err))
 
+    def export_csv(self):
+        """
+        export CSV for a single AIS station
+        pop open a file browser to allow the user to choose where to save the
+        file and then save file to that location
+        """
+        outputfile = tkinter.filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=(("comma seperated values", "*.csv"),
+                       ("All Files", "*.*")))
+        lookupmmsi = self.stnoptions.get()
+        if lookupmmsi != '':
+            try:
+                stninfo = self.tabs.window.aistracker.stations[lookupmmsi]
+                stninfo.create_positions_csv(outputfile)
+                tkinter.messagebox.showinfo(
+                    'Export Files', 'Export Successful')
+            except Exception as err:
+                tkinter.messagebox.showerror('Export Files', str(err))
 
 class TabControl(tkinter.ttk.Notebook):
     """
