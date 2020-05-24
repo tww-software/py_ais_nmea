@@ -238,9 +238,9 @@ class AISStation():
         stninfo['Flag'] = self.flag
         stninfo['Name'] = self.name
         stninfo.update(self.details)
+        stninfo['Sent Messages'] = dict(self.sentmsgs)
         if verbose:
             stninfo['Position Reports'] = self.posrep
-            stninfo['Sent Messages'] = dict(self.sentmsgs)
         else:
             try:
                 stninfo['Last Known Position'] = self.get_latest_position()

@@ -100,7 +100,7 @@ def aistracker_from_file(filepath, debug=False):
 def read_from_file(filepath, outpath, debug=False,
                    jsonoutput=True, geojsonoutput=True, csvoutput=True,
                    tsvoutput=False,
-                   kmloutput=False, kmzoutput=True):
+                   kmloutput=False, kmzoutput=True, verbosejson=False):
     """
     read AIS NMEA sentences from a text file and save to various output formats
 
@@ -140,7 +140,8 @@ def read_from_file(filepath, outpath, debug=False,
         joutdict = {}
         joutdict['NMEA Stats'] = sentencestats
         joutdict['AIS Stats'] = stnstats
-        joutdict['AIS Stations'] = aistracker.all_station_info(verbose=True)
+        joutdict['AIS Stations'] = aistracker.all_station_info(
+            verbose=verbosejson)
         ais.write_json_file(joutdict,
                             os.path.join(outpath, 'vessel-data.json'))
     if geojsonoutput:

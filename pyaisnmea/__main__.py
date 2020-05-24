@@ -80,7 +80,8 @@ def main():
             jsonoutput=cliargs.j,
             geojsonoutput=cliargs.g, csvoutput=cliargs.c,
             tsvoutput=cliargs.t,
-            kmloutput=cliargs.kml, kmzoutput=cliargs.kmz)
+            kmloutput=cliargs.kml, kmzoutput=cliargs.kmz,
+            verbosejson=cliargs.v)
     elif cliargs.subcommand == 'livemap':
         if cliargs.a:
             livemap = livekmlmap.AdvancedLiveKMLMap(

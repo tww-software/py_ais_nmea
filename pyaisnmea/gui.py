@@ -185,7 +185,8 @@ class ExportTab(tkinter.ttk.Frame):
         and add an export button next to it
         """
         self.exportoptions['values'] = ('ALL', 'CSV', 'TSV', 'KML',
-                                        'KMZ', 'JSON', 'GEOJSON', 'DEBUG')
+                                        'KMZ', 'JSON', 'VERBOSE JSON',
+                                        'GEOJSON', 'DEBUG')
         self.exportoptions.set('KMZ')
         self.exportoptions.grid(column=1, row=1)
         exportbutton = tkinter.Button(self, text='Export',
@@ -207,6 +208,7 @@ class ExportTab(tkinter.ttk.Frame):
                         'KML': self.export_kml,
                         'KMZ': self.export_kmz,
                         'JSON': self.export_json,
+                        'VERBOSE JSON': self.export_verbose_json,
                         'GEOJSON': self.export_geojson,
                         'DEBUG': self.export_debug}
             option = self.exportoptions.get()
@@ -264,7 +266,7 @@ class ExportTab(tkinter.ttk.Frame):
                        ("All Files", "*.*")))
         self.tabs.window.aistracker.create_kml_map(outputfile, kmzoutput=True)
 
-    def export_json(self):
+    def export_json(self, verbosejson=False):
         """
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
@@ -277,8 +279,14 @@ class ExportTab(tkinter.ttk.Frame):
         joutdict['NMEA Stats'] = self.tabs.window.nmeatracker.nmea_stats()
         joutdict['AIS Stats'] = self.tabs.window.aistracker.tracker_stats()
         joutdict['AIS Stations'] = self.tabs.window.aistracker. \
-            all_station_info(verbose=True)
+            all_station_info(verbose=verbosejson)
         ais.write_json_file(joutdict, outputfile)
+
+    def export_verbose_json(self):
+        """
+        json file with all postion reports for each vessel
+        """
+        self.export_json(verbosejson=True)
 
     def export_geojson(self):
         """
