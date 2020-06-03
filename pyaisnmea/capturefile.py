@@ -32,6 +32,7 @@ def debug_output(messagedict):
         message = {}
         message['payload'] = payload
         message.update(messagedict[payload].__dict__)
+        message.pop('msgbinary', None)
         jsonlines.append(message)
         singlemsg = [payload, messagedict[payload].mmsi,
                      messagedict[payload].msgtype,
