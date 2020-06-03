@@ -1,3 +1,5 @@
+import calendar
+
 import pyaisnmea.binary as binary
 
 import pyaisnmea.messages.aismessage
@@ -45,11 +47,13 @@ class Type5StaticAndVoyageData(pyaisnmea.messages.aismessage.AISMessage):
         self.width = toport + tostarboard
         self.epfdfixtype = self.epfdfixtypes[self.decode_sixbit_integer(
             msgbinary[270:274])]
-        etamonth = self.decode_sixbit_integer(msgbinary[274:278])
+        etamonth = calendar.month_name[
+            self.decode_sixbit_integer(msgbinary[274:278])]
         etaday = self.decode_sixbit_integer(msgbinary[278:283])
         etahour = self.decode_sixbit_integer(msgbinary[283:288])
         etamin = self.decode_sixbit_integer(msgbinary[288:294])
-        self.eta = '{:02d}:{:02d} {}/{}'.format(etahour, etamin, etaday, etamonth)
+        self.eta = '{:02d}:{:02d} {} {}'.format(
+            etahour, etamin, etaday, etamonth)
         self.draught = self.decode_sixbit_integer(msgbinary[294:302]) / 10
         self.destination = binary.decode_sixbit_ascii(
             msgbinary[302:422]).rstrip()
