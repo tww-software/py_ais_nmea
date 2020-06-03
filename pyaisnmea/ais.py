@@ -553,42 +553,49 @@ class AISTracker():
             docpath = os.path.join(outputfile)
         kmlmap = kml.KMLOutputParser(docpath)
         kmlmap.create_kml_header(kmz=kmzoutput)
-        for stn in self.stations_generator():
-            try:
-                lastpos = stn.get_latest_position()
-            except NoSuitablePositionReport:
-                continue
-            stntype = stn.stntype
-            stninfo = stn.get_station_info()
-            desc = kmlmap.format_kml_placemark_description(stninfo)
-            kmlmap.open_folder(stn.mmsi)
-            try:
-                heading = lastpos['True Heading']
-                if heading != HEADINGUNAVAILABLE and kmzoutput:
-                    hdesc = 'TRUE HEADING - {}'.format(heading)
-                    kmlmap.add_kml_placemark(stn.mmsi + ' TH', hdesc,
-                                             str(lastpos['Longitude']),
-                                             str(lastpos['Latitude']),
-                                             str(heading)  + 'TH', kmzoutput)
-            except KeyError:
-                pass
-            try:
-                cog = int(lastpos['CoG'])
-                if cog != COGUNAVAILABLE and kmzoutput:
-                    hdesc = 'COURSE OVER GROUND - {}'.format(cog)
-                    kmlmap.add_kml_placemark(stn.mmsi + ' CoG', hdesc,
-                                             str(lastpos['Longitude']),
-                                             str(lastpos['Latitude']),
-                                             str(cog) + 'CoG', kmzoutput)
-            except KeyError:
-                pass
-            if linestring:
-                posreps = stn.posrep
-                kmlmap.add_kml_placemark_linestring(stn.mmsi, posreps)
-            kmlmap.add_kml_placemark(stn.mmsi, desc,
-                                     str(lastpos['Longitude']),
-                                     str(lastpos['Latitude']),
-                                     stntype, kmzoutput)
+
+        organisedstns = self.sort_mmsi_by_catagory()
+        for stntype in organisedstns['Types']:
+            kmlmap.open_folder(stntype)
+            for mmsi in organisedstns['Types'][stntype]:
+                stn = self.stations[mmsi]
+                try:
+                    lastpos = stn.get_latest_position()
+                except NoSuitablePositionReport:
+                    continue
+                stntype = stn.stntype
+                stninfo = stn.get_station_info()
+                desc = kmlmap.format_kml_placemark_description(stninfo)
+                kmlmap.open_folder(stn.mmsi)
+                try:
+                    heading = lastpos['True Heading']
+                    if heading != HEADINGUNAVAILABLE and kmzoutput:
+                        hdesc = 'TRUE HEADING - {}'.format(heading)
+                        kmlmap.add_kml_placemark(
+                            stn.mmsi + ' TH', hdesc,
+                            str(lastpos['Longitude']),
+                            str(lastpos['Latitude']),
+                            str(heading)  + 'TH', kmzoutput)
+                except KeyError:
+                    pass
+                try:
+                    cog = int(lastpos['CoG'])
+                    if cog != COGUNAVAILABLE and kmzoutput:
+                        hdesc = 'COURSE OVER GROUND - {}'.format(cog)
+                        kmlmap.add_kml_placemark(stn.mmsi + ' CoG', hdesc,
+                                                 str(lastpos['Longitude']),
+                                                 str(lastpos['Latitude']),
+                                                 str(cog) + 'CoG', kmzoutput)
+                except KeyError:
+                    pass
+                if linestring:
+                    posreps = stn.posrep
+                    kmlmap.add_kml_placemark_linestring(stn.mmsi, posreps)
+                kmlmap.add_kml_placemark(stn.mmsi, desc,
+                                         str(lastpos['Longitude']),
+                                         str(lastpos['Latitude']),
+                                         stntype, kmzoutput)
+                kmlmap.close_folder()
             kmlmap.close_folder()
         kmlmap.close_kml_file()
         kmlmap.write_kml_doc_file()
