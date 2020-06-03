@@ -337,7 +337,7 @@ class ExportTab(tkinter.ttk.Frame):
         joutdict['NMEA Stats'] = self.tabs.window.nmeatracker.nmea_stats()
         joutdict['AIS Stats'] = self.tabs.window.aistracker.tracker_stats()
         joutdict['AIS Stations'] = self.tabs.window.aistracker. \
-            all_station_info(verbose=True)
+            all_station_info(verbose=False)
         ais.write_json_file(joutdict,
                             os.path.join(outpath, 'vessel-data.json'))
         self.export_debug(outpath)
