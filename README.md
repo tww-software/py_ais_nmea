@@ -80,7 +80,7 @@ This tab allows you to export all the data the AIS decoder currently has.
 
 The export options are:
 
-* ALL          - export all the file types below to a directory
+* OVERVIEW     - export CSV, JSON, KMZ and DEBUG files to a directory
 * CSV          - Comma Separated Values file containing similar data to the Ships tab
 * TSV          - Tab Separated Values file containing similar data to the Ships tab
 * KML          - plain KML file with no custom icons (default icons will be used)

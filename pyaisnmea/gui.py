@@ -184,7 +184,7 @@ class ExportTab(tkinter.ttk.Frame):
         populate the export options drop down menu with file export options
         and add an export button next to it
         """
-        self.exportoptions['values'] = ('ALL', 'CSV', 'TSV', 'KML',
+        self.exportoptions['values'] = ('OVERVIEW', 'CSV', 'TSV', 'KML',
                                         'KMZ', 'JSON', 'VERBOSE JSON',
                                         'GEOJSON', 'DEBUG')
         self.exportoptions.set('KMZ')
@@ -202,7 +202,7 @@ class ExportTab(tkinter.ttk.Frame):
             tkinter.messagebox.showwarning(
                 'WARNING', 'Cannot export files whilst server is running')
         else:
-            commands = {'ALL': self.export_all,
+            commands = {'OVERVIEW': self.export_overview,
                         'CSV': self.export_csv,
                         'TSV': self.export_tsv,
                         'KML': self.export_kml,
@@ -314,25 +314,20 @@ class ExportTab(tkinter.ttk.Frame):
         ais.write_csv_file(messagecsvlist,
                            os.path.join(outpath, 'ais-messages.csv'))
 
-    def export_all(self):
+    def export_overview(self):
         """
-        export all file formats
+        export the most popular file formats
+        KMZ - map
+        JSON & CSV - vessel details
+        JSONLINES and CSV - message debug
         """
         outpath = tkinter.filedialog.askdirectory()
         outputdata = self.tabs.window.aistracker.create_table_data()
         self.tabs.window.aistracker.create_kml_map(
             os.path.join(outpath, 'map.kmz'),
             kmzoutput=True)
-        self.tabs.window.aistracker.create_kml_map(
-            os.path.join(outpath, 'map.kml'),
-            kmzoutput=False)
-        ais.write_csv_file(outputdata,
-                           os.path.join(outpath, 'vessel-data.tsv'),
-                           dialect='excel-tab')
         ais.write_csv_file(outputdata,
                            os.path.join(outpath, 'vessel-data.csv'))
-        self.tabs.window.aistracker.create_geojson_map(
-            os.path.join(outpath, 'map.geojson'))
         joutdict = {}
         joutdict['NMEA Stats'] = self.tabs.window.nmeatracker.nmea_stats()
         joutdict['AIS Stats'] = self.tabs.window.aistracker.tracker_stats()

@@ -103,12 +103,13 @@ This tab allows you to export all the data the AIS decoder currently has.
 
 The export options are:
 
--ALL     - export all the file types below to a directory
+-OVERVIEW - export CSV, JSON, KMZ and DEBUG files to a directory
 -CSV     - Comma Separated Values file containing similar data to the Ships tab
 -TSV     - Tab Separated Values file containing similar data to the Ships tab
 -KML     - plain KML file with no custom icons (default icons will be used)
 -KMZ     - Keyhole Markup Language Map with custom icons
--JSON    - JSON file containing stats and all the vessels with position reports
+-JSON         - JSON file containing stats and AIS station last known positions
+-VERBOSE JSON - JSON file containing stats and all AIS station position reports
 -GEOJSON - GEOJSON map of all AIS Station positions
 -DEBUG   - outputs 2 files (CSV and JSON lines) output of all decoded messages
 
