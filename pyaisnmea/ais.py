@@ -572,13 +572,17 @@ class AISTracker():
                 stntype = stn.stntype
                 stninfo = stn.get_station_info()
                 desc = kmlmap.format_kml_placemark_description(stninfo)
-                kmlmap.open_folder(stn.mmsi)
+                if stn.name != '':
+                    displayname = stn.mmsi + ' - ' + stn.name
+                else:
+                    displayname = stn.mmsi
+                kmlmap.open_folder(displayname)
                 try:
                     heading = lastpos['True Heading']
                     if heading != HEADINGUNAVAILABLE and kmzoutput:
                         hdesc = 'TRUE HEADING - {}'.format(heading)
                         kmlmap.add_kml_placemark(
-                            stn.mmsi + ' TH', hdesc,
+                            'TH', hdesc,
                             str(lastpos['Longitude']),
                             str(lastpos['Latitude']),
                             str(heading)  + 'TH', kmzoutput)
@@ -588,7 +592,7 @@ class AISTracker():
                     cog = int(lastpos['CoG'])
                     if cog != COGUNAVAILABLE and kmzoutput:
                         hdesc = 'COURSE OVER GROUND - {}'.format(cog)
-                        kmlmap.add_kml_placemark(stn.mmsi + ' CoG', hdesc,
+                        kmlmap.add_kml_placemark('CoG', hdesc,
                                                  str(lastpos['Longitude']),
                                                  str(lastpos['Latitude']),
                                                  str(cog) + 'CoG', kmzoutput)
@@ -597,7 +601,7 @@ class AISTracker():
                 if linestring:
                     posreps = stn.posrep
                     kmlmap.add_kml_placemark_linestring(stn.mmsi, posreps)
-                kmlmap.add_kml_placemark(stn.mmsi, desc,
+                kmlmap.add_kml_placemark(displayname, desc,
                                          str(lastpos['Longitude']),
                                          str(lastpos['Latitude']),
                                          stntype, kmzoutput)
