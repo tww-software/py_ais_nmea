@@ -274,8 +274,14 @@ class AISStation():
         stndata = [self.mmsi, self.name, self.stnclass,
                    self.stntype, self.flag]
         header = ['Time', 'Latitude', 'Longitude', 'CoG',
-                  'True Heading','Speed (knots)', 'Navigation Status',
-                  'Turn Rate', 'Special Maneuver', 'Destination', 'ETA']
+                  'True Heading', 'Speed (knots)']
+        if self.stnclass == 'A':
+            moreheaders = ['Navigation Status', 'Turn Rate',
+                           'Special Maneuver', 'Destination', 'ETA']
+            header.extend(moreheaders)
+        if self.stntype == 'SAR Aircraft':
+            header[4] = 'Altitude (m)'
+            header[5] = 'Ground Speed (knots)'
         positionlines.append(stndata)
         positionlines.append(header)
         for posrep in self.posrep:
