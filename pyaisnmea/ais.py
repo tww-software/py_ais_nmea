@@ -28,6 +28,7 @@ LONGITUDEUNAVAILABLE = 181.0
 
 TIMEREGEX = re.compile('\d{2}:\d{2}:\d{2}')
 
+
 class AISStation():
     """
     represents a single AIS station
@@ -88,30 +89,53 @@ class AISStation():
             flag = 'Unknown'
         return flag
 
-    def update_position(self, currentpos):
+    def determine_station_class(self, msgobj):
         """
-        update the position of the AIS Station
+        try and determine the class of AIS station based on MMSI and what
+        message we received from it
+
+        Note:
+            message types 4 and 11 are only transmitted by
+            Base Stations
+            message type 21 is only sent by Navigation Aids
+            message types 1,2,3,5 and 27 are only sent by Class A
+            message types 14,18,19 and 24 are only sent by Class B
+            message type 9 is only sent by SAR Aircraft
 
         Args:
-            currentpos(dict): position report must have a minimum of keys
-                              'Latitude' and 'Longitude'
-
-        Raises:
-            NoSuitablePositionReport: if we do not have a minimum of a latitude
-                                      and longitude in currentpos
+            msgobj(messages.aismessage.AISMessage): message object
         """
-        if (currentpos['Latitude'] == LATITUDEUNAVAILABLE or
-                currentpos['Longitude'] == LONGITUDEUNAVAILABLE):
-            raise NoSuitablePositionReport('do not have a suitable LAT/LON')
-        try:
-            currentpos['Destination'] = self.details['Destination']
-        except KeyError:
-            pass
-        try:
-            currentpos['ETA'] = self.details['ETA']
-        except KeyError:
-            pass
-        self.posrep.append(currentpos)
+        mmsitypes = {
+            '8': 'Portable VHF Transceiver',
+            '98': 'Auxiliary craft associated with a parent ship',
+            '99': 'Navigation Aid',
+            '111': 'SAR Aircraft',
+            '970': 'AIS SART (Search and Rescue Transmitter)',
+            '972': 'MOB (Man Overboard) device',
+            '974': 'EPIRB (Emergency Position Indicating Radio Beacon)'}
+        for prefix in mmsitypes:
+            if self.mmsi.startswith(prefix):
+                self.stnclass = mmsitypes[prefix]
+                self.stntype = mmsitypes[prefix]
+                return
+        typesdict = {
+            4: 'Base Station',
+            11: 'Base Station',
+            21: 'Navigation Aid',
+            1: 'A',
+            2: 'A',
+            3: 'A',
+            5: 'A',
+            27: 'A',
+            14: 'B',
+            18: 'B',
+            19: 'B',
+            24: 'B',
+            9: 'SAR Aircraft'}
+        if msgobj.msgtype in typesdict:
+            self.stnclass = typesdict[msgobj.msgtype]
+        if self.stnclass == 'Base Station':
+            self.stntype = 'Base Station'
 
     def find_station_name_and_type(self, msgobj):
         """
@@ -162,6 +186,31 @@ class AISStation():
         except NotImplementedError:
             pass
 
+    def update_position(self, currentpos):
+        """
+        update the position of the AIS Station
+
+        Args:
+            currentpos(dict): position report must have a minimum of keys
+                              'Latitude' and 'Longitude'
+
+        Raises:
+            NoSuitablePositionReport: if we do not have a minimum of a latitude
+                                      and longitude in currentpos
+        """
+        if (currentpos['Latitude'] == LATITUDEUNAVAILABLE or
+                currentpos['Longitude'] == LONGITUDEUNAVAILABLE):
+            raise NoSuitablePositionReport('do not have a suitable LAT/LON')
+        try:
+            currentpos['Destination'] = self.details['Destination']
+        except KeyError:
+            pass
+        try:
+            currentpos['ETA'] = self.details['ETA']
+        except KeyError:
+            pass
+        self.posrep.append(currentpos)
+
     def get_latest_position(self):
         """
         return the last known position we have for the ais station
@@ -176,54 +225,6 @@ class AISStation():
             return self.posrep[len(self.posrep) - 1]
         except (IndexError, AttributeError) as err:
             raise NoSuitablePositionReport('Unknown') from err
-
-    def determine_station_class(self, msgobj):
-        """
-        try and determine the class of AIS station based on MMSI and what
-        message we received from it
-
-        Note:
-            message types 4 and 11 are only transmitted by
-            Base Stations
-            message type 21 is only sent by Navigation Aids
-            message types 1,2,3,5 and 27 are only sent by Class A
-            message types 14,18,19 and 24 are only sent by Class B
-            message type 9 is only sent by SAR Aircraft
-
-        Args:
-            msgobj(messages.aismessage.AISMessage): message object
-        """
-        mmsitypes = {
-            '8': 'Portable VHF Transceiver',
-            '98': 'Auxiliary craft associated with a parent ship',
-            '99': 'Navigation Aid',
-            '111': 'SAR Aircraft',
-            '970': 'AIS SART (Search and Rescue Transmitter)',
-            '972': 'MOB (Man Overboard) device',
-            '974': 'EPIRB (Emergency Position Indicating Radio Beacon)'}
-        for prefix in mmsitypes:
-            if self.mmsi.startswith(prefix):
-                self.stnclass = mmsitypes[prefix]
-                self.stntype = mmsitypes[prefix]
-                return
-        typesdict = {
-            4: 'Base Station',
-            11: 'Base Station',
-            21: 'Navigation Aid',
-            1: 'A',
-            2: 'A',
-            3: 'A',
-            5: 'A',
-            27: 'A',
-            14: 'B',
-            18: 'B',
-            19: 'B',
-            24: 'B',
-            9: 'SAR Aircraft'}
-        if msgobj.msgtype in typesdict:
-            self.stnclass = typesdict[msgobj.msgtype]
-        if self.stnclass == 'Base Station':
-            self.stntype = 'Base Station'
 
     def get_station_info(self, verbose=False, messagetally=True):
         """
@@ -250,20 +251,6 @@ class AISStation():
             except NoSuitablePositionReport:
                 stninfo['Last Known Position'] = 'Unknown'
         return stninfo
-
-    def __str__(self):
-        strtext = ('AIS Station - MMSI: {}, Name: {}, Class: {},'
-                   ' Type: {}, Flag: {}'.format(
-                       self.mmsi,
-                       self.name,
-                       self.stnclass,
-                       self.stntype,
-                       self.flag))
-        return strtext
-
-    def __repr__(self):
-        reprstr = '{}()'.format(self.__class__.__name__)
-        return reprstr
 
     def create_positions_csv(self, outputfile, dialect='excel'):
         """
@@ -361,6 +348,20 @@ class AISStation():
         kmlmap.write_kml_doc_file()
         if kmzoutput:
             kml.make_kmz(outputfile)
+
+    def __str__(self):
+        strtext = ('AIS Station - MMSI: {}, Name: {}, Class: {},'
+                   ' Type: {}, Flag: {}'.format(
+                       self.mmsi,
+                       self.name,
+                       self.stnclass,
+                       self.stntype,
+                       self.flag))
+        return strtext
+
+    def __repr__(self):
+        reprstr = '{}()'.format(self.__class__.__name__)
+        return reprstr
 
 
 class AISTracker():
