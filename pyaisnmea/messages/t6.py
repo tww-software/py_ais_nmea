@@ -68,6 +68,18 @@ class Type6BinaryMessage(pyaisnmea.messages.aismessage.AISMessage):
         self.msgdetails['Position status'] = posstatus[
             self.decode_sixbit_integer(self.msgbinary[131:132])]
 
+    def get_details(self):
+        """
+        get the most pertinent details of the message as a dictionary
+
+        Returns:
+            msgdetails(dict): most relevant information of this message
+        """
+        self.msgdetails['Time'] = self.rxtime
+        return {'Binary Message Sub Type': self.msgsubtype,
+                'Destination MMSI': self.destinationmmsi,
+                'Details': self.msgdetails}
+
     def __str__(self):
         """
         describes the message object
@@ -81,12 +93,3 @@ class Type6BinaryMessage(pyaisnmea.messages.aismessage.AISMessage):
                                              self.designatedareacode,
                                              self.functionid)
         return strtext
-
-    def get_details(self):
-        """
-        get the most pertinent details of the message as a dictionary
-
-        Returns:
-            msgdetails(dict): most relevant information of this message
-        """
-        return {self.msgsubtype: self.msgdetails}

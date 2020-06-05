@@ -105,5 +105,6 @@ class Type19ExtendedReportClassB(pyaisnmea.messages.aismessage.AISMessage):
             'True Heading': self.trueheading,
             'CoG': self.courseoverground,
             'Latitude': self.latitude,
-            'Longitude': self.longitude}
+            'Longitude': self.longitude,
+            'Time': self.rxtime}
         return posrep

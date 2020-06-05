@@ -137,5 +137,6 @@ class Type123PositionReportClassA(pyaisnmea.messages.aismessage.AISMessage):
             'Turn Rate': self.turnrate,
             'Special Maneuver': self.maneuverindicator,
             'Latitude': self.latitude,
-            'Longitude': self.longitude}
+            'Longitude': self.longitude,
+            'Time': self.rxtime}
         return posrep

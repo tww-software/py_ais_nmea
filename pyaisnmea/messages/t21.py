@@ -139,6 +139,7 @@ class Type21AidToNavigation(pyaisnmea.messages.aismessage.AISMessage):
         """
         posrep = {
             'Latitude': self.latitude,
-            'Longitude': self.longitude}
+            'Longitude': self.longitude,
+            'Time': self.rxtime}
         return posrep
 

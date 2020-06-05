@@ -26,7 +26,7 @@ LATITUDEUNAVAILABLE = 91.0
 LONGITUDEUNAVAILABLE = 181.0
 
 
-TIMEREGEX = re.compile('\d{2}:\d{2}:\d{2}')
+TIMEREGEX = re.compile(r'\d{2}:\d{2}:\d{2}')
 
 
 class AISStation():
@@ -41,6 +41,8 @@ class AISStation():
         name(str): the name of the station
         posrep(list): list of dictionaries each item is a position report
         details(dict): extra information about the AIS Station
+        binarymsgs(list): list of dictionaries - all the type 6 & 8 binary
+                          messages we have from this station
         flag(str): the country the station is sailing under
         sentmsgs(collections.defaultdict): count of different message types
                                            this station has sent
@@ -56,6 +58,7 @@ class AISStation():
         self.name = ''
         self.posrep = []
         self.details = {}
+        self.binarymsgs = []
         self.flag = self.identify_flag(mmsi)
         self.sentmsgs = collections.Counter()
 
@@ -161,7 +164,7 @@ class AISStation():
             if msgobj.partno == 1:
                 self.stntype = msgobj.shiptype
 
-    def find_position_information(self, msgobj, timestamp=None):
+    def find_position_information(self, msgobj):
         """
         takes a message object and gets useful information from it
 
@@ -172,17 +175,24 @@ class AISStation():
             msgobj(messages.aismessage.AISMessage): message object
         """
         self.sentmsgs[msgobj.description] += 1
+        binarymsgtypes = [6, 8]
         posreptypes = [1, 2, 3, 4, 9, 11, 18, 19, 21, 27]
         if msgobj.msgtype in posreptypes:
             try:
                 posrepdict = msgobj.get_position_data()
-                if timestamp:
-                    posrepdict['Time'] = timestamp
                 self.update_position(posrepdict)
             except (NotImplementedError, NoSuitablePositionReport):
                 pass
         try:
-            self.details.update(msgobj.get_details())
+            msgdetails = msgobj.get_details()
+            if msgobj.msgtype in binarymsgtypes:
+                latest = {
+                    msgdetails['Binary Message Sub Type']: \
+                    msgdetails['Details']}
+                self.details.update(latest)
+                self.binarymsgs.append(msgdetails)
+            else:
+                self.details.update(msgdetails)
         except NotImplementedError:
             pass
 
@@ -245,6 +255,8 @@ class AISStation():
             stninfo['Sent Messages'] = dict(self.sentmsgs)
         if verbose:
             stninfo['Position Reports'] = self.posrep
+            if self.binarymsgs:
+                stninfo['Binary Messages'] = self.binarymsgs
         else:
             try:
                 stninfo['Last Known Position'] = self.get_latest_position()
@@ -282,7 +294,7 @@ class AISStation():
                 except KeyError:
                     posrepline.append('')
             positionlines.append(posrepline)
-        write_csv_file(positionlines, outputfile, dialect='excel')
+        write_csv_file(positionlines, outputfile, dialect=dialect)
 
     def create_kml_map(self, outputfile, kmzoutput=True):
         """
@@ -438,7 +450,7 @@ class AISTracker():
             except IndexError:
                 timestamp = 'N/A'
         msgobj.rxtime = timestamp
-        self.stations[msgobj.mmsi].find_position_information(msgobj, timestamp)
+        self.stations[msgobj.mmsi].find_position_information(msgobj)
         self.messagesprocessed += 1
         self.messages[allmessages.MSGDESCRIPTIONS[msgtype]] += 1
         return msgobj

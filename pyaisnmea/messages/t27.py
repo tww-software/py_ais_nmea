@@ -73,5 +73,6 @@ class Type27LongRangeAISPositionReport(
             'Speed (knots)': self.speed,
             'CoG': self.courseoverground,
             'Latitude': self.latitude,
-            'Longitude': self.longitude}
+            'Longitude': self.longitude,
+            'Time': self.rxtime}
         return posrep

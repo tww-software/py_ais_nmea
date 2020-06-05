@@ -86,5 +86,6 @@ class Type9StandardSARAircraftPositionReport(
             'CoG': self.courseoverground,
             'Ground Speed (knots)': self.speedoverground,
             'Latitude': self.latitude,
-            'Longitude': self.longitude}
+            'Longitude': self.longitude,
+            'Time': self.rxtime}
         return posrep

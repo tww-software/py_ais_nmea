@@ -189,7 +189,9 @@ class Type8BinaryBroadcastMessage(pyaisnmea.messages.aismessage.AISMessage):
         Returns:
             self.msgdetails(dict): most relevant information of this message
         """
-        return {self.msgsubtype: self.msgdetails}
+        self.msgdetails['Time'] = self.rxtime
+        return {'Binary Message Sub Type':self.msgsubtype,
+                'Details': self.msgdetails}
 
     def __str__(self):
         """
