@@ -26,6 +26,8 @@ LATITUDEUNAVAILABLE = 91.0
 LONGITUDEUNAVAILABLE = 181.0
 
 
+TIMEREGEX = re.compile('\d{2}:\d{2}:\d{2}')
+
 class AISStation():
     """
     represents a single AIS station
@@ -318,7 +320,10 @@ class AISStation():
         kmlmap.open_folder(displayname)
         posnumber = 1
         for pos in self.posrep:
-            kmlmap.open_folder(posnumber)
+            timematch = TIMEREGEX.search(pos['Time'])
+            if timematch:
+                posfoldername = str(posnumber) + ' - ' + timematch.group()
+            kmlmap.open_folder(posfoldername)
             stninfo['Last Known Position'] = pos
             desc = kmlmap.format_kml_placemark_description(stninfo)
             try:
