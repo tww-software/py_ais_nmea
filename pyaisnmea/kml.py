@@ -95,7 +95,9 @@ class KMLOutputParser():
         descriptionlist = []
         descriptionlist.append(starttag)
         for item in placemarkdict:
-            if item == 'Last Known Position':
+            if isinstance(placemarkdict[item], dict):
+                descriptionlist.append(newlinetag)
+                descriptionlist.append(item.upper())
                 descriptionlist.append(newlinetag)
                 for subitem in placemarkdict[item]:
                     descriptionlist.append(str(subitem).upper())
