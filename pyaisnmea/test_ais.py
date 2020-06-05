@@ -902,25 +902,25 @@ class IMONumberTests(unittest.TestCase):
         """
         a correct IMO number
         """
-        self.assertTrue(ais.check_imo_number('9170705'))
+        self.assertTrue(t5.check_imo_number('9170705'))
 
     def test_check_invalid_imo_number(self):
         """
         correct length but is not a valid IMO number
         """
-        self.assertFalse(ais.check_imo_number('9999999'))
+        self.assertFalse(t5.check_imo_number('9999999'))
 
     def test_check_too_short_imo_number(self):
         """
         IMO number that is too short - < 7 chars
         """
-        self.assertFalse(ais.check_imo_number('9999'))
+        self.assertFalse(t5.check_imo_number('9999'))
 
     def test_check_too_long_imo_number(self):
         """
         IMO number that is too long - > 7 chars
         """
-        self.assertFalse(ais.check_imo_number('917070500005'))
+        self.assertFalse(t5.check_imo_number('917070500005'))
 
 
 class TextSummaryFormattingTests(unittest.TestCase):

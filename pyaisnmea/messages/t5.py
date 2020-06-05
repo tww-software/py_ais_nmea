@@ -5,6 +5,31 @@ import pyaisnmea.binary as binary
 import pyaisnmea.messages.aismessage
 
 
+def check_imo_number(imo):
+    """
+    do a basic integrity check of an IMO number
+
+    Args:
+        imo(str): the IMO number as a string
+
+    Returns:
+        True: if valid IMO number
+        False: invalid IMO number
+    """
+    if len(imo) > 7:
+        return False
+    try:
+        lastdigit = imo[6]
+        total = 0
+        multiplyby = 7
+        for digit in range(0, 6):
+            total += int(imo[digit]) * multiplyby
+            multiplyby -= 1
+    except IndexError:
+        return False
+    return bool(str(total)[len(str(total)) - 1] == lastdigit)
+
+
 class Type5StaticAndVoyageData(pyaisnmea.messages.aismessage.AISMessage):
     """
     detailed information sent by class A equipment
@@ -92,6 +117,7 @@ class Type5StaticAndVoyageData(pyaisnmea.messages.aismessage.AISMessage):
         details['Destination'] = self.destination
         details['ETA'] = self.eta
         details['IMO number'] = self.imo
+        details['Valid IMO number'] = check_imo_number(str(self.imo))
         details['DTE'] = self.dte
         details['AIS version'] = self.aisversion
         return details

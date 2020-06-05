@@ -310,7 +310,11 @@ class AISStation():
         kmlmap = kml.KMLOutputParser(docpath)
         kmlmap.create_kml_header(kmz=kmzoutput)
         stninfo = self.get_station_info()
-        kmlmap.open_folder(self.mmsi)
+        if self.name != '':
+            displayname = self.mmsi + ' - ' + self.name
+        else:
+            displayname = self.mmsi
+        kmlmap.open_folder(displayname)
         posnumber = 1
         for pos in self.posrep:
             kmlmap.open_folder(posnumber)
@@ -320,7 +324,7 @@ class AISStation():
                 heading = pos['True Heading']
                 if heading != HEADINGUNAVAILABLE and kmzoutput:
                     hdesc = 'TRUE HEADING - {}'.format(heading)
-                    kmlmap.add_kml_placemark(self.mmsi + ' TH', hdesc,
+                    kmlmap.add_kml_placemark('TH', hdesc,
                                              str(pos['Longitude']),
                                              str(pos['Latitude']),
                                              str(heading) + 'TH', kmzoutput)
@@ -330,14 +334,14 @@ class AISStation():
                 cog = int(pos['CoG'])
                 if cog != COGUNAVAILABLE and kmzoutput:
                     hdesc = 'COURSE OVER GROUND - {}'.format(cog)
-                    kmlmap.add_kml_placemark(self.mmsi + ' CoG', hdesc,
+                    kmlmap.add_kml_placemark('CoG', hdesc,
                                              str(pos['Longitude']),
                                              str(pos['Latitude']),
                                              str(cog) + 'CoG', kmzoutput)
             except KeyError:
                 pass
             try:
-                kmlmap.add_kml_placemark(self.mmsi, desc,
+                kmlmap.add_kml_placemark(displayname, desc,
                                          str(pos['Longitude']),
                                          str(pos['Latitude']),
                                          self.stntype, kmzoutput)
@@ -843,31 +847,6 @@ def write_csv_file(lines, outpath, dialect='excel'):
     with open(outpath, 'w') as outfile:
         csvwriter = csv.writer(outfile, dialect=dialect)
         csvwriter.writerows(lines)
-
-
-def check_imo_number(imo):
-    """
-    do a basic integrity check of an IMO number
-
-    Args:
-        imo(str): the IMO number as a string
-
-    Returns:
-        True: if valid IMO number
-        False: invalid IMO number
-    """
-    if len(imo) > 7:
-        return False
-    try:
-        lastdigit = imo[6]
-        total = 0
-        multiplyby = 7
-        for digit in range(0, 6):
-            total += int(imo[digit]) * multiplyby
-            multiplyby -= 1
-    except IndexError:
-        return False
-    return bool(str(total)[len(str(total)) - 1] == lastdigit)
 
 
 def create_summary_text(summary):
