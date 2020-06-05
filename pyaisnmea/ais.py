@@ -223,7 +223,7 @@ class AISStation():
         if self.stnclass == 'Base Station':
             self.stntype = 'Base Station'
 
-    def get_station_info(self, verbose=False):
+    def get_station_info(self, verbose=False, messagetally=True):
         """
         return the most relevant information about this AIS station as a
         dictionary
@@ -238,7 +238,8 @@ class AISStation():
         stninfo['Flag'] = self.flag
         stninfo['Name'] = self.name
         stninfo.update(self.details)
-        stninfo['Sent Messages'] = dict(self.sentmsgs)
+        if messagetally:
+            stninfo['Sent Messages'] = dict(self.sentmsgs)
         if verbose:
             stninfo['Position Reports'] = self.posrep
         else:
@@ -309,7 +310,7 @@ class AISStation():
             docpath = os.path.join(outputfile)
         kmlmap = kml.KMLOutputParser(docpath)
         kmlmap.create_kml_header(kmz=kmzoutput)
-        stninfo = self.get_station_info()
+        stninfo = self.get_station_info(messagetally=False)
         if self.name != '':
             displayname = self.mmsi + ' - ' + self.name
         else:
