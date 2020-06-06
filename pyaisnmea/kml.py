@@ -27,13 +27,14 @@ class KMLOutputParser():
 <LookAt>
 <longitude>%s</longitude>
 <latitude>%s</latitude>
-<altitude>0</altitude>
+<altitude>%s</altitude>
 <heading>-0</heading>
 <tilt>0</tilt>
 <range>500</range>
 </LookAt>
 <styleUrl>#%s</styleUrl>
 <Point>
+<altitudeMode>absolute</altitudeMode>
 <coordinates>%s</coordinates>
 </Point>
 </Placemark>"""
@@ -41,6 +42,7 @@ class KMLOutputParser():
 <Placemark>
 <name>%s</name>
 <LineString>
+<altitudeMode>absolute</altitudeMode>
 <coordinates>%s</coordinates>
 </LineString>
 </Placemark>"""
@@ -133,7 +135,7 @@ class KMLOutputParser():
                 self.kmldoc.append(cogiconkml)
 
     def add_kml_placemark(self, placemarkname, description, lon, lat, style,
-                          kmz=True):
+                          altitude='0', kmz=True):
         """
         Write a placemark to the KML file (a pin on the map!)
 
@@ -144,11 +146,11 @@ class KMLOutputParser():
             lat(str): latitude in decimal degrees
             style(str): icon to use
         """
-        coords = lon + ',' + lat + ',0'
+        coords = lon + ',' + lat + ',' + altitude
         if not kmz:
             style = ''
-        placemark = self.placemarktemplate % (placemarkname, description,
-                                              lon, lat, style, coords)
+        placemark = self.placemarktemplate % (
+            placemarkname, description, lon, lat, altitude, style, coords)
         self.kmldoc.append(placemark)
 
     def open_folder(self, foldername):
@@ -178,8 +180,13 @@ class KMLOutputParser():
         """
         newcoordslist = []
         for item in coords:
-            coordsline = '{},{},0'.format(str(item['Longitude']),
-                                          str(item['Latitude']))
+            lon = str(item['Longitude'])
+            lat = str(item['Latitude'])
+            try:
+                alt = str(item['Altitude (m)'])
+            except KeyError:
+                alt = '0'
+            coordsline = '{},{},{}'.format(lon, lat, alt)
             newcoordslist.append(coordsline)
         placemark = self.lineplacemarktemplate % (placemarkname,
                                                   '\n'.join(newcoordslist))

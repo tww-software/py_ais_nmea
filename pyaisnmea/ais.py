@@ -326,13 +326,18 @@ class AISStation():
             stninfo['Last Known Position'] = pos
             desc = kmlmap.format_kml_placemark_description(stninfo)
             try:
+                alt = str(pos['Altitude (m)'])
+            except KeyError:
+                alt = '0'
+            try:
                 heading = pos['True Heading']
                 if heading != HEADINGUNAVAILABLE and kmzoutput:
                     hdesc = 'TRUE HEADING - {}'.format(heading)
                     kmlmap.add_kml_placemark('TH', hdesc,
                                              str(pos['Longitude']),
                                              str(pos['Latitude']),
-                                             str(heading) + 'TH', kmzoutput)
+                                             str(heading) + 'TH',
+                                             alt, kmzoutput)
             except KeyError:
                 pass
             try:
@@ -342,14 +347,15 @@ class AISStation():
                     kmlmap.add_kml_placemark('CoG', hdesc,
                                              str(pos['Longitude']),
                                              str(pos['Latitude']),
-                                             str(cog) + 'CoG', kmzoutput)
+                                             str(cog) + 'CoG',
+                                             alt, kmzoutput)
             except KeyError:
                 pass
             try:
                 kmlmap.add_kml_placemark(displayname, desc,
                                          str(pos['Longitude']),
                                          str(pos['Latitude']),
-                                         self.stntype, kmzoutput)
+                                         self.stntype, alt, kmzoutput)
             except KeyError:
                 pass
             kmlmap.close_folder()
@@ -601,6 +607,10 @@ class AISTracker():
                     displayname = stn.mmsi
                 kmlmap.open_folder(displayname)
                 try:
+                    alt = str(lastpos['Altitude (m)'])
+                except KeyError:
+                    alt = '0'
+                try:
                     heading = lastpos['True Heading']
                     if heading != HEADINGUNAVAILABLE and kmzoutput:
                         hdesc = 'TRUE HEADING - {}'.format(heading)
@@ -608,7 +618,7 @@ class AISTracker():
                             'TH', hdesc,
                             str(lastpos['Longitude']),
                             str(lastpos['Latitude']),
-                            str(heading)  + 'TH', kmzoutput)
+                            str(heading)  + 'TH', alt, kmzoutput)
                 except KeyError:
                     pass
                 try:
@@ -618,7 +628,8 @@ class AISTracker():
                         kmlmap.add_kml_placemark('CoG', hdesc,
                                                  str(lastpos['Longitude']),
                                                  str(lastpos['Latitude']),
-                                                 str(cog) + 'CoG', kmzoutput)
+                                                 str(cog) + 'CoG',
+                                                 alt, kmzoutput)
                 except KeyError:
                     pass
                 if linestring:
@@ -627,7 +638,7 @@ class AISTracker():
                 kmlmap.add_kml_placemark(displayname, desc,
                                          str(lastpos['Longitude']),
                                          str(lastpos['Latitude']),
-                                         stntype, kmzoutput)
+                                         stntype, alt, kmzoutput)
                 kmlmap.close_folder()
             kmlmap.close_folder()
         kmlmap.close_kml_file()
