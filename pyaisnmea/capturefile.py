@@ -5,6 +5,7 @@ capture files should be plain text files with each NMEA 0183 sentence
 on it's own line
 """
 
+import json
 import logging
 import os
 
@@ -32,7 +33,6 @@ def debug_output(messagedict):
         message = {}
         message['payload'] = payload
         message.update(messagedict[payload].__dict__)
-        message.pop('msgbinary', None)
         jsonlines.append(message)
         singlemsg = [payload, messagedict[payload].mmsi,
                      messagedict[payload].msgtype,
@@ -58,6 +58,76 @@ def open_file_generator(filepath):
                 continue
             yield line
 
+
+def aistracker_from_csv(filepath, debug=True):
+    """
+    get an aistracker object from a debug messages CSV that was previously
+    exported from pyaisnmea
+
+    Args:
+        filepath(str): full path to csv file
+        debug(bool): save all message payloads and decoded attributes into
+                     messagedict
+
+    Returns:
+        aistracker(ais.AISTracker): object that keeps track of all the
+                                    ships we have seen
+        messagedict(dict): keys are payloads values are the
+                           corresponding AISMessage objects
+    """
+    messagedict = {}
+    aistracker = ais.AISTracker()
+    for line in open_file_generator(filepath):
+        try:
+            linelist = line.split(',')
+            payload = linelist[0]
+            msgtime = linelist[3]
+            msg = aistracker.process_message(payload, timestamp=msgtime)
+            if debug:
+                messagedict[payload] = msg
+        except (ais.UnknownMessageType, ais.InvalidMMSI) as err:
+            AISLOGGER.debug(str(err))
+            continue
+        except IndexError:
+            AISLOGGER.debug('no data on line')
+            continue
+    return (aistracker, messagedict)
+
+
+def aistracker_from_json(filepath, debug=True):
+    """
+    get an aistracker object from a debug messages JSON that was previously
+    exported from pyaisnmea
+
+    Args:
+        filepath(str): full path to json file
+        debug(bool): save all message payloads and decoded attributes into
+                     messagedict
+
+    Returns:
+        aistracker(ais.AISTracker): object that keeps track of all the
+                                    ships we have seen
+        messagedict(dict): keys are payloads values are the
+                           corresponding AISMessage objects
+    """
+    messagedict = {}
+    aistracker = ais.AISTracker()
+    for line in open_file_generator(filepath):
+        try:
+            linemsgdict = json.loads(line)
+            payload = linemsgdict['payload']
+            msgtime = linemsgdict['rxtime']
+            msg = aistracker.process_message(payload, timestamp=msgtime)
+            if debug:
+                messagedict[payload] = msg
+        except (ais.UnknownMessageType, ais.InvalidMMSI) as err:
+            AISLOGGER.debug(str(err))
+            continue
+        except (json.decoder.JSONDecodeError, KeyError):
+            AISLOGGER.debug('no data on line')
+            continue
+    return (aistracker, messagedict)
+    
 
 def aistracker_from_file(filepath, debug=False):
     """
@@ -101,7 +171,7 @@ def aistracker_from_file(filepath, debug=False):
 def read_from_file(filepath, outpath, debug=False,
                    jsonoutput=True, geojsonoutput=True, csvoutput=True,
                    tsvoutput=False,
-                   kmloutput=False, kmzoutput=True, verbosejson=False):
+                   kmloutput=False, kmzoutput=True):
     """
     read AIS NMEA sentences from a text file and save to various output formats
 
@@ -141,8 +211,7 @@ def read_from_file(filepath, outpath, debug=False,
         joutdict = {}
         joutdict['NMEA Stats'] = sentencestats
         joutdict['AIS Stats'] = stnstats
-        joutdict['AIS Stations'] = aistracker.all_station_info(
-            verbose=verbosejson)
+        joutdict['AIS Stations'] = aistracker.all_station_info(verbose=True)
         ais.write_json_file(joutdict,
                             os.path.join(outpath, 'vessel-data.json'))
     if geojsonoutput:

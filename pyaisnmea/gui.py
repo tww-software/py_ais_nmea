@@ -881,14 +881,27 @@ class BasicGUI(tkinter.Tk):
             tkinter.messagebox.showwarning(
                 'WARNING', 'Stop Server First')
         else:
-            inputfile = tkinter.filedialog.askopenfilename()
+            inputfile = tkinter.filedialog.askopenfilename(
+                filetypes=(
+                    ("comma seperated values", "*.csv"),
+                    ("javascript object notation lines", "*.jsonl"),
+                    ("All Files", "*.*")))
             self.statuslabel.config(
                 text='Loading capture file - {}'.format(inputfile),
                 fg='black', bg='gold')
             self.update_idletasks()
             try:
-                self.aistracker, self.nmeatracker, self.messagedict = \
-                    capturefile.aistracker_from_file(inputfile, debug=True)
+                if inputfile.endswith('.csv'):
+                    self.aistracker, self.messagedict = capturefile.aistracker_from_csv(inputfile)
+                    self.nmeatracker.sentencecount = 'N/A'
+                    self.nmeatracker.reassembled = 'N/A'
+                elif inputfile.endswith('.jsonl'):
+                    self.aistracker, self.messagedict = capturefile.aistracker_from_json(inputfile)
+                    self.nmeatracker.sentencecount = 'N/A'
+                    self.nmeatracker.reassembled = 'N/A'
+                else:
+                    self.aistracker, self.nmeatracker, self.messagedict = \
+                        capturefile.aistracker_from_file(inputfile, debug=True)
             except (FileNotFoundError, TypeError):
                 self.statuslabel.config(text='', bg='light grey')
                 return
