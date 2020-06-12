@@ -1,4 +1,7 @@
-import pyaisnmea.binary as binary
+"""
+Type 23 messages set operational parameters for all mobile AIS stations
+in a coverage area. They are sent by AIS base stations.
+"""
 
 import pyaisnmea.messages.aismessage
 

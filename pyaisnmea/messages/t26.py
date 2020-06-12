@@ -1,10 +1,12 @@
-import pyaisnmea.binary as binary
+"""
+Type 26 messages are multiple slot binary messages.
+"""
 
 import pyaisnmea.messages.aismessage
 
 
 class Type26MultipleSlotBinaryMessage(
-    pyaisnmea.messages.aismessage.AISMessage):
+        pyaisnmea.messages.aismessage.AISMessage):
     """
     NO REAL LIFE TEST DATA FOUND YET!
     """

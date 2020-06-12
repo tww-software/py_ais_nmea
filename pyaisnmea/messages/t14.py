@@ -1,3 +1,7 @@
+"""
+Type 14 messages are broadcast safety messages.
+"""
+
 import pyaisnmea.binary as binary
 
 import pyaisnmea.messages.aismessage

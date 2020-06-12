@@ -1,4 +1,6 @@
-import pyaisnmea.binary as binary
+"""
+Type 25 messages are single slot binary messages.
+"""
 
 import pyaisnmea.messages.aismessage
 

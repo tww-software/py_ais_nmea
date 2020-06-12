@@ -1,3 +1,7 @@
+"""
+Type 8 messages are broadcast binary messages.
+"""
+
 import pyaisnmea.binary as binary
 
 import pyaisnmea.messages.aismessage

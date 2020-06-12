@@ -1,4 +1,6 @@
-import pyaisnmea.binary as binary
+"""
+Type 7 messages are acknowlegements send in response to a Type 6 message.
+"""
 
 import pyaisnmea.messages.aismessage
 

@@ -1,3 +1,8 @@
+"""
+Type 24 messages are used by Class B AIS stations to send information about
+the ship. They are similar to Type 5 messages sent by Class A stations.
+"""
+
 import pyaisnmea.binary as binary
 
 import pyaisnmea.messages.aismessage

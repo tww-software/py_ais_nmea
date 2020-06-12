@@ -1,3 +1,7 @@
+"""
+Type 18 messages are postion reports sent by Class B AIS stations.
+"""
+
 import pyaisnmea.binary as binary
 
 import pyaisnmea.messages.aismessage

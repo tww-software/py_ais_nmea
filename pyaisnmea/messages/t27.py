@@ -1,12 +1,17 @@
+"""
+Type 27 messages are postion reports sent by Class AIS stations.
+They are intended for long range detection by satellite.
+"""
+
 import pyaisnmea.binary as binary
 
 import pyaisnmea.messages.aismessage
 
 
 class Type27LongRangeAISPositionReport(
-    pyaisnmea.messages.aismessage.AISMessage):
+        pyaisnmea.messages.aismessage.AISMessage):
     """
-    used by class A eqipment for long range detection (ussualy by satellite)
+    used by class A eqipment for long range detection
 
     Attributes:
         posfixaccuracy(bool): 1 = accuracy < 10m, 0 = accuracy > 10m

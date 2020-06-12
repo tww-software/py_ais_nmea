@@ -1,3 +1,9 @@
+"""
+Type 19 messages are postion reports sent by Class B AIS stations.
+They contain more information than Type 18 messages and include the ships
+name, dimensions and ship type.
+"""
+
 import pyaisnmea.binary as binary
 
 import pyaisnmea.messages.aismessage

@@ -1,3 +1,9 @@
+"""
+Type 5 messages are used by Class A AIS stations to provide vessel and voyage
+data. Data provided includes the ships name, IMO number, dimensions,
+destination and ETA.
+"""
+
 import calendar
 
 import pyaisnmea.binary as binary

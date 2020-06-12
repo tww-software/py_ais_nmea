@@ -1,3 +1,7 @@
+"""
+Type 12 messages are safety messages sent to another AIS station.
+"""
+
 import pyaisnmea.binary as binary
 
 import pyaisnmea.messages.aismessage

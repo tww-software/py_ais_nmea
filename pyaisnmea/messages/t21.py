@@ -1,3 +1,8 @@
+"""
+Type 21 messages are used by navigation aids to send position reports and
+information.
+"""
+
 import pyaisnmea.binary as binary
 
 import pyaisnmea.messages.aismessage
@@ -142,4 +147,3 @@ class Type21AidToNavigation(pyaisnmea.messages.aismessage.AISMessage):
             'Longitude': self.longitude,
             'Time': self.rxtime}
         return posrep
-

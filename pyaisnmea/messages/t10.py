@@ -1,4 +1,7 @@
-import pyaisnmea.binary as binary
+"""
+Type 10 messages are used by stations to request a UTC timestamp from an AIS
+base staion.
+"""
 
 import pyaisnmea.messages.aismessage
 

@@ -1,3 +1,9 @@
+"""
+Type 4 messages are used by AIS Base Stations to send timestamps.
+
+pyaisnmea uses these mesages to estimate when AIS messages were received.
+"""
+
 import pyaisnmea.binary as binary
 
 import pyaisnmea.messages.aismessage

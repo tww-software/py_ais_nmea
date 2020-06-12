@@ -1,4 +1,6 @@
-import pyaisnmea.binary as binary
+"""
+Type 22 messages are used by AIS base stations to set the AIS channels.
+"""
 
 import pyaisnmea.messages.aismessage
 

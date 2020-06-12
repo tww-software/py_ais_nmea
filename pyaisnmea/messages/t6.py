@@ -1,4 +1,6 @@
-import pyaisnmea.binary as binary
+"""
+Type 6 messages are addressed binary messages.
+"""
 
 import pyaisnmea.messages.aismessage
 

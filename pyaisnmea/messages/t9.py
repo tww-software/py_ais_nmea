@@ -1,10 +1,14 @@
+"""
+Type 9 messages provide postion reports for Search and Rescue Aircraft.
+"""
+
 import pyaisnmea.binary as binary
 
 import pyaisnmea.messages.aismessage
 
 
 class Type9StandardSARAircraftPositionReport(
-    pyaisnmea.messages.aismessage.AISMessage):
+        pyaisnmea.messages.aismessage.AISMessage):
     """
     SAR aircraft position report
 

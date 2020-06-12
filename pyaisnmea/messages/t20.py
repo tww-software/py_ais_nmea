@@ -1,10 +1,13 @@
-import pyaisnmea.binary as binary
+"""
+Type 20 messages are used to pre-allocate TDMA slots within an AIS base
+station network.
+"""
 
 import pyaisnmea.messages.aismessage
 
 
 class Type20DatalinkManagementMessage(
-    pyaisnmea.messages.aismessage.AISMessage):
+        pyaisnmea.messages.aismessage.AISMessage):
     """
     Type 20 Datalink Management Message
 
@@ -39,4 +42,3 @@ class Type20DatalinkManagementMessage(
         """
         strtext = ('{} - MMSI: {}').format(self.description, self.mmsi)
         return strtext
-

@@ -1,3 +1,7 @@
+"""
+Type 1,2 & 3 messages are position reports for Class A AIS stations.
+"""
+
 import pyaisnmea.binary as binary
 
 import pyaisnmea.messages.aismessage

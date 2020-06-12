@@ -218,7 +218,7 @@ def make_kmz(kmzoutputfilename):
     iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                              'static', 'icons')
     greenarrowspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                              'static', 'green_arrows')
+                                   'static', 'green_arrows')
     orangearrowspath = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), 'static', 'orange_arrows')
     with zipfile.ZipFile(kmzoutputfilename,

@@ -1,4 +1,6 @@
-import pyaisnmea.binary as binary
+"""
+Type 16 messages are used by AIS base stations to specify TDMA slot offsets.
+"""
 
 import pyaisnmea.messages.aismessage
 

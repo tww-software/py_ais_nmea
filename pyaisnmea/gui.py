@@ -947,7 +947,7 @@ class BasicGUI(tkinter.Tk):
                             msg = self.aistracker.process_message(
                                 payload, timestamp=currenttime)
                         except (IndexError, KeyError) as err:
-                            errmsg = '%s - error with - %s'.format(
+                            errmsg = '{} - error with - {}'.format(
                                 str(err), payload)
                             AISLOGGER.error(errmsg)
                         self.messagedict[payload] = msg

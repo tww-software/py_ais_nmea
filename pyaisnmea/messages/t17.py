@@ -1,10 +1,13 @@
-import pyaisnmea.binary as binary
+"""
+Type 17 messages are usedto broadcast differential corrections
+for GPS recivers.
+"""
 
 import pyaisnmea.messages.aismessage
 
 
 class Type17DGNSSBroadcastBinaryMessage(
-    pyaisnmea.messages.aismessage.AISMessage):
+        pyaisnmea.messages.aismessage.AISMessage):
     """
     used to broadcast differential corrections for GPS
     """

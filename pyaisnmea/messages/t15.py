@@ -1,4 +1,6 @@
-import pyaisnmea.binary as binary
+"""
+Type 15 messages are used by AIS base stations to interrogate up to 2 MMSIs.
+"""
 
 import pyaisnmea.messages.aismessage
 

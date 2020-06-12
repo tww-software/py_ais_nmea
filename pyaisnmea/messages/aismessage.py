@@ -193,7 +193,7 @@ class AISMessage():
         self.msgtype = binary.decode_sixbit_integer(msgbinary[0:6])
         self.repeatcount = binary.decode_sixbit_integer(msgbinary[6:8])
         self.mmsi = str(format(binary.decode_sixbit_integer(msgbinary[8:38]),
-                           '09d'))
+                               '09d'))
         try:
             self.description = MSGDESCRIPTIONS[self.msgtype]
         except KeyError:

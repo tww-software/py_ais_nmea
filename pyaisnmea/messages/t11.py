@@ -1,4 +1,7 @@
-import pyaisnmea.binary as binary
+"""
+Type 11 messages are sent in response to a Type 10 message. They are the same
+format as a Type 4 message.
+"""
 
 import pyaisnmea.messages.aismessage
 
