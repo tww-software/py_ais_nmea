@@ -544,6 +544,7 @@ class StationInfoTab(tkinter.ttk.Frame):
             except Exception as err:
                 tkinter.messagebox.showerror('Export Files', str(err))
 
+
 class TabControl(tkinter.ttk.Notebook):
     """
     organise the main tabs
@@ -631,14 +632,14 @@ class NetworkSettingsWindow(tkinter.Toplevel):
         logpathbutton = tkinter.Button(
             self, text='Choose Log Path', command=self.set_log_path)
         logpathbutton.grid(column=1, row=7)
-        loglabel = tkinter.Label(self, text='Ouput Live KMZ Map')
+        loglabel = tkinter.Label(self, text='Ouput Live KML Map')
         loglabel.grid(column=0, row=8)
-        self.kmzpath = tkinter.Entry(self)
-        self.kmzpath.insert(0, self.window.netsettings['KMZ File Path'])
-        self.kmzpath.grid(column=0, row=9)
-        kmzpathbutton = tkinter.Button(
-            self, text='Choose KMZ Path', command=self.set_kmz_path)
-        kmzpathbutton.grid(column=1, row=9)
+        self.kmlpath = tkinter.Entry(self)
+        self.kmlpath.insert(0, self.window.netsettings['KML File Path'])
+        self.kmlpath.grid(column=0, row=9)
+        kmlpathbutton = tkinter.Button(
+            self, text='Choose KML Path', command=self.set_kml_path)
+        kmlpathbutton.grid(column=1, row=9)
         savesettingsbutton = tkinter.Button(
             self, text='Save Settings', command=self.save_settings)
         savesettingsbutton.grid(column=0, row=10)
@@ -654,12 +655,12 @@ class NetworkSettingsWindow(tkinter.Toplevel):
                        ("All Files", "*.*")))
         self.logpath.insert(0, outputfile)
 
-    def set_kmz_path(self):
+    def set_kml_path(self):
         """
-        open a dialogue box to choose where we save KMZ data to
+        open a dialogue box to choose where we save KMl data to
         """
         outputdir = tkinter.filedialog.askdirectory()
-        self.kmzpath.insert(0, outputdir)
+        self.kmlpath.insert(0, outputdir)
 
     def save_settings(self):
         """
@@ -676,7 +677,7 @@ class NetworkSettingsWindow(tkinter.Toplevel):
             self.window.netsettings['Remote Server Port'] = int(
                 self.remoteport.get())
             self.window.netsettings['Log File Path'] = self.logpath.get()
-            self.window.netsettings['KMZ File Path'] = self.kmzpath.get()
+            self.window.netsettings['KML File Path'] = self.kmlpath.get()
             tkinter.messagebox.showinfo(
                 'Network Settings', 'Network Settings Saved')
         self.destroy()
@@ -711,7 +712,7 @@ class BasicGUI(tkinter.Tk):
         'Remote Server IP': '127.0.0.1',
         'Remote Server Port': 10111,
         'Log File Path': '',
-        'KMZ File Path': ''}
+        'KML File Path': ''}
 
     def __init__(self):
         tkinter.Tk.__init__(self)
@@ -821,9 +822,9 @@ class BasicGUI(tkinter.Tk):
         self.serverrunning = True
         self.tabcontrol.statstab.starttime.configure(
             text=datetime.datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S'))
-        if self.netsettings['KMZ File Path'] != '':
-            self.livemap = livekmlmap.AdvancedLiveKMLMap(
-                self.netsettings['KMZ File Path'])
+        if self.netsettings['KML File Path'] != '':
+            self.livemap = livekmlmap.LiveKMLMap(
+                self.netsettings['KML File Path'])
             self.livemap.create_netlink_file()
         if self.forwardsentences.get() == 1:
             print('forwarding sentences')
@@ -892,11 +893,13 @@ class BasicGUI(tkinter.Tk):
             self.update_idletasks()
             try:
                 if inputfile.endswith('.csv'):
-                    self.aistracker, self.messagedict = capturefile.aistracker_from_csv(inputfile)
+                    self.aistracker, self.messagedict = \
+                        capturefile.aistracker_from_csv(inputfile)
                     self.nmeatracker.sentencecount = 'N/A'
                     self.nmeatracker.reassembled = 'N/A'
                 elif inputfile.endswith('.jsonl'):
-                    self.aistracker, self.messagedict = capturefile.aistracker_from_json(inputfile)
+                    self.aistracker, self.messagedict = \
+                        capturefile.aistracker_from_json(inputfile)
                     self.nmeatracker.sentencecount = 'N/A'
                     self.nmeatracker.reassembled = 'N/A'
                 else:
@@ -979,8 +982,10 @@ class BasicGUI(tkinter.Tk):
                 self.tabcontrol.stninfotab.stn_options()
                 self.tabcontrol.stninfotab.show_stn_info()
                 if self.livemap:
-                    self.livemap.create_detailed_map(
-                        aistracker=self.aistracker)
+                    self.aistracker.create_kml_map(
+                        self.livemap.kmlpath, kmzoutput=False,
+                        linestring=False, livemap=True,
+                        livemaptimeout=480)
                 time.sleep(1)
 
     def quit(self):

@@ -10,7 +10,6 @@ import shutil
 import time
 
 import pyaisnmea.ais as ais
-import pyaisnmea.kml as kml
 import pyaisnmea.network as network
 import pyaisnmea.nmea as nmea
 
@@ -43,8 +42,8 @@ class LiveKMLMap():
         if not os.path.exists(outputpath):
             AISLOGGER.info('output path does not exist creating directories')
             os.makedirs(outputpath)
-        self.netlinkpath = os.path.join(outputpath, 'netlink.kml')
-        self.kmlpath = os.path.join(outputpath, 'livemap.kml')
+        self.netlinkpath = os.path.join(outputpath, 'open_this.kml')
+        self.kmlpath = os.path.join(outputpath, 'livemapdata.kml')
         self.aistracker = ais.AISTracker()
         self.nmeatracker = nmea.NMEAtracker()
 
@@ -90,7 +89,7 @@ class LiveKMLMap():
                         if currenttime.endswith('5'):
                             self.aistracker.create_kml_map(
                                 self.kmlpath, kmzoutput=False,
-                                linestring=False)
+                                linestring=False, livemap=True)
                             time.sleep(1)
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                         ais.UnknownMessageType, ais.InvalidMMSI) as err:
@@ -119,14 +118,22 @@ class AdvancedLiveKMLMap(LiveKMLMap):
         """
         iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                  'static', 'icons')
-        arrowspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                  'static', 'green_arrows')
+        greenarrowspath = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'static', 'green_arrows')
+        orangearrowspath = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'static', 'orange_arrows')
         iconsdestination = os.path.join(self.outputpath, 'icons')
-        arrowsdestination = os.path.join(self.outputpath, 'green_arrows')
+        greenarrowsdestination = os.path.join(self.outputpath, 'green_arrows')
+        orangearrowsdestination = os.path.join(
+            self.outputpath, 'orange_arrows')
         if not os.path.exists(iconsdestination):
             shutil.copytree(iconspath, iconsdestination)
-        if not os.path.exists(arrowsdestination):
-            shutil.copytree(arrowspath, arrowsdestination)
+        if not os.path.exists(greenarrowsdestination):
+            shutil.copytree(greenarrowspath, greenarrowsdestination)
+        if not os.path.exists(orangearrowsdestination):
+            shutil.copytree(orangearrowspath, orangearrowsdestination)
 
     def get_nmea_sentences(self):
         """
@@ -146,7 +153,9 @@ class AdvancedLiveKMLMap(LiveKMLMap):
                             payload, timestamp=currenttime)
                         AISLOGGER.info(msg.__str__())
                         if currenttime.endswith('5'):
-                            self.create_detailed_map()
+                            self.aistracker.create_kml_map(
+                                self.kmlpath, kmzoutput=True,
+                                linestring=False, livemap=True)
                             time.sleep(1)
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                         ais.UnknownMessageType, ais.InvalidMMSI) as err:
@@ -158,45 +167,3 @@ class AdvancedLiveKMLMap(LiveKMLMap):
                 except KeyboardInterrupt:
                     self.stop_server()
                     break
-
-    def create_detailed_map(self, aistracker=None):
-        """
-        created a map with full colour icons
-
-        Args:
-            aistracker(ais.AISTracker): ais tracker object if we are calling
-                                        this externally and not using the
-                                        get_nmea_sentences method
-        """
-        if not aistracker:
-            aistracker = self.aistracker
-        if os.path.exists(self.kmlpath):
-            os.remove(self.kmlpath)
-        kmzoutput = True
-        kmlmap = kml.KMLOutputParser(self.kmlpath)
-        kmlmap.create_kml_header(kmz=kmzoutput)
-        for stn in aistracker.stations_generator():
-            try:
-                lastpos = stn.get_latest_position()
-            except ais.NoSuitablePositionReport:
-                continue
-            stntype = stn.stntype
-            stninfo = stn.get_station_info()
-            desc = kmlmap.format_kml_placemark_description(stninfo)
-            kmlmap.open_folder(stn.mmsi)
-            try:
-                heading = lastpos['True Heading']
-                if heading != ais.HEADINGUNAVAILABLE:
-                    kmlmap.add_kml_placemark(stn.mmsi, desc,
-                                             str(lastpos['Longitude']),
-                                             str(lastpos['Latitude']),
-                                             heading, kmzoutput)
-            except KeyError:
-                pass
-            kmlmap.add_kml_placemark(stn.mmsi, desc,
-                                     str(lastpos['Longitude']),
-                                     str(lastpos['Latitude']),
-                                     stntype, kmzoutput)
-            kmlmap.close_folder()
-        kmlmap.close_kml_file()
-        kmlmap.write_kml_doc_file()

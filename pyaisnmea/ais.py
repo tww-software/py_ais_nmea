@@ -7,6 +7,7 @@ contains the main class that represents each AIS station
 
 import collections
 import csv
+import datetime
 import json
 import os
 import re
@@ -187,7 +188,7 @@ class AISStation():
             msgdetails = msgobj.get_details()
             if msgobj.msgtype in binarymsgtypes:
                 latest = {
-                    msgdetails['Binary Message Sub Type']: \
+                    msgdetails['Binary Message Sub Type']:
                     msgdetails['Details']}
                 self.details.update(latest)
                 self.binarymsgs.append(msgdetails)
@@ -572,7 +573,9 @@ class AISTracker():
         organised['Types'] = stntypes
         return organised
 
-    def create_kml_map(self, outputfile, kmzoutput=True, linestring=True):
+    def create_kml_map(
+            self, outputfile, kmzoutput=True, linestring=True, livemap=False,
+            livemaptimeout=480):
         """
         create a KML map of all the vessels we have on record
 
@@ -581,14 +584,19 @@ class AISTracker():
             kmzoutput(bool): whether to create a kmz with custom icons (True)
                              or a basic kml file (False)
             linestring(bool): display a line showing where the vessel has been
+            livemap(bool): is this for a constantly updating KML file
+            livemaptimeout(int): if the last postion time of a station is
+                                 greater than this, then the station will not
+                                 be displayed on the map,
+                                 default is 480 seconds (8 minutes)
+                                 APPLIES TO LIVE MAP ONLY
         """
-        if kmzoutput:
+        if kmzoutput and not livemap:
             docpath = os.path.join(os.path.dirname(outputfile), 'doc.kml')
         else:
             docpath = os.path.join(outputfile)
         kmlmap = kml.KMLOutputParser(docpath)
         kmlmap.create_kml_header(kmz=kmzoutput)
-
         organisedstns = self.sort_mmsi_by_catagory()
         for stntype in organisedstns['Types']:
             kmlmap.open_folder(stntype)
@@ -596,6 +604,13 @@ class AISTracker():
                 stn = self.stations[mmsi]
                 try:
                     lastpos = stn.get_latest_position()
+                    if livemap:
+                        currenttime = datetime.datetime.utcnow()
+                        lastpostime = datetime.datetime.strptime(
+                            lastpos['Time'], '%Y/%m/%d %H:%M:%S')
+                        timediff = currenttime - lastpostime
+                        if timediff.seconds > livemaptimeout:
+                            continue
                 except NoSuitablePositionReport:
                     continue
                 stntype = stn.stntype
@@ -618,7 +633,7 @@ class AISTracker():
                             'TH', hdesc,
                             str(lastpos['Longitude']),
                             str(lastpos['Latitude']),
-                            str(heading)  + 'TH', alt, kmzoutput)
+                            str(heading) + 'TH', alt, kmzoutput)
                 except KeyError:
                     pass
                 try:
@@ -643,7 +658,7 @@ class AISTracker():
             kmlmap.close_folder()
         kmlmap.close_kml_file()
         kmlmap.write_kml_doc_file()
-        if kmzoutput:
+        if kmzoutput and not livemap:
             kml.make_kmz(outputfile)
 
     def create_geojson_map(self, outputfile=None):

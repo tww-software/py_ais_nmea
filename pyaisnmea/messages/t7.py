@@ -14,10 +14,10 @@ class Type7BinaryAcknowlegement(pyaisnmea.messages.aismessage.AISMessage):
         senders(list): filtered list of senders to acknowlege
     """
 
-    fields = {'MMSI 1':{'start': 40, 'end': 70},
-              'MMSI 2':{'start': 72, 'end': 102},
-              'MMSI 3':{'start': 104, 'end': 134},
-              'MMSI 4':{'start': 136, 'end': 166}}
+    fields = {'MMSI 1': {'start': 40, 'end': 70},
+              'MMSI 2': {'start': 72, 'end': 102},
+              'MMSI 3': {'start': 104, 'end': 134},
+              'MMSI 4': {'start': 136, 'end': 166}}
 
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
@@ -25,7 +25,8 @@ class Type7BinaryAcknowlegement(pyaisnmea.messages.aismessage.AISMessage):
         for field in self.fields:
             try:
                 sentmmsi = self.decode_sixbit_integer(
-                    msgbinary[self.fields[field]['start']:self.fields[field]['end']])
+                    msgbinary[self.fields[field]['start']:
+                              self.fields[field]['end']])
                 senders.append(sentmmsi)
             except IndexError:
                 pass

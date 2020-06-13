@@ -86,7 +86,7 @@ class Type4BaseStationReport(pyaisnmea.messages.aismessage.AISMessage):
             posrep(dict): position and navigation details from the message
         """
         posrep = {
-            'Time Stamp (UTC)': self.timestamp,
+            'Time': self.rxtime,
             'Latitude': self.latitude,
             'Longitude': self.longitude}
         return posrep
