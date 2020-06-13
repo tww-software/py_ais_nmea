@@ -44,6 +44,7 @@ class LiveKMLMap():
             os.makedirs(outputpath)
         self.netlinkpath = os.path.join(outputpath, 'open_this.kml')
         self.kmlpath = os.path.join(outputpath, 'livemapdata.kml')
+        self.logpath = os.path.join(outputpath, 'nmea-sentence-log.txt')
         self.aistracker = ais.AISTracker()
         self.nmeatracker = nmea.NMEAtracker()
 
@@ -58,8 +59,9 @@ class LiveKMLMap():
         """
         start listening for sentences
         """
-        self.serverprocess = multiprocessing.Process(target=network.mpserver,
-                                                     args=[self.mpq])
+        self.serverprocess = multiprocessing.Process(
+            target=network.mpserver, args=[self.mpq],
+            kwargs={'logpath': self.logpath})
         self.serverprocess.start()
 
     def stop_server(self):
