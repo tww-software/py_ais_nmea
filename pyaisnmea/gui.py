@@ -679,7 +679,7 @@ class NetworkSettingsWindow(tkinter.Toplevel):
             self.window.netsettings['Log File Path'] = self.logpath.get()
             self.window.netsettings['KML File Path'] = self.kmlpath.get()
             tkinter.messagebox.showinfo(
-                'Network Settings', 'Network Settings Saved')
+                'Network Settings', 'Network Settings Saved', parent=self)
         self.destroy()
 
 
