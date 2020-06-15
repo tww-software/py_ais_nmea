@@ -6,7 +6,7 @@ import argparse
 import logging
 
 import pyaisnmea.capturefile as capturefile
-import pyaisnmea.gui as gui
+import pyaisnmea.gui.basicgui as basicgui
 import pyaisnmea.livekmlmap as livekmlmap
 
 
@@ -72,7 +72,7 @@ def main():
         logging.basicConfig(level=logging.INFO,
                             handlers=[logging.StreamHandler()])
     if cliargs.subcommand == 'gui':
-        aisgui = gui.BasicGUI()
+        aisgui = basicgui.BasicGUI()
         aisgui.mainloop()
     elif cliargs.subcommand == 'file':
         capturefile.read_from_file(
