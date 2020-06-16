@@ -34,8 +34,23 @@ class StationInfoTab(tkinter.ttk.Frame):
                                          command=self.export_csv)
         exportcsvbutton.grid(column=2, row=0)
         lowerbuttons.pack(side='bottom')
-        self.stntxt = tkinter.scrolledtext.ScrolledText(self)
+        self.stntxt = tkinter.scrolledtext.ScrolledText(
+            self, selectbackground='cyan')
         self.stntxt.pack(side='left', fill='both', expand=tkinter.TRUE)
+        self.bind_all('<Control-c>', self.copy)
+
+    def copy(self, event):
+        """
+        put highlighted text onto the clipboard when ctrl+c is used
+
+        Args:
+            event(tkinter.Event): event from the user (ctrl + c)
+        """
+        try:
+            self.stntxt.clipboard_clear()
+            self.stntxt.clipboard_append(self.stntxt.selection_get())
+        except tkinter.TclError:
+            pass
 
     def stn_options(self):
         """
