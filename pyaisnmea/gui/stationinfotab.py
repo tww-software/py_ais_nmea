@@ -37,7 +37,11 @@ class StationInfoTab(tkinter.ttk.Frame):
         self.stntxt = tkinter.scrolledtext.ScrolledText(
             self, selectbackground='cyan')
         self.stntxt.pack(side='left', fill='both', expand=tkinter.TRUE)
-        self.bind_all('<Control-c>', self.copy)
+        self.stntxt.bind('<Control-c>', self.copy)
+        self.stntxt.bind('<Control-C>', self.copy)
+        self.stntxt.bind('<Control-a>', self.select_all)
+        self.stntxt.bind('<Control-A>', self.select_all)
+        self.stntxt.bind('<Button-3>', self.select_all)
 
     def copy(self, event):
         """
@@ -51,6 +55,19 @@ class StationInfoTab(tkinter.ttk.Frame):
             self.stntxt.clipboard_append(self.stntxt.selection_get())
         except tkinter.TclError:
             pass
+
+    def select_all(self, event):
+        """
+        select all the text in the textbox when ctrl+a is used
+
+        Args:
+            event(tkinter.Event): event from the user (ctrl + a)
+        """
+        self.stntxt.tag_add(tkinter.SEL, "1.0", tkinter.END)
+        self.stntxt.mark_set(tkinter.INSERT, "1.0")
+        self.stntxt.see(tkinter.INSERT)
+        return 'break'
+
 
     def stn_options(self):
         """
