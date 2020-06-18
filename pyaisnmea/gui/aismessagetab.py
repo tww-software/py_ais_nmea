@@ -22,8 +22,14 @@ class TextBoxTab(tkinter.ttk.Frame):
     def __init__(self, tabcontrol):
         tkinter.ttk.Frame.__init__(self, tabcontrol)
         self.tabs = tabcontrol
-        self.aisbox = tkinter.scrolledtext.ScrolledText(self)
+        self.aisbox = tkinter.scrolledtext.ScrolledText(
+            self, selectbackground='cyan')
         self.aisbox.pack(side='left', fill='both', expand=tkinter.TRUE)
+        self.aisbox.bind('<Control-c>', self.copy)
+        self.aisbox.bind('<Control-C>', self.copy)
+        self.aisbox.bind('<Control-a>', self.select_all)
+        self.aisbox.bind('<Control-A>', self.select_all)
+        self.aisbox.bind('<Button-3>', self.select_all)
 
     def append_text(self, text):
         """
@@ -35,6 +41,32 @@ class TextBoxTab(tkinter.ttk.Frame):
         self.aisbox.insert(tkinter.INSERT, text)
         self.aisbox.insert(tkinter.INSERT, '\n\n')
         self.aisbox.see(tkinter.END)
+
+    def copy(self, event):
+        """
+        put highlighted text onto the clipboard when ctrl+c is used
+
+        Args:
+            event(tkinter.Event): event from the user (ctrl + c)
+        """
+        try:
+            self.aisbox.clipboard_clear()
+            self.aisbox.clipboard_append(
+                self.aisbox.selection_get())
+        except tkinter.TclError:
+            pass
+
+    def select_all(self, event):
+        """
+        select all the text in the textbox when ctrl+a is used
+
+        Args:
+            event(tkinter.Event): event from the user (ctrl + a)
+        """
+        self.aisbox.tag_add(tkinter.SEL, "1.0", tkinter.END)
+        self.aisbox.mark_set(tkinter.INSERT, "1.0")
+        self.aisbox.see(tkinter.INSERT)
+        return 'break'
 
 
 class MessageWindow(tkinter.Toplevel):
