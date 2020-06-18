@@ -358,9 +358,9 @@ class BasicGUI(tkinter.Tk):
         else:
             inputfile = tkinter.filedialog.askopenfilename(
                 filetypes=(
-                    ("comma seperated values", "*.csv"),
-                    ("javascript object notation lines", "*.jsonl"),
-                    ("All Files", "*.*")))
+                    ("NMEA 0183 text files", "*.txt *.nmea"),
+                    ("pyaisnmea DEBUG comma seperated values", "*.csv"),
+                    ("pyaisnmea DEBUG JSON lines", "*.jsonl")))
             self.statuslabel.config(
                 text='Loading capture file - {}'.format(inputfile),
                 fg='black', bg='gold')
