@@ -68,7 +68,6 @@ class StationInfoTab(tkinter.ttk.Frame):
         self.stntxt.see(tkinter.INSERT)
         return 'break'
 
-
     def stn_options(self):
         """
         populate the stations to the station information tab drop down
