@@ -146,6 +146,7 @@ class KMLOutputParser():
             lat(str): latitude in decimal degrees
             style(str): icon to use
         """
+        placemarkname = remove_invalid_chars(placemarkname)
         coords = lon + ',' + lat + ',' + altitude
         if not kmz:
             style = ''
@@ -160,7 +161,8 @@ class KMLOutputParser():
         Args:
             foldername(str): the name of the folder
         """
-        openfolderstr = "<Folder>\n<name>{}</name>".format(foldername)
+        cleanfoldername = remove_invalid_chars(foldername)
+        openfolderstr = "<Folder>\n<name>{}</name>".format(cleanfoldername)
         self.kmldoc.append(openfolderstr)
 
     def close_folder(self):
@@ -178,6 +180,7 @@ class KMLOutputParser():
             placemarkname(str): name of the linestring
             coords(list): list of dicts containing Lat/Lon
         """
+        placemarkname = remove_invalid_chars(placemarkname)
         newcoordslist = []
         for item in coords:
             lon = str(item['Longitude'])
@@ -239,3 +242,22 @@ def make_kmz(kmzoutputfilename):
         except Exception as err:
             print('zip error')
             print(str(err))
+
+
+def remove_invalid_chars(xmlstring):
+    """
+    remove invalid chars from a string
+
+    Args:
+        xmlstring(str): input string to clean
+
+    Returns:
+        cleanstring(str): return string with invalid chars replaced or removed
+    """
+    invalidchars = {'<': '&lt;', '>': '&gt;', '"': '&quot;',
+                    '\t': '    ', '\n': ''}
+    cleanstring = xmlstring.replace('&', '&amp;')
+    for invalidchar in invalidchars:
+        cleanstring = cleanstring.replace(
+            invalidchar, invalidchars[invalidchar])
+    return cleanstring

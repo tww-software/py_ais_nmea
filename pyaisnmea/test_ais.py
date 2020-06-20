@@ -1107,6 +1107,15 @@ FLAG - United Kingdom<br  />
 ]]>"""
         self.assertEqual(testhtml, expectedhtml)
 
+    def test_kml_invalid_chars(self):
+        """
+        test removal of invalid characters for KML placemarks
+        """
+        teststr = '"<hello world>" &\ttest\n'
+        clean = kml.remove_invalid_chars(teststr)
+        expected = '&quot;&lt;hello world&gt;&quot; &amp;    test'
+        self.assertEqual(clean, expected)
+ 
 
 if __name__ == '__main__':
     unittest.main()
