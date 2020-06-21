@@ -117,6 +117,7 @@ class AISMessageTab(tkinter.ttk.Frame):
         self.tree.configure(yscrollcommand=verticalscrollbar.set,
                             xscrollcommand=horizontalscrollbar.set)
         self.create_message_table()
+        self.msg_line_colours()
         self.tree.bind("<Double-1>", self.on_tree_item_doubleclick)
 
     def on_tree_item_doubleclick(self, event):
@@ -145,11 +146,43 @@ class AISMessageTab(tkinter.ttk.Frame):
         self.tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
         self.tree['show'] = 'headings'
 
+    def msg_line_colours(self):
+        """
+        format lines based on message types
+        """
+        self.tree.tag_configure('Type 4 - Base Station Report', background='orange')
+        self.tree.tag_configure('Type 5 - Static and Voyage Related Data', background='cornflower blue')
+        self.tree.tag_configure('Type 6 - Binary Adressed Message', background='salmon1')
+        self.tree.tag_configure('Type 7 - Binary Acknowlegement', background='salmon3')
+        self.tree.tag_configure('Type 8 - Binary Broadcast Message', background='salmon2')
+        self.tree.tag_configure('Type 9 - Standard SAR Aircraft Report', background='yellow')
+        self.tree.tag_configure('Type 10 - UTC Date Inquiry', background='dark orange')
+        self.tree.tag_configure('Type 11 - UTC Date Response', background='orange')
+        self.tree.tag_configure('Type 12 - Addressed Safety Related Message', background='yellow2')
+        self.tree.tag_configure('Type 13 - Safety Related Acknowlegement', background='yellow2')
+        self.tree.tag_configure('Type 14 - Safety Related Broadcast Message', background='yellow2')
+        self.tree.tag_configure('Type 15 - Interrogation', background='light slate gray')
+        self.tree.tag_configure('Type 16 - Assignment Mode Command', background='gray')
+        self.tree.tag_configure('Type 17 - DGNSS Broadcast Binary Message', background='sandy brown')
+        self.tree.tag_configure('Type 18 - Standard Class B CS Position Report', background='medium sea green')
+        self.tree.tag_configure('Type 19 - Extended Class B CS Position Report', background='medium sea green')
+        self.tree.tag_configure('Type 20 - Datalink Management Message', background='red')
+        self.tree.tag_configure('Type 21 - Aid to Navigation Report', background='aquamarine')
+        self.tree.tag_configure('Type 22 - Channel Management', background='light gray')
+        self.tree.tag_configure('Type 23 - Group Assignment Command', background='light gray')
+        self.tree.tag_configure('Type 24 - Static Data Report', background='light sea green')
+        self.tree.tag_configure('Type 25 - Single Slot Binary Message', background='LightPink1')
+        self.tree.tag_configure('Type 26 - Multiple Slot Binary Message', background='LightPink2')
+        self.tree.tag_configure('Type 27 - Long Range AIS Broadcast Message', background='medium purple')
+
     def add_new_line(self, line):
         """
         add a new line to the tree table and scroll down to it
+
+        Note:
+            line[1] is the message type refered to in msg_line_colours
         """
-        self.tree.insert('', self.counter, values=line)
+        self.tree.insert('', self.counter, values=line, tags = (line[1],))
         self.counter += 1
         if self.autoscroll.get() == 1:
             self.tree.yview_moveto(1)
