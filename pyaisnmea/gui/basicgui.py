@@ -66,55 +66,82 @@ class NetworkSettingsWindow(tkinter.Toplevel):
     def __init__(self, window):
         tkinter.Toplevel.__init__(self, window)
         self.window = window
-        self.title = 'Network Settings'
-        serverhostlabel = tkinter.Label(self, text='Server IP')
-        serverhostlabel.grid(column=0, row=0)
-        self.serverhost = tkinter.Entry(self)
+        self.network_settings_group()
+        self.nmea_settings_group()
+        self.kml_settings_group()
+
+    def network_settings_group(self):
+        """
+        group all the network settings within a tkinter LabelFrame
+        """
+        netgroup = tkinter.LabelFrame(
+            self, text="Network settings", padx=10, pady=10)
+        netgroup.pack(fill="both", expand="yes")
+        serverhostlabel = tkinter.Label(netgroup, text='Server IP')
+        serverhostlabel.pack()
+        self.serverhost = tkinter.Entry(netgroup)
         self.serverhost.insert(0, self.window.netsettings['Server IP'])
-        self.serverhost.grid(column=1, row=0)
-        serverportlabel = tkinter.Label(self, text='Server Port')
-        serverportlabel.grid(column=0, row=1)
-        self.serverport = tkinter.Entry(self)
+        self.serverhost.pack()
+        serverportlabel = tkinter.Label(netgroup, text='Server Port')
+        serverportlabel.pack()
+        self.serverport = tkinter.Entry(netgroup)
         self.serverport.insert(0, self.window.netsettings['Server Port'])
-        self.serverport.grid(column=1, row=1)
+        self.serverport.pack()
         self.chk = tkinter.Checkbutton(
-            self, text='forward NMEA Sentences to a remote host',
+            netgroup, text='forward NMEA Sentences to a remote host',
             var=self.window.forwardsentences)
-        self.chk.grid(column=0, row=2)
-        remotehostlabel = tkinter.Label(self, text='Remote Server IP')
-        remotehostlabel.grid(column=0, row=3)
-        self.remotehost = tkinter.Entry(self)
+        self.chk.pack()
+        remotehostlabel = tkinter.Label(netgroup, text='Remote Server IP')
+        remotehostlabel.pack()
+        self.remotehost = tkinter.Entry(netgroup)
         self.remotehost.insert(0, self.window.netsettings['Remote Server IP'])
-        self.remotehost.grid(column=1, row=3)
-        remoteportlabel = tkinter.Label(self, text='Remote Server Port')
-        remoteportlabel.grid(column=0, row=4)
-        self.remoteport = tkinter.Entry(self)
+        self.remotehost.pack()
+        remoteportlabel = tkinter.Label(netgroup, text='Remote Server Port')
+        remoteportlabel.pack()
+        self.remoteport = tkinter.Entry(netgroup)
         self.remoteport.insert(
             0, self.window.netsettings['Remote Server Port'])
-        self.remoteport.grid(column=1, row=4)
-        loglabel = tkinter.Label(self, text='Log NMEA Sentences')
-        loglabel.grid(column=0, row=6)
-        self.logpath = tkinter.Entry(self)
+        self.remoteport.pack()
+
+    def nmea_settings_group(self):
+        """
+        group all the nmea settings within a tkinter LabelFrame
+        """
+        nmeagroup = tkinter.LabelFrame(
+            self, text="NMEA logging settings", padx=20, pady=20)
+        nmeagroup.pack(fill="both", expand="yes")
+        loglabel = tkinter.Label(nmeagroup, text='Log NMEA Sentences')
+        loglabel.pack()
+        self.logpath = tkinter.Entry(nmeagroup)
         self.logpath.insert(0, self.window.netsettings['Log File Path'])
-        self.logpath.grid(column=0, row=7)
+        self.logpath.pack()
         logpathbutton = tkinter.Button(
-            self, text='Choose Log Path', command=self.set_log_path)
-        logpathbutton.grid(column=1, row=7)
-        loglabel = tkinter.Label(self, text='Ouput Live KML Map')
-        loglabel.grid(column=0, row=8)
-        self.kmlpath = tkinter.Entry(self)
+            nmeagroup, text='Choose Log Path', command=self.set_log_path)
+        logpathbutton.pack()
+
+    def kml_settings_group(self):
+        """
+        group all the kml settings within a tkinter LabelFrame
+        """
+        kmlgroup = tkinter.LabelFrame(
+            self, text="Live KML map settings", padx=20, pady=20)
+        kmlgroup.pack(fill="both", expand="yes")
+        kmllabel = tkinter.Label(kmlgroup, text='Ouput Live KML Map')
+        kmllabel.pack()
+        self.kmlpath = tkinter.Entry(kmlgroup)
         self.kmlpath.insert(0, self.window.netsettings['KML File Path'])
-        self.kmlpath.grid(column=0, row=9)
+        self.kmlpath.pack()
         kmlpathbutton = tkinter.Button(
-            self, text='Choose KML Path', command=self.set_kml_path)
-        kmlpathbutton.grid(column=1, row=9)
+            kmlgroup, text='Choose KML Path', command=self.set_kml_path)
+        kmlpathbutton.pack()
         self.kmzchk = tkinter.Checkbutton(
-            self, text='KMZ map (full colour icons)',
+            kmlgroup, text='KMZ map (full colour icons)',
             var=self.window.kmzlivemap)
-        self.kmzchk.grid(column=2, row=9)
+        self.kmzchk.pack()
+
         savesettingsbutton = tkinter.Button(
             self, text='Save Settings', command=self.save_settings)
-        savesettingsbutton.grid(column=0, row=10)
+        savesettingsbutton.pack()
         self.transient(self.window)
 
     def set_log_path(self):

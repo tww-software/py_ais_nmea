@@ -53,7 +53,7 @@ class StationInfoTab(tkinter.ttk.Frame):
         try:
             self.stntxt.clipboard_clear()
             self.stntxt.clipboard_append(self.stntxt.selection_get())
-        except tkinter.TclError as err:
+        except tkinter.TclError:
             pass
 
     def select_all(self, event):
