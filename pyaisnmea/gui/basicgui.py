@@ -297,8 +297,12 @@ class BasicGUI(tkinter.Tk):
         self.tabcontrol.statstab.starttime.configure(
             text=datetime.datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S'))
         if self.netsettings['KML File Path'] != '':
+            if self.kmzlivemap.get() == 1:
+                kmzoutput = True
+            else:
+                kmzoutput = False
             self.livemap = livekmlmap.LiveKMLMap(
-                self.netsettings['KML File Path'])
+                self.netsettings['KML File Path'], kmzoutput=kmzoutput)
             self.livemap.create_netlink_file()
         if self.forwardsentences.get() == 1:
             print('forwarding sentences')
@@ -457,7 +461,7 @@ class BasicGUI(tkinter.Tk):
                 self.tabcontrol.stninfotab.show_stn_info()
                 if self.livemap:
                     self.aistracker.create_kml_map(
-                        self.livemap.kmlpath, kmzoutput=False,
+                        self.livemap.kmlpath, kmzoutput=self.livemap.kmzoutput,
                         linestring=False, livemap=True,
                         livemaptimeout=480)
                 time.sleep(1)

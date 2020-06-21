@@ -19,6 +19,10 @@ AISLOGGER = logging.getLogger(__name__)
 class LiveKMLMap():
     """
     a live map for google earth
+
+    Args:
+        outputpath(str): path to directory to write files to
+        kmzoutput(bool): if true then full colour icons are used
     """
 
     kmlnetlink = """<?xml version="1.0" encoding="UTF-8"?>
@@ -35,7 +39,8 @@ class LiveKMLMap():
     </NetworkLink>
 </kml>"""
 
-    def __init__(self, outputpath):
+    def __init__(self, outputpath, kmzoutput=False):
+        self.kmzoutput = kmzoutput
         self.outputpath = outputpath
         self.mpq = multiprocessing.Queue()
         self.serverprocess = None
@@ -47,6 +52,31 @@ class LiveKMLMap():
         self.logpath = os.path.join(outputpath, 'nmea-sentence-log.txt')
         self.aistracker = ais.AISTracker()
         self.nmeatracker = nmea.NMEAtracker()
+        if kmzoutput:
+            self.copy_icons()
+
+    def copy_icons(self):
+        """
+        copy icons into the output folder so the kml file can see them
+        """
+        iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                 'static', 'icons')
+        greenarrowspath = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'static', 'green_arrows')
+        orangearrowspath = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'static', 'orange_arrows')
+        iconsdestination = os.path.join(self.outputpath, 'icons')
+        greenarrowsdestination = os.path.join(self.outputpath, 'green_arrows')
+        orangearrowsdestination = os.path.join(
+            self.outputpath, 'orange_arrows')
+        if not os.path.exists(iconsdestination):
+            shutil.copytree(iconspath, iconsdestination)
+        if not os.path.exists(greenarrowsdestination):
+            shutil.copytree(greenarrowspath, greenarrowsdestination)
+        if not os.path.exists(orangearrowsdestination):
+            shutil.copytree(orangearrowspath, orangearrowsdestination)
 
     def create_netlink_file(self):
         """
@@ -90,73 +120,7 @@ class LiveKMLMap():
                         AISLOGGER.info(msg.__str__())
                         if currenttime.endswith('5'):
                             self.aistracker.create_kml_map(
-                                self.kmlpath, kmzoutput=False,
-                                linestring=False, livemap=True)
-                            time.sleep(1)
-                except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
-                        ais.UnknownMessageType, ais.InvalidMMSI) as err:
-                    AISLOGGER.debug(str(err))
-                    continue
-                except IndexError:
-                    AISLOGGER.debug('no data on line')
-                    continue
-                except KeyboardInterrupt:
-                    self.stop_server()
-                    break
-
-
-class AdvancedLiveKMLMap(LiveKMLMap):
-    """
-    a more advanced live KML map that also shows ship type and heading
-    """
-
-    def __init__(self, outputpath):
-        super().__init__(outputpath)
-        self.copy_icons()
-
-    def copy_icons(self):
-        """
-        copy icons into the output folder so the kml file can see them
-        """
-        iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                 'static', 'icons')
-        greenarrowspath = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            'static', 'green_arrows')
-        orangearrowspath = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            'static', 'orange_arrows')
-        iconsdestination = os.path.join(self.outputpath, 'icons')
-        greenarrowsdestination = os.path.join(self.outputpath, 'green_arrows')
-        orangearrowsdestination = os.path.join(
-            self.outputpath, 'orange_arrows')
-        if not os.path.exists(iconsdestination):
-            shutil.copytree(iconspath, iconsdestination)
-        if not os.path.exists(greenarrowsdestination):
-            shutil.copytree(greenarrowspath, greenarrowsdestination)
-        if not os.path.exists(orangearrowsdestination):
-            shutil.copytree(orangearrowspath, orangearrowsdestination)
-
-    def get_nmea_sentences(self):
-        """
-        get the nmea sentences from the network and write to kml file
-        """
-        AISLOGGER.info('live KML map, open %s to track vessels',
-                       os.path.realpath(self.netlinkpath))
-        while True:
-            qdata = self.mpq.get()
-            if qdata:
-                try:
-                    payload = self.nmeatracker.process_sentence(qdata)
-                    if payload:
-                        currenttime = datetime.datetime.utcnow().strftime(
-                            '%Y/%m/%d %H:%M:%S')
-                        msg = self.aistracker.process_message(
-                            payload, timestamp=currenttime)
-                        AISLOGGER.info(msg.__str__())
-                        if currenttime.endswith('5'):
-                            self.aistracker.create_kml_map(
-                                self.kmlpath, kmzoutput=True,
+                                self.kmlpath, kmzoutput=self.kmzoutput,
                                 linestring=False, livemap=True)
                             time.sleep(1)
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,

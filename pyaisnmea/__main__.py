@@ -84,12 +84,12 @@ def main():
             verbosejson=cliargs.v)
     elif cliargs.subcommand == 'livemap':
         if cliargs.a:
-            livemap = livekmlmap.AdvancedLiveKMLMap(
-                cliargs.outputdir)
-            livemap.copy_icons()
+            kmzoutput = True
         elif cliargs.b:
-            livemap = livekmlmap.LiveKMLMap(cliargs.outputdir)
+            kmzoutput = False
         if cliargs.a or cliargs.b:
+            livemap = livekmlmap.LiveKMLMap(
+                cliargs.outputdir, kmzoutput=kmzoutput)
             livemap.create_netlink_file()
             livemap.start_server()
             livemap.get_nmea_sentences()
