@@ -98,6 +98,13 @@ class AISMessageTab(tkinter.ttk.Frame):
 
     def __init__(self, tabcontrol):
         tkinter.ttk.Frame.__init__(self, tabcontrol)
+        self.autoscroll = tkinter.BooleanVar()
+        self.autoscroll.set(1)
+        self.autoscrollchk = tkinter.Checkbutton(
+            self, text='autoscroll as new messages are added',
+            var=self.autoscroll)
+        self.autoscrollchk.select()
+        self.autoscrollchk.pack(side=tkinter.TOP)
         self.tabs = tabcontrol
         self.counter = 0
         self.tree = tkinter.ttk.Treeview(self)
@@ -144,4 +151,5 @@ class AISMessageTab(tkinter.ttk.Frame):
         """
         self.tree.insert('', self.counter, values=line)
         self.counter += 1
-        self.tree.yview_moveto(1)
+        if self.autoscroll.get() == 1:
+            self.tree.yview_moveto(1)
