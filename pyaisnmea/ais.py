@@ -25,6 +25,7 @@ COGUNAVAILABLE = 360
 HEADINGUNAVAILABLE = 511
 LATITUDEUNAVAILABLE = 91.0
 LONGITUDEUNAVAILABLE = 181.0
+TIMEUNAVAILABLE = '0/00/00 24:60:60'
 
 
 TIMEREGEX = re.compile(r'\d{2}:\d{2}:\d{2}')
@@ -449,7 +450,7 @@ class AISTracker():
                 self.timings.append(timestamp)
         else:
             if msgtype in (4, 11):
-                if msgobj.timestamp != '0/00/00 24:60:60':
+                if msgobj.timestamp != TIMEUNAVAILABLE:
                     if timestamp not in self.timings:
                         self.timings.append(msgobj.timestamp + ' (estimated)')
             try:
