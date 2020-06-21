@@ -9,6 +9,8 @@ import tkinter.scrolledtext
 import tkinter.ttk
 
 
+import pyaisnmea.version as version
+
 INTRO = """
 This program is designed to decode AIS NMEA 0183 sentences.
 
@@ -28,11 +30,11 @@ To read NMEA sentences from the network:
 
 LICENCE = """
 
-Version 2020.2
+Version {}
 
 MIT License
 
-Copyright (c) 2020 Thomas W Whittam
+Copyright (c) {} Thomas W Whittam
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +53,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-"""
+""".format(version.VERSION, version.YEAR)
 
 
 NETWORKSETTINGS = """
@@ -122,14 +124,16 @@ A table of all the AIS messages.
 
 Double clicking a message will open a window with more detailed information
 about that message.
+
+Right click will select all text, ctrl + c to copy it to the clipboard.
 """
 
 
 STNINFO = """
 Display detailed information about an AIS Station and its last known location.
 
-KMZ maps of the vessels location and JSON data of all known positions can be
-exported from here using the buttons at the bottom of the tab.
+KMZ maps of the vessels location, CSV and JSON data of all known positions
+can be exported from here using the buttons at the bottom of the tab.
 """
 
 
