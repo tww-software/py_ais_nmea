@@ -29,16 +29,17 @@ def debug_output(messagedict):
     headers = ['NMEA Payload', 'MMSI', 'Message Type Number',
                'Received Time', 'Detailed Description']
     csvlist.append(headers)
-    for payload in messagedict:
+    for msg in messagedict:
+        payload = msg[1]
         message = {}
         message['payload'] = payload
-        message.update(messagedict[payload].__dict__)
+        message.update(messagedict[msg].__dict__)
         message.pop('msgbinary', None)
         jsonlines.append(message)
-        singlemsg = [payload, messagedict[payload].mmsi,
-                     messagedict[payload].msgtype,
-                     messagedict[payload].rxtime,
-                     messagedict[payload].__str__()]
+        singlemsg = [payload, messagedict[msg].mmsi,
+                     messagedict[msg].msgtype,
+                     messagedict[msg].rxtime,
+                     messagedict[msg].__str__()]
         csvlist.append(singlemsg)
     return (jsonlines, csvlist)
 
@@ -73,11 +74,12 @@ def aistracker_from_csv(filepath, debug=True):
     Returns:
         aistracker(ais.AISTracker): object that keeps track of all the
                                     ships we have seen
-        messagedict(dict): keys are payloads values are the
-                           corresponding AISMessage objects
+        messagedict(dict): keys are tuples of message number and nmea payload
+                           values are the corresponding AISMessage objects
     """
     messagedict = {}
     aistracker = ais.AISTracker()
+    msgnumber = 1
     for line in open_file_generator(filepath):
         try:
             linelist = line.split(',')
@@ -85,7 +87,8 @@ def aistracker_from_csv(filepath, debug=True):
             msgtime = linelist[3]
             msg = aistracker.process_message(payload, timestamp=msgtime)
             if debug:
-                messagedict[payload] = msg
+                messagedict[(msgnumber, payload)] = msg
+            msgnumber += 1
         except (ais.UnknownMessageType, ais.InvalidMMSI) as err:
             AISLOGGER.debug(str(err))
             continue
@@ -108,11 +111,12 @@ def aistracker_from_json(filepath, debug=True):
     Returns:
         aistracker(ais.AISTracker): object that keeps track of all the
                                     ships we have seen
-        messagedict(dict): keys are payloads values are the
-                           corresponding AISMessage objects
+        messagedict(dict): keys are tuples of message number and nmea payload
+                           values are the corresponding AISMessage objects
     """
     messagedict = {}
     aistracker = ais.AISTracker()
+    msgnumber = 1
     for line in open_file_generator(filepath):
         try:
             linemsgdict = json.loads(line)
@@ -120,7 +124,8 @@ def aistracker_from_json(filepath, debug=True):
             msgtime = linemsgdict['rxtime']
             msg = aistracker.process_message(payload, timestamp=msgtime)
             if debug:
-                messagedict[payload] = msg
+                messagedict[(msgnumber, payload)] = msg
+            msgnumber += 1
         except (ais.UnknownMessageType, ais.InvalidMMSI) as err:
             AISLOGGER.debug(str(err))
             continue
@@ -146,19 +151,21 @@ def aistracker_from_file(filepath, debug=False):
         aistracker(ais.AISTracker): object that keeps track of all the
                                     ships we have seen
         nmeatracker(nmea.NMEAtracker): object that organises the nmea sentences
-        messagedict(dict): keys are payloads values are the
-                           corresponding AISMessage objects
+        messagedict(dict): keys are tuples of message number and nmea payload
+                           values are the corresponding AISMessage objects
     """
     messagedict = {}
     aistracker = ais.AISTracker()
     nmeatracker = nmea.NMEAtracker()
+    msgnumber = 1
     for line in open_file_generator(filepath):
         try:
             payload = nmeatracker.process_sentence(line)
             if payload:
                 msg = aistracker.process_message(payload)
                 if debug:
-                    messagedict[payload] = msg
+                    messagedict[(msgnumber, payload)] = msg
+                msgnumber += 1
         except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                 ais.UnknownMessageType, ais.InvalidMMSI) as err:
             AISLOGGER.debug(str(err))

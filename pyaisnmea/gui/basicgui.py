@@ -424,10 +424,12 @@ class BasicGUI(tkinter.Tk):
             self.tabcontrol.statstab.write_stats_verbose()
             self.tabcontrol.shipstab.create_ship_table()
             self.tabcontrol.messagetab.create_message_table()
-            for payload in self.messagedict:
-                latestmsg = [payload, self.messagedict[payload].description,
-                             self.messagedict[payload].mmsi,
-                             self.messagedict[payload].rxtime]
+            for msg in self.messagedict:
+                msgno = msg[0]
+                payload = msg[1]
+                latestmsg = [msgno, payload, self.messagedict[msg].description,
+                             self.messagedict[msg].mmsi,
+                             self.messagedict[msg].rxtime]
                 self.tabcontrol.messagetab.add_new_line(latestmsg)
             self.statuslabel.config(
                 text='Loaded capture file - {}'.format(inputfile),
@@ -443,6 +445,7 @@ class BasicGUI(tkinter.Tk):
         Args:
             stopevent(threading.Event): a threading stop event
         """
+        msgno = 1
         while not stopevent.is_set():
             qdata = self.mpq.get()
             if qdata:
@@ -458,9 +461,10 @@ class BasicGUI(tkinter.Tk):
                             errmsg = '{} - error with - {}'.format(
                                 str(err), payload)
                             AISLOGGER.error(errmsg)
-                        self.messagedict[payload] = msg
-                        latestmsg = [payload, msg.description,
+                        self.messagedict[(msgno, payload)] = msg
+                        latestmsg = [msgno, payload, msg.description,
                                      msg.mmsi, currenttime]
+                        msgno += 1
                         self.tabcontrol.messagetab.add_new_line(latestmsg)
                         self.tabcontrol.statstab.write_stats()
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,

@@ -126,10 +126,11 @@ class AISMessageTab(tkinter.ttk.Frame):
         message
         """
         item = self.tree.identify('item', event.x, event.y)
-        clickednmea = self.tree.item(item)['values'][0]
+        clickedmsgno = self.tree.item(item)['values'][0]
+        clickednmea = self.tree.item(item)['values'][1]
         messagewindow = MessageWindow(self.tabs.window)
         msgsummary = ais.create_summary_text(
-            self.tabs.window.messagedict[clickednmea].__dict__)
+            self.tabs.window.messagedict[(clickedmsgno, clickednmea)].__dict__)
         messagewindow.msgdetailsbox.append_text(msgsummary)
 
     def create_message_table(self):
@@ -137,7 +138,7 @@ class AISMessageTab(tkinter.ttk.Frame):
         draw a large table in messagetab of all the NMEA sentences we have
         """
         self.tree.delete(*self.tree.get_children())
-        headers = ['NMEA', 'AIS', 'MMSI', 'Timestamp']
+        headers = ['Message No', 'NMEA', 'AIS', 'MMSI', 'Timestamp']
         self.tree["columns"] = headers
         for column in headers:
             self.tree.column(column, width=200, minwidth=70,
@@ -211,7 +212,7 @@ class AISMessageTab(tkinter.ttk.Frame):
         Note:
             line[1] is the message type refered to in msg_line_colours
         """
-        self.tree.insert('', self.counter, values=line, tags=(line[1],))
+        self.tree.insert('', self.counter, values=line, tags=(line[2],))
         self.counter += 1
         if self.autoscroll.get() == 1:
             self.tree.yview_moveto(1)
