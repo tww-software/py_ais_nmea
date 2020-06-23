@@ -12,6 +12,21 @@ import pyaisnmea.capturefile as capturefile
 
 AISLOGGER = logging.getLogger(__name__)
 
+EXPORTHELP = {
+    'OVERVIEW': 'export CSV, JSON, KMZ and DEBUG files to a directory',
+    'CSV': ('Comma Separated Values file containing similar data'
+            ' to the Ships tab'),
+    'TSV':  ('Tab Separated Values file containing similar data'
+             ' to the Ships tab'),
+    'KML':  'plain KML file with no custom icons (default icons will be used)',
+    'KMZ':  'Keyhole Markup Language Map with custom icons',
+    'JSON': 'JSON file containing stats and AIS station last known positions',
+    'VERBOSE JSON': ('JSON file containing stats and '
+                     'all AIS station position reports'),
+    'GEOJSON': 'GEOJSON map of all AIS Station positions',
+    'DEBUG': ('outputs 2 files (CSV and JSON lines) '
+              'output of all decoded messages')}
+
 
 class ExportTab(tkinter.ttk.Frame):
     """
@@ -26,6 +41,10 @@ class ExportTab(tkinter.ttk.Frame):
         self.tabs = tabcontrol
         self.exportoptions = tkinter.ttk.Combobox(self, state='readonly')
         self.export_options()
+        self.exporthelplabel = tkinter.Label(self)
+        self.exporthelplabel.grid(column=3, row=1)
+        self.exportoptions.bind("<<ComboboxSelected>>", self.show_export_help)
+        self.show_export_help()
 
     def export_options(self):
         """
@@ -67,6 +86,18 @@ class ExportTab(tkinter.ttk.Frame):
             except Exception as err:
                 AISLOGGER.exception('export error')
                 tkinter.messagebox.showerror('Export Files', str(err))
+
+    def show_export_help(self, event=None):
+        """
+        Display help text for each export option as the user selects each one
+
+        Args:
+            event(tkinter.Event): event from the user changing the export
+                                  combobox dropdown menu options
+        """
+        option = self.exportoptions.get()
+        helptext = EXPORTHELP[option]
+        self.exporthelplabel.configure(text=helptext)
 
     def export_csv(self):
         """
