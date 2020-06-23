@@ -8,6 +8,7 @@ import logging
 import pyaisnmea.capturefile as capturefile
 import pyaisnmea.gui.basicgui as basicgui
 import pyaisnmea.livekmlmap as livekmlmap
+import pyaisnmea.version as version
 
 
 AISLOGGER = logging.getLogger(__name__)
@@ -21,7 +22,8 @@ def cli_arg_parser():
         parser(argparse.ArgumentParser): the command line options parser
     """
     desc = 'tool to decode AIS traffic and generate meaningful data'
-    parser = argparse.ArgumentParser(description=desc)
+    versiontxt = 'version = {}'.format(version.VERSION)
+    parser = argparse.ArgumentParser(description=desc, epilog=versiontxt)
     parser.add_argument('-v', action='store_true', help='verbose output')
     subparsers = parser.add_subparsers(dest='subcommand')
     subparsers.add_parser('gui', help=('open the GUI'))
