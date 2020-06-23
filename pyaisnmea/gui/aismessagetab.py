@@ -210,7 +210,7 @@ class AISMessageTab(tkinter.ttk.Frame):
         add a new line to the tree table and scroll down to it
 
         Note:
-            line[1] is the message type refered to in msg_line_colours
+            line[2] is the message type refered to in msg_line_colours
         """
         self.tree.insert('', self.counter, values=line, tags=(line[2],))
         self.counter += 1

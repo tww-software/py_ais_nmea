@@ -18,7 +18,8 @@ class StationInfoTab(tkinter.ttk.Frame):
     def __init__(self, tabcontrol):
         tkinter.ttk.Frame.__init__(self, tabcontrol)
         self.tabs = tabcontrol
-        self.stnoptions = tkinter.ttk.Combobox(self)
+        self.stnlookup = {}
+        self.stnoptions = tkinter.ttk.Combobox(self, width=55)
         self.stnoptions.pack(side='top')
         stnoptionsbutton = tkinter.Button(self, text='Display Info',
                                           command=self.show_stn_info)
@@ -72,17 +73,21 @@ class StationInfoTab(tkinter.ttk.Frame):
         """
         populate the stations to the station information tab drop down
         """
-        self.stnoptions['values'] = list(
-            self.tabs.window.aistracker.stations.keys())
+        for stn in self.tabs.window.aistracker.stations:
+            stnobj = self.tabs.window.aistracker.stations[stn]
+            dropdowntext = '{}  {}'.format(stnobj.mmsi, stnobj.name)
+            self.stnlookup[dropdowntext] = stnobj.mmsi
+        self.stnoptions['values'] = list(self.stnlookup.keys())
 
     def show_stn_info(self):
         """
         show individual station info
         """
         self.stntxt.delete(1.0, tkinter.END)
-        lookupmmsi = self.stnoptions.get()
-        if lookupmmsi != '':
+        dropdowntext = self.stnoptions.get()
+        if dropdowntext != '':
             try:
+                lookupmmsi = self.stnlookup[dropdowntext]
                 stninfo = ais.create_summary_text(
                     self.tabs.window.aistracker.stations[lookupmmsi]
                     .get_station_info())

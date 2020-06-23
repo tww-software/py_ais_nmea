@@ -37,7 +37,9 @@ class ShipsTableTab(tkinter.ttk.Frame):
         clickedmmsi = str(self.tree.item(item)['values'][0])
         if len(clickedmmsi) == 7:
             clickedmmsi = '00' + clickedmmsi
-        self.tabs.stninfotab.stnoptions.set(clickedmmsi)
+        stnobj = self.tabs.window.aistracker.stations[clickedmmsi]
+        lookup = '{}  {}'.format(clickedmmsi, stnobj.name)
+        self.tabs.stninfotab.stnoptions.set(lookup)
         self.tabs.stninfotab.show_stn_info()
         self.tabs.select(self.tabs.stninfotab)
 
