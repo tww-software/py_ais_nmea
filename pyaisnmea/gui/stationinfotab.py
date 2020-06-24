@@ -106,9 +106,10 @@ class StationInfoTab(tkinter.ttk.Frame):
             defaultextension=".kmz",
             filetypes=(("keyhole markup language KMZ", "*.kmz"),
                        ("All Files", "*.*")))
-        lookupmmsi = self.stnoptions.get()
-        if lookupmmsi != '':
+        dropdowntext = self.stnoptions.get()
+        if dropdowntext != '':
             try:
+                lookupmmsi = self.stnlookup[dropdowntext]
                 self.tabs.window.aistracker.stations[lookupmmsi]. \
                     create_kml_map(outputfile, kmzoutput=True)
                 tkinter.messagebox.showinfo(
@@ -126,9 +127,10 @@ class StationInfoTab(tkinter.ttk.Frame):
             defaultextension=".json",
             filetypes=(("javascript object notation", "*.json"),
                        ("All Files", "*.*")))
-        lookupmmsi = self.stnoptions.get()
-        if lookupmmsi != '':
+        dropdowntext = self.stnoptions.get()
+        if dropdowntext != '':
             try:
+                lookupmmsi = self.stnlookup[dropdowntext]
                 stninfo = self.tabs.window.aistracker.stations[lookupmmsi]. \
                     get_station_info(verbose=True)
                 ais.write_json_file(stninfo, outputfile)
@@ -147,9 +149,10 @@ class StationInfoTab(tkinter.ttk.Frame):
             defaultextension=".csv",
             filetypes=(("comma seperated values", "*.csv"),
                        ("All Files", "*.*")))
-        lookupmmsi = self.stnoptions.get()
-        if lookupmmsi != '':
+        dropdowntext = self.stnoptions.get()
+        if dropdowntext != '':
             try:
+                lookupmmsi = self.stnlookup[dropdowntext]
                 stninfo = self.tabs.window.aistracker.stations[lookupmmsi]
                 stninfo.create_positions_csv(outputfile)
                 tkinter.messagebox.showinfo(
