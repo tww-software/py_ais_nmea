@@ -745,6 +745,43 @@ class AISTrackerTimingTests(unittest.TestCase):
         self.assertEqual(teststr, actualstr)
 
 
+class KMLTimingTests(unittest.TestCase):
+    """
+    test formatting timestamps for KML/KMZ files and other related tests
+    """
+
+    def test_suitable_timestamp(self):
+        """
+        test a valid timestamp in the correct format
+        """
+        testinput = '2020/06/02 19:03:17'
+        expected = '2020-06-02T19:03:17Z'
+        teststring = kml.convert_timestamp_to_kmltimestamp(testinput)
+        self.assertEqual(expected, teststring)
+
+    def test_unsuitable_timestamp_regex_match(self):
+        """
+        test a timestamp that doesn't match the regex
+        
+        Note:
+            change this when i come up with a better regex for datetimes
+        """
+        testinput = '2020-06-02 19:03:17'
+        with self.assertRaises(kml.InvalidDateTimeString):
+            kml.convert_timestamp_to_kmltimestamp(testinput)
+
+    def test_unsuitable_timestamp_regex_fail(self):
+        """
+        test a timestamp that matches the regex but isn't a proper time
+        
+        Note:
+            change this when i come up with a better regex for datetimes
+        """
+        testinput = '2020/16/43 25:67:09'
+        with self.assertRaises(kml.InvalidDateTimeString):
+            kml.convert_timestamp_to_kmltimestamp(testinput)
+
+
 class GeoJSONTests(unittest.TestCase):
     """
     testing the creation of GeoJSON

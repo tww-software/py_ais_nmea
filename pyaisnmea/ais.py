@@ -324,6 +324,14 @@ class AISStation():
             timematch = TIMEREGEX.search(pos['Time'])
             if timematch:
                 posfoldername = str(posnumber) + ' - ' + timematch.group()
+                try:
+                    kmltimestamp = kml.convert_timestamp_to_kmltimestamp(
+                        pos['Time'])
+                except kml.InvalidDateTimeString:
+                    kmltimestamp = ''
+            else:
+                posfoldername = str(posnumber)
+                kmltimestamp = ''
             kmlmap.open_folder(posfoldername)
             stninfo['Last Known Position'] = pos
             desc = kmlmap.format_kml_placemark_description(stninfo)
@@ -339,7 +347,7 @@ class AISStation():
                                              str(pos['Longitude']),
                                              str(pos['Latitude']),
                                              str(heading) + 'TH',
-                                             alt, kmzoutput)
+                                             alt, kmzoutput, kmltimestamp)
             except KeyError:
                 pass
             try:
@@ -350,14 +358,15 @@ class AISStation():
                                              str(pos['Longitude']),
                                              str(pos['Latitude']),
                                              str(cog) + 'CoG',
-                                             alt, kmzoutput)
+                                             alt, kmzoutput, kmltimestamp)
             except KeyError:
                 pass
             try:
                 kmlmap.add_kml_placemark(displayname, desc,
                                          str(pos['Longitude']),
                                          str(pos['Latitude']),
-                                         self.stntype, alt, kmzoutput)
+                                         self.stntype, alt, kmzoutput,
+                                         kmltimestamp)
             except KeyError:
                 pass
             kmlmap.close_folder()

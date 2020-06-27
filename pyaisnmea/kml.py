@@ -2,10 +2,15 @@
 a parser to generate Keyhole Markup Language (KML) for Google Earth
 """
 
+import datetime
 import os
+import re
 import zipfile
 
 import pyaisnmea.icons as icons
+
+
+DATETIMEREGEX = re.compile(r'\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}')
 
 
 class KMLOutputParser():
@@ -24,6 +29,9 @@ class KMLOutputParser():
 <Placemark>
 <name>%s</name>
 <description>%s</description>
+<TimeStamp>
+<when>%s</when>
+</TimeStamp>
 <LookAt>
 <longitude>%s</longitude>
 <latitude>%s</latitude>
@@ -135,7 +143,7 @@ class KMLOutputParser():
                 self.kmldoc.append(cogiconkml)
 
     def add_kml_placemark(self, placemarkname, description, lon, lat, style,
-                          altitude='0', kmz=True):
+                          altitude='0', kmz=True, timestamp=''):
         """
         Write a placemark to the KML file (a pin on the map!)
 
@@ -145,13 +153,17 @@ class KMLOutputParser():
             lon(str): longitude in decimal degrees
             lat(str): latitude in decimal degrees
             style(str): icon to use
+            altitude(str): altitude in metres
+            kmz(bool): are we using the custom icons for a KMZ file?
+            timestamp(str): time stamp in XML format
         """
         placemarkname = remove_invalid_chars(placemarkname)
         coords = lon + ',' + lat + ',' + altitude
         if not kmz:
             style = ''
         placemark = self.placemarktemplate % (
-            placemarkname, description, lon, lat, altitude, style, coords)
+            placemarkname, description, timestamp, lon, lat,
+            altitude, style, coords)
         self.kmldoc.append(placemark)
 
     def open_folder(self, foldername):
@@ -213,6 +225,13 @@ class KMLOutputParser():
                 kmlout.write(kmltags)
 
 
+class InvalidDateTimeString(Exception):
+    """
+    raise if timestamp is the wrong format
+    """
+    pass
+
+
 def make_kmz(kmzoutputfilename):
     """
     make a kmz file out of the doc.kml and symbols directory
@@ -261,3 +280,29 @@ def remove_invalid_chars(xmlstring):
         cleanstring = cleanstring.replace(
             invalidchar, invalidchars[invalidchar])
     return cleanstring
+
+
+def convert_timestamp_to_kmltimestamp(timestamp):
+    """
+    convert the pyais timestamp string to one suitable for KML
+
+    Args:
+        timestamp(str): the timestamp string in the format '%Y/%m/%d %H:%M:%S'
+
+    Raises:
+        InvalidDateTimeString: when the timestamp is not correctly formatted
+
+    Returns:
+        xmltimestamp(str): the timestamp in the format '%Y-%m-%dT%H:%M:%SZ'
+    """
+    if DATETIMEREGEX.match(timestamp):
+        if timestamp.endswith(' (estimated)'):
+            timestamp = timestamp.rstrip(' (estimated)')
+        try:
+            dtobj = datetime.datetime.strptime(timestamp, '%Y/%m/%d %H:%M:%S')
+            kmltimestamp = dtobj.strftime('%Y-%m-%dT%H:%M:%SZ')
+        except ValueError as err:
+            raise InvalidDateTimeString('wrong') from err
+        return kmltimestamp
+    else:
+        raise InvalidDateTimeString('timestamp must be %Y/%m/%d %H:%M:%S')

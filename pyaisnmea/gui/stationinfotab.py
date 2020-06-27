@@ -115,6 +115,8 @@ class StationInfoTab(tkinter.ttk.Frame):
                 tkinter.messagebox.showinfo(
                     'Export Files', 'Export Successful')
             except Exception as err:
+                import traceback
+                print(traceback.format_exc())
                 tkinter.messagebox.showerror('Export Files', str(err))
 
     def export_json(self):

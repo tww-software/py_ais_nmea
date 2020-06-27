@@ -17,7 +17,7 @@ class Type4BaseStationReport(pyaisnmea.messages.aismessage.AISMessage):
         EPFD = electronic position fixing device
 
     Attributes:
-        timestamp(str): the timestamp in UTC "%Y %m %D - %H:%M:%S"
+        timestamp(str): the timestamp in UTC "%Y/%m/%D %H:%M:%S"
         posfixaccuracy(bool): 1 = accuracy < 10m, 0 = accuracy > 10m
         longitude(float): longitude in decimal degrees, 181 means not available
         latitude(float): latitude in decimal degrees, 91 means not available
