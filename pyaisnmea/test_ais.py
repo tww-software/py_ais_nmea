@@ -759,7 +759,7 @@ class KMLTimingTests(unittest.TestCase):
         teststring = kml.convert_timestamp_to_kmltimestamp(testinput)
         self.assertEqual(expected, teststring)
 
-    def test_unsuitable_timestamp_regex_match(self):
+    def test_unsuitable_timestamp_regex_fail(self):
         """
         test a timestamp that doesn't match the regex
         
@@ -770,14 +770,58 @@ class KMLTimingTests(unittest.TestCase):
         with self.assertRaises(kml.InvalidDateTimeString):
             kml.convert_timestamp_to_kmltimestamp(testinput)
 
-    def test_unsuitable_timestamp_regex_fail(self):
+    def test_unsuitable_timestamp_regex_fail_month(self):
         """
-        test a timestamp that matches the regex but isn't a proper time
+        test a timestamp with an invalid month
         
         Note:
             change this when i come up with a better regex for datetimes
         """
-        testinput = '2020/16/43 25:67:09'
+        testinput = '2020/16/06 20:34:09'
+        with self.assertRaises(kml.InvalidDateTimeString):
+            kml.convert_timestamp_to_kmltimestamp(testinput)
+
+    def test_unsuitable_timestamp_regex_fail_day(self):
+        """
+        test a timestamp with an invalid day
+        
+        Note:
+            change this when i come up with a better regex for datetimes
+        """
+        testinput = '2020/11/62 20:34:09'
+        with self.assertRaises(kml.InvalidDateTimeString):
+            kml.convert_timestamp_to_kmltimestamp(testinput)
+
+    def test_unsuitable_timestamp_regex_fail_hour(self):
+        """
+        test a timestamp with an invalid hour
+        
+        Note:
+            change this when i come up with a better regex for datetimes
+        """
+        testinput = '2020/11/30 26:34:09'
+        with self.assertRaises(kml.InvalidDateTimeString):
+            kml.convert_timestamp_to_kmltimestamp(testinput)
+
+    def test_unsuitable_timestamp_regex_fail_minutes(self):
+        """
+        test a timestamp with an invalid minutes field
+        
+        Note:
+            change this when i come up with a better regex for datetimes
+        """
+        testinput = '2020/11/30 17:67:09'
+        with self.assertRaises(kml.InvalidDateTimeString):
+            kml.convert_timestamp_to_kmltimestamp(testinput)
+
+    def test_unsuitable_timestamp_regex_fail_seconds(self):
+        """
+        test a timestamp with an invalid seconds field
+        
+        Note:
+            change this when i come up with a better regex for datetimes
+        """
+        testinput = '2020/11/30 17:02:78'
         with self.assertRaises(kml.InvalidDateTimeString):
             kml.convert_timestamp_to_kmltimestamp(testinput)
 

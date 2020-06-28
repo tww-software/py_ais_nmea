@@ -28,7 +28,7 @@ LONGITUDEUNAVAILABLE = 181.0
 TIMEUNAVAILABLE = '0/00/00 24:60:60'
 
 
-TIMEREGEX = re.compile(r'\d{2}:\d{2}:\d{2}')
+TIMEREGEX = re.compile(r'(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])')
 
 
 class AISStation():
@@ -460,7 +460,8 @@ class AISTracker():
         else:
             if msgtype in (4, 11):
                 if msgobj.timestamp != TIMEUNAVAILABLE:
-                    if timestamp not in self.timings:
+                    if (msgobj.timestamp not in self.timings and
+                            kml.DATETIMEREGEX.match(msgobj.timestamp)):
                         self.timings.append(msgobj.timestamp + ' (estimated)')
             try:
                 timestamp = self.timings[len(self.timings) - 1]
