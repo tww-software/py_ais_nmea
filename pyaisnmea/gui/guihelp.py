@@ -154,16 +154,14 @@ class HelpTab(tkinter.ttk.Frame):
         tkinter.ttk.Frame.__init__(self, window)
         self.helpoptions = tkinter.ttk.Combobox(self, state='readonly')
         self.helpoptions.pack(side='top')
-        helpoptionsbutton = tkinter.Button(self, text='Display Info',
-                                           command=self.show_help)
-        helpoptionsbutton.pack(side='top')
         self.helptxt = tkinter.scrolledtext.ScrolledText(self)
         self.helptxt.pack(side='left', fill='both', expand=tkinter.TRUE)
         self.helpoptions['values'] = list(self.help.keys())
         self.helptxt.delete(1.0, tkinter.END)
         self.helptxt.insert(tkinter.INSERT, self.help['Introduction'])
+        self.helpoptions.bind("<<ComboboxSelected>>", self.show_help)
 
-    def show_help(self):
+    def show_help(self, event=None):
         """
         show help topic
         """
