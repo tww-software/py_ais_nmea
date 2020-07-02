@@ -35,6 +35,9 @@ def ais_sentence_payload_binary(payload):
     Args:
         payload(str): the payload from a AIS NMEA sentence
 
+    Raises:
+        NoBinaryData: if the string is empty, i.e no nmea ais data to process
+
     Returns:
         binarystr(str): the payload represented as binary
                         in a string e.g '01101010111'
@@ -46,6 +49,8 @@ def ais_sentence_payload_binary(payload):
             sixbitchar = sixbitchar - 8
         decoded.append(f'{sixbitchar:06b}')
     binarystr = ''.join(decoded)
+    if binarystr == '':
+        raise NoBinaryData('no data found')
     return binarystr
 
 
@@ -57,10 +62,15 @@ def ais_sentence_binary_payload(binarystr):
         binarystr(str): the payload represented as binary
                         in a string e.g '01101010111'
 
+    Raises:
+        NoBinaryData: if the string is empty, i.e no binary data to process
+
     Returns:
         payload(str): the payload from a AIS NMEA sentence
 
     """
+    if binarystr == '':
+        raise NoBinaryData('no data found')
     encoded = []
     bitslist = SIXBITREGEX.findall(binarystr)
     for part in bitslist:
@@ -107,11 +117,16 @@ def decode_sixbit_ascii(binarystr):
         these are stripped from the end of the string
 
     Args:
-         binarystr(str): binary as a string e.g ''.join(decoded)
+         binarystr(str): binary as a string e.g '01101010111'
+
+    Raises:
+        NoBinaryData: if the string is empty, i.e no binary data to process
 
     Returns:
          decodedstr(str): the decoded data as a string
     """
+    if binarystr == '':
+        raise NoBinaryData('no data found')
     bitslist = SIXBITREGEX.findall(binarystr)
     charlist = []
     for bit in bitslist:
@@ -129,11 +144,16 @@ def decode_twos_complement(binarystr):
         flip the bits and add one!
 
     Args:
-        binarystr(str): the binary as a string
+        binarystr(str): the binary as a string e.g '01101010111'
+
+    Raises:
+        NoBinaryData: if the string is empty, i.e no binary data to process
 
     Returns:
         twoscomplement(int): the number as an integer
     """
+    if binarystr == '':
+        raise NoBinaryData('no data found')
     if binarystr[0] == '1':
         newbinlist = []
         for i in binarystr:

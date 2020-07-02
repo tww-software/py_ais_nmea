@@ -8,12 +8,22 @@ on it's own line
 import json
 import logging
 import os
+import sys
 
 import pyaisnmea.ais as ais
+import pyaisnmea.binary as binary
+import pyaisnmea.kml as kml
 import pyaisnmea.nmea as nmea
 
 
 AISLOGGER = logging.getLogger(__name__)
+
+
+class NoSuitableMessagesFound(Exception):
+    """
+    raise if we cannot find any messages in a file
+    """
+    pass
 
 
 def debug_output(messagedict):
@@ -71,6 +81,9 @@ def aistracker_from_csv(filepath, debug=True):
         debug(bool): save all message payloads and decoded attributes into
                      messagedict
 
+    Raises:
+        NoSuitableMessagesFound: if there are no AIS messages in the file
+
     Returns:
         aistracker(ais.AISTracker): object that keeps track of all the
                                     ships we have seen
@@ -83,18 +96,19 @@ def aistracker_from_csv(filepath, debug=True):
     for line in open_file_generator(filepath):
         try:
             linelist = line.split(',')
-            payload = linelist[0]
-            msgtime = linelist[3]
-            msg = aistracker.process_message(payload, timestamp=msgtime)
-            if debug:
-                messagedict[(msgnumber, payload)] = msg
-            msgnumber += 1
-        except (ais.UnknownMessageType, ais.InvalidMMSI) as err:
+            if kml.DATETIMEREGEX.match(linelist[3]):
+                payload = linelist[0]
+                msgtime = linelist[3]
+                msg = aistracker.process_message(payload, timestamp=msgtime)
+                if debug:
+                    messagedict[(msgnumber, payload)] = msg
+                msgnumber += 1
+        except (ais.UnknownMessageType, ais.InvalidMMSI,
+                IndexError, binary.NoBinaryData) as err:
             AISLOGGER.debug(str(err))
             continue
-        except IndexError:
-            AISLOGGER.debug('no data on line')
-            continue
+    if aistracker.messagesprocessed == 0:
+        raise NoSuitableMessagesFound('No AIS messages detected in this file')
     return (aistracker, messagedict)
 
 
@@ -107,6 +121,9 @@ def aistracker_from_json(filepath, debug=True):
         filepath(str): full path to json file
         debug(bool): save all message payloads and decoded attributes into
                      messagedict
+
+    Raises:
+        NoSuitableMessagesFound: if there are no AIS messages in the file
 
     Returns:
         aistracker(ais.AISTracker): object that keeps track of all the
@@ -126,12 +143,13 @@ def aistracker_from_json(filepath, debug=True):
             if debug:
                 messagedict[(msgnumber, payload)] = msg
             msgnumber += 1
-        except (ais.UnknownMessageType, ais.InvalidMMSI) as err:
+        except (ais.UnknownMessageType, ais.InvalidMMSI,
+                json.decoder.JSONDecodeError, KeyError,
+                binary.NoBinaryData) as err:
             AISLOGGER.debug(str(err))
             continue
-        except (json.decoder.JSONDecodeError, KeyError):
-            AISLOGGER.debug('no data on line')
-            continue
+    if aistracker.messagesprocessed == 0:
+        raise NoSuitableMessagesFound('No AIS messages detected in this file')
     return (aistracker, messagedict)
 
 
@@ -146,6 +164,9 @@ def aistracker_from_file(filepath, debug=False):
         filepath(str): full path to nmea file
         debug(bool): save all message payloads and decoded attributes into
                      messagedict
+
+    Raises:
+        NoSuitableMessagesFound: if there are no AIS messages in the file
 
     Returns:
         aistracker(ais.AISTracker): object that keeps track of all the
@@ -167,12 +188,12 @@ def aistracker_from_file(filepath, debug=False):
                     messagedict[(msgnumber, payload)] = msg
                 msgnumber += 1
         except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
-                ais.UnknownMessageType, ais.InvalidMMSI) as err:
+                ais.UnknownMessageType, ais.InvalidMMSI,
+                binary.NoBinaryData, IndexError) as err:
             AISLOGGER.debug(str(err))
             continue
-        except IndexError:
-            AISLOGGER.debug('no data on line')
-            continue
+    if aistracker.messagesprocessed == 0:
+        raise NoSuitableMessagesFound('No AIS messages detected in this file')
     return (aistracker, nmeatracker, messagedict)
 
 
@@ -204,8 +225,12 @@ def read_from_file(filepath, outpath, debug=False,
         os.makedirs(outpath)
     AISLOGGER.info('processed output will be saved in %s', outpath)
     AISLOGGER.info('reading nmea sentences from - %s', filepath)
-    aistracker, nmeatracker, messagedict = aistracker_from_file(
-        filepath, debug=debug)
+    try:
+        aistracker, nmeatracker, messagedict = aistracker_from_file(
+            filepath, debug=debug)
+    except (FileNotFoundError, NoSuitableMessagesFound) as err:
+        AISLOGGER.info(str(err))
+        sys.exit(1)
     stnstats = aistracker.tracker_stats()
     sentencestats = nmeatracker.nmea_stats()
     AISLOGGER.debug('saving summary to summary.txt')

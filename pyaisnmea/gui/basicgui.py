@@ -410,6 +410,10 @@ class BasicGUI(tkinter.Tk):
                 else:
                     self.aistracker, self.nmeatracker, self.messagedict = \
                         capturefile.aistracker_from_file(inputfile, debug=True)
+            except capturefile.NoSuitableMessagesFound as err:
+                tkinter.messagebox.showerror('Error', str(err))
+                self.statuslabel.config(text='', bg='light grey')
+                return
             except (FileNotFoundError, TypeError):
                 self.statuslabel.config(text='', bg='light grey')
                 return
