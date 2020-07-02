@@ -115,6 +115,34 @@ class BinaryTests(unittest.TestCase):
         with self.assertRaises(binary.NoBinaryData):
             binary.decode_sixbit_integer(testbinarystr[116:128]) / 10
 
+    def test_empty_string_ais_sentence_payload_binary(self):
+        """
+        an empty string should raise a NoBinaryData exception
+        """
+        with self.assertRaises(binary.NoBinaryData):
+            binary.ais_sentence_payload_binary('')
+
+    def test_empty_string_ais_sentence_binary_payload(self):
+        """
+        an empty string should raise a NoBinaryData exception
+        """
+        with self.assertRaises(binary.NoBinaryData):
+            binary.ais_sentence_binary_payload('')
+
+    def test_empty_string_decode_sixbit_ascii(self):
+        """
+        an empty string should raise a NoBinaryData exception
+        """
+        with self.assertRaises(binary.NoBinaryData):
+            binary.decode_sixbit_ascii('')
+
+    def test_empty_string_decode_twos_complement(self):
+        """
+        an empty string should raise a NoBinaryData exception
+        """
+        with self.assertRaises(binary.NoBinaryData):
+            binary.decode_twos_complement('')
+
 
 class NMEATests(unittest.TestCase):
     """
