@@ -787,6 +787,15 @@ class KMLTimingTests(unittest.TestCase):
         teststring = kml.convert_timestamp_to_kmltimestamp(testinput)
         self.assertEqual(expected, teststring)
 
+    def test_suitable_estimated_timestamp(self):
+        """
+        test a valid timestamp in the correct format
+        """
+        testinput = '2020/07/03 00:34:17 (estimated)'
+        expected = '2020-07-03T00:34:17Z'
+        teststring = kml.convert_timestamp_to_kmltimestamp(testinput)
+        self.assertEqual(expected, teststring)
+
     def test_unsuitable_timestamp_regex_fail(self):
         """
         test a timestamp that doesn't match the regex
@@ -1206,13 +1215,17 @@ class KMLTests(unittest.TestCase):
         testdict = {
             'mmsi': '992351030', 'type': 'Navigation Aid',
             'subtype': 'Cardinal Mark S', 'name': 'LUNE DEEP BUOY',
-            'flag': 'United Kingdom'}
+            'flag': 'United Kingdom', 'Sent Messages': {
+            'Type 21 - Aid to Navigation Report': 15}}
         testhtml = self.parser.format_kml_placemark_description(testdict)
         expectedhtml = """<![CDATA[MMSI - 992351030<br  />
 TYPE - Navigation Aid<br  />
 SUBTYPE - Cardinal Mark S<br  />
 NAME - LUNE DEEP BUOY<br  />
 FLAG - United Kingdom<br  />
+<br  />
+SENT MESSAGES<br  />
+TYPE 21 - AID TO NAVIGATION REPORT - 15<br  />
 ]]>"""
         self.assertEqual(testhtml, expectedhtml)
 
