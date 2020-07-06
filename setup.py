@@ -7,7 +7,7 @@ setup(name='pyaisnmea',
       author='Thomas W Whittam',
       url='https://github.com/tww-software/py_ais_nmea',
       license='MIT',
-      packages=['pyaisnmea', 'pyaisnmea.messages'],
+      packages=['pyaisnmea', 'pyaisnmea.messages', 'pyaisnmea.gui'],
       include_package_data=True,
       zip_safe=False
 )
