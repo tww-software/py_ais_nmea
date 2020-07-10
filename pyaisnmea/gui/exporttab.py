@@ -7,7 +7,6 @@ import os
 import tkinter
 
 import pyaisnmea.ais as ais
-import pyaisnmea.capturefile as capturefile
 
 
 AISLOGGER = logging.getLogger(__name__)
@@ -25,7 +24,7 @@ EXPORTHELP = {
                      'all AIS station position reports'),
     'GEOJSON': 'GEOJSON map of all AIS Station positions',
     'DEBUG': ('outputs 2 files (CSV and JSON lines) '
-              'output of all decoded messages')}
+              'output of all AIS decoded messages')}
 
 
 class ExportTab(tkinter.ttk.Frame):
@@ -85,7 +84,7 @@ class ExportTab(tkinter.ttk.Frame):
                     'Export Files', 'Export Successful')
             except Exception as err:
                 AISLOGGER.exception('export error')
-                tkinter.messagebox.showerror('Export Files', str(err))
+                tkinter.messagebox.showerror(type(err).__name__, str(err))
 
     def show_export_help(self, event=None):
         """
@@ -185,8 +184,7 @@ class ExportTab(tkinter.ttk.Frame):
         """
         if not outpath:
             outpath = tkinter.filedialog.askdirectory()
-        jsonlines, messagecsvlist = capturefile.debug_output(
-            self.tabs.window.messagedict)
+        jsonlines, messagecsvlist = self.tabs.window.messagelog.debug_output()
         ais.write_json_lines(jsonlines,
                              os.path.join(outpath,
                                           'ais-messages.jsonl'))

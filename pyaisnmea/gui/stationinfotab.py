@@ -2,9 +2,14 @@
 tab to display detailed info about an AIS station
 """
 
+import logging
+import os
 import tkinter
 
 import pyaisnmea.ais as ais
+
+
+AISLOGGER = logging.getLogger(__name__)
 
 
 class StationInfoTab(tkinter.ttk.Frame):
@@ -14,6 +19,8 @@ class StationInfoTab(tkinter.ttk.Frame):
     Args:
         tabcontrol(tkinter.ttk.Notebook): ttk notebook to add this tab to
     """
+
+    nostnerr = 'Please choose a station from the drop down to export data for.'
 
     def __init__(self, tabcontrol):
         tkinter.ttk.Frame.__init__(self, tabcontrol)
@@ -31,9 +38,13 @@ class StationInfoTab(tkinter.ttk.Frame):
         exportkmzbutton = tkinter.Button(lowerbuttons, text='KMZ',
                                          command=self.export_kmz)
         exportkmzbutton.grid(column=1, row=0)
-        exportcsvbutton = tkinter.Button(lowerbuttons, text='CSV',
-                                         command=self.export_csv)
+        exportcsvbutton = tkinter.Button(lowerbuttons, text='Positions CSV',
+                                         command=self.export_positions_csv)
         exportcsvbutton.grid(column=2, row=0)
+        exportdebugbutton = tkinter.Button(
+            lowerbuttons, text='AIS Messages (DEBUG)',
+            command=self.export_debug)
+        exportdebugbutton.grid(column=3, row=0)
         lowerbuttons.pack(side='bottom')
         self.stntxt = tkinter.scrolledtext.ScrolledText(
             self, selectbackground='cyan')
@@ -94,7 +105,8 @@ class StationInfoTab(tkinter.ttk.Frame):
                 self.stntxt.insert(tkinter.INSERT, stninfo)
             except KeyError:
                 tkinter.messagebox.showerror(
-                    'Station Info', 'no data for MMSI - {}'.format(lookupmmsi))
+                    'Station Info', 'no data for MMSI - {}'.format(
+                        dropdowntext))
 
     def export_kmz(self):
         """
@@ -102,22 +114,23 @@ class StationInfoTab(tkinter.ttk.Frame):
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
         """
-        outputfile = tkinter.filedialog.asksaveasfilename(
-            defaultextension=".kmz",
-            filetypes=(("keyhole markup language KMZ", "*.kmz"),
-                       ("All Files", "*.*")))
         dropdowntext = self.stnoptions.get()
         if dropdowntext != '':
             try:
+                outputfile = tkinter.filedialog.asksaveasfilename(
+                    defaultextension=".kmz",
+                    filetypes=(("keyhole markup language KMZ", "*.kmz"),
+                               ("All Files", "*.*")))
                 lookupmmsi = self.stnlookup[dropdowntext]
                 self.tabs.window.aistracker.stations[lookupmmsi]. \
                     create_kml_map(outputfile, kmzoutput=True)
                 tkinter.messagebox.showinfo(
                     'Export Files', 'Export Successful')
             except Exception as err:
-                import traceback
-                print(traceback.format_exc())
-                tkinter.messagebox.showerror('Export Files', str(err))
+                AISLOGGER.exception('export error')
+                tkinter.messagebox.showerror(type(err).__name__, str(err))
+        else:
+            tkinter.messagebox.showerror('Export Files', self.nostnerr)
 
     def export_json(self):
         """
@@ -125,13 +138,13 @@ class StationInfoTab(tkinter.ttk.Frame):
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
         """
-        outputfile = tkinter.filedialog.asksaveasfilename(
-            defaultextension=".json",
-            filetypes=(("javascript object notation", "*.json"),
-                       ("All Files", "*.*")))
         dropdowntext = self.stnoptions.get()
         if dropdowntext != '':
             try:
+                outputfile = tkinter.filedialog.asksaveasfilename(
+                    defaultextension=".json",
+                    filetypes=(("javascript object notation", "*.json"),
+                               ("All Files", "*.*")))
                 lookupmmsi = self.stnlookup[dropdowntext]
                 stninfo = self.tabs.window.aistracker.stations[lookupmmsi]. \
                     get_station_info(verbose=True)
@@ -139,25 +152,64 @@ class StationInfoTab(tkinter.ttk.Frame):
                 tkinter.messagebox.showinfo(
                     'Export Files', 'Export Successful')
             except Exception as err:
-                tkinter.messagebox.showerror('Export Files', str(err))
+                AISLOGGER.exception('export error')
+                tkinter.messagebox.showerror(type(err).__name__, str(err))
+        else:
+            tkinter.messagebox.showerror('Export Files', self.nostnerr)
 
-    def export_csv(self):
+    def export_positions_csv(self):
         """
         export CSV for a single AIS station
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
         """
-        outputfile = tkinter.filedialog.asksaveasfilename(
-            defaultextension=".csv",
-            filetypes=(("comma seperated values", "*.csv"),
-                       ("All Files", "*.*")))
         dropdowntext = self.stnoptions.get()
         if dropdowntext != '':
             try:
+                outputfile = tkinter.filedialog.asksaveasfilename(
+                    defaultextension=".csv",
+                    filetypes=(("comma seperated values", "*.csv"),
+                               ("All Files", "*.*")))
                 lookupmmsi = self.stnlookup[dropdowntext]
                 stninfo = self.tabs.window.aistracker.stations[lookupmmsi]
                 stninfo.create_positions_csv(outputfile)
                 tkinter.messagebox.showinfo(
                     'Export Files', 'Export Successful')
             except Exception as err:
-                tkinter.messagebox.showerror('Export Files', str(err))
+                AISLOGGER.exception('export error')
+                tkinter.messagebox.showerror(type(err).__name__, str(err))
+        else:
+            tkinter.messagebox.showerror('Export Files', self.nostnerr)
+
+    def export_debug(self):
+        """
+        export all the AIS messages for a single AIS station
+        pop open a file browser to allow the user to choose
+        a directory to save the
+        file and then save csv and jsonl to that location
+        """
+        dropdowntext = self.stnoptions.get()
+        if dropdowntext != '':
+            try:
+                outpath = tkinter.filedialog.askdirectory()
+                lookupmmsi = self.stnlookup[dropdowntext]
+                jsonlines, messagecsvlist = \
+                    self.tabs.window.messagelog.debug_output(
+                        mmsi=lookupmmsi)
+                ais.write_json_lines(
+                    jsonlines,
+                    os.path.join(
+                        outpath,
+                        dropdowntext + '-ais-messages.jsonl'))
+                ais.write_csv_file(
+                    messagecsvlist,
+                    os.path.join(
+                        outpath,
+                        dropdowntext + '-ais-messages.csv'))
+                tkinter.messagebox.showinfo(
+                    'Export Files', 'Export Successful')
+            except Exception as err:
+                AISLOGGER.exception('export error')
+                tkinter.messagebox.showerror(type(err).__name__, str(err))
+        else:
+            tkinter.messagebox.showerror('Export Files', self.nostnerr)

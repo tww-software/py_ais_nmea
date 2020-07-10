@@ -130,7 +130,8 @@ class AISMessageTab(tkinter.ttk.Frame):
         clickednmea = self.tree.item(item)['values'][1]
         messagewindow = MessageWindow(self.tabs.window)
         msgsummary = ais.create_summary_text(
-            self.tabs.window.messagedict[(clickedmsgno, clickednmea)].__dict__)
+            self.tabs.window.messagelog.messagedict[
+                (clickedmsgno, clickednmea)].__dict__)
         messagewindow.msgdetailsbox.append_text(msgsummary)
 
     def create_message_table(self):

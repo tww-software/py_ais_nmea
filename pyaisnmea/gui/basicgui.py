@@ -13,6 +13,7 @@ import tkinter.messagebox
 import tkinter.scrolledtext
 import tkinter.ttk
 
+import pyaisnmea.allmessages as allmessages
 import pyaisnmea.ais as ais
 import pyaisnmea.capturefile as capturefile
 import pyaisnmea.livekmlmap as livekmlmap
@@ -189,7 +190,7 @@ class BasicGUI(tkinter.Tk):
     Attributes:
         nmeatracker(nmea.NMEAtracker): deals with the NMEA sentences
         aistracker(ais.AISTracker): decodes the AIS messages
-        messagedict(dict): stores all the messages
+        messagelog(dict): stores all the messages
         statuslabel(tkinter.Label): forms the status bar at the top of the
                                     main window
         mpq(multiprocessing.Queue): used to communicate with the
@@ -217,7 +218,7 @@ class BasicGUI(tkinter.Tk):
         tkinter.Tk.__init__(self)
         self.nmeatracker = nmea.NMEAtracker()
         self.aistracker = ais.AISTracker()
-        self.messagedict = {}
+        self.messagelog = allmessages.AISMessageLog()
         self.protocol("WM_DELETE_WINDOW", self.quit)
         self.title('AIS NMEA 0183 Decoder')
         self.statuslabel = tkinter.Label(self, text='', bg='light grey')
@@ -271,7 +272,7 @@ class BasicGUI(tkinter.Tk):
                 self.nmeatracker.channelcounter.clear()
                 self.nmeatracker.sentencecount = 0
                 self.nmeatracker.reassembled = 0
-                self.messagedict.clear()
+                self.messagelog.clear()
 
     def top_menu(self):
         """
@@ -398,17 +399,17 @@ class BasicGUI(tkinter.Tk):
             self.update_idletasks()
             try:
                 if inputfile.endswith('.csv'):
-                    self.aistracker, self.messagedict = \
+                    self.aistracker, self.messagelog = \
                         capturefile.aistracker_from_csv(inputfile)
                     self.nmeatracker.sentencecount = 'N/A'
                     self.nmeatracker.reassembled = 'N/A'
                 elif inputfile.endswith('.jsonl'):
-                    self.aistracker, self.messagedict = \
+                    self.aistracker, self.messagelog = \
                         capturefile.aistracker_from_json(inputfile)
                     self.nmeatracker.sentencecount = 'N/A'
                     self.nmeatracker.reassembled = 'N/A'
                 else:
-                    self.aistracker, self.nmeatracker, self.messagedict = \
+                    self.aistracker, self.nmeatracker, self.messagelog = \
                         capturefile.aistracker_from_file(inputfile, debug=True)
             except capturefile.NoSuitableMessagesFound as err:
                 tkinter.messagebox.showerror('Error', str(err))
@@ -428,12 +429,13 @@ class BasicGUI(tkinter.Tk):
             self.tabcontrol.statstab.write_stats_verbose()
             self.tabcontrol.shipstab.create_ship_table()
             self.tabcontrol.messagetab.create_message_table()
-            for msg in self.messagedict:
+            for msg in self.messagelog.messagedict:
                 msgno = msg[0]
                 payload = msg[1]
-                latestmsg = [msgno, payload, self.messagedict[msg].description,
-                             self.messagedict[msg].mmsi,
-                             self.messagedict[msg].rxtime]
+                latestmsg = [msgno, payload,
+                             self.messagelog.messagedict[msg].description,
+                             self.messagelog.messagedict[msg].mmsi,
+                             self.messagelog.messagedict[msg].rxtime]
                 self.tabcontrol.messagetab.add_new_line(latestmsg)
             self.statuslabel.config(
                 text='Loaded capture file - {}'.format(inputfile),
@@ -465,7 +467,7 @@ class BasicGUI(tkinter.Tk):
                             errmsg = '{} - error with - {}'.format(
                                 str(err), payload)
                             AISLOGGER.error(errmsg)
-                        self.messagedict[(msgno, payload)] = msg
+                        self.messagelog.store(msgno, payload, msg)
                         latestmsg = [msgno, payload, msg.description,
                                      msg.mmsi, currenttime]
                         msgno += 1

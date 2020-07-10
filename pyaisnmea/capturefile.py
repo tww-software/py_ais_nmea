@@ -10,6 +10,7 @@ import logging
 import os
 import sys
 
+import pyaisnmea.allmessages as allmessages
 import pyaisnmea.ais as ais
 import pyaisnmea.binary as binary
 import pyaisnmea.kml as kml
@@ -24,34 +25,6 @@ class NoSuitableMessagesFound(Exception):
     raise if we cannot find any messages in a file
     """
     pass
-
-
-def debug_output(messagedict):
-    """
-    prepare output to jsonlines and csv
-
-    Args:
-        messagedict(dict): keys are payloads values are the
-                           corresponding AISMessage objects
-    """
-    csvlist = []
-    jsonlines = []
-    headers = ['NMEA Payload', 'MMSI', 'Message Type Number',
-               'Received Time', 'Detailed Description']
-    csvlist.append(headers)
-    for msg in messagedict:
-        payload = msg[1]
-        message = {}
-        message['payload'] = payload
-        message.update(messagedict[msg].__dict__)
-        message.pop('msgbinary', None)
-        jsonlines.append(message)
-        singlemsg = [payload, messagedict[msg].mmsi,
-                     messagedict[msg].msgtype,
-                     messagedict[msg].rxtime,
-                     messagedict[msg].__str__()]
-        csvlist.append(singlemsg)
-    return (jsonlines, csvlist)
 
 
 def open_file_generator(filepath):
@@ -79,7 +52,7 @@ def aistracker_from_csv(filepath, debug=True):
     Args:
         filepath(str): full path to csv file
         debug(bool): save all message payloads and decoded attributes into
-                     messagedict
+                     messagelog
 
     Raises:
         NoSuitableMessagesFound: if there are no AIS messages in the file
@@ -87,10 +60,9 @@ def aistracker_from_csv(filepath, debug=True):
     Returns:
         aistracker(ais.AISTracker): object that keeps track of all the
                                     ships we have seen
-        messagedict(dict): keys are tuples of message number and nmea payload
-                           values are the corresponding AISMessage objects
+        messagelog(allmessages.AISMessageLog): object with all the AIS messages
     """
-    messagedict = {}
+    messagelog = allmessages.AISMessageLog()
     aistracker = ais.AISTracker()
     msgnumber = 1
     for line in open_file_generator(filepath):
@@ -101,7 +73,7 @@ def aistracker_from_csv(filepath, debug=True):
                 msgtime = linelist[3]
                 msg = aistracker.process_message(payload, timestamp=msgtime)
                 if debug:
-                    messagedict[(msgnumber, payload)] = msg
+                    messagelog.store(msgnumber, payload, msg)
                 msgnumber += 1
         except (ais.UnknownMessageType, ais.InvalidMMSI,
                 IndexError, binary.NoBinaryData) as err:
@@ -109,7 +81,7 @@ def aistracker_from_csv(filepath, debug=True):
             continue
     if aistracker.messagesprocessed == 0:
         raise NoSuitableMessagesFound('No AIS messages detected in this file')
-    return (aistracker, messagedict)
+    return (aistracker, messagelog)
 
 
 def aistracker_from_json(filepath, debug=True):
@@ -120,7 +92,7 @@ def aistracker_from_json(filepath, debug=True):
     Args:
         filepath(str): full path to json file
         debug(bool): save all message payloads and decoded attributes into
-                     messagedict
+                     messagelog
 
     Raises:
         NoSuitableMessagesFound: if there are no AIS messages in the file
@@ -128,10 +100,9 @@ def aistracker_from_json(filepath, debug=True):
     Returns:
         aistracker(ais.AISTracker): object that keeps track of all the
                                     ships we have seen
-        messagedict(dict): keys are tuples of message number and nmea payload
-                           values are the corresponding AISMessage objects
+        messagelog(allmessages.AISMessageLog): object with all the AIS messages
     """
-    messagedict = {}
+    messagelog = allmessages.AISMessageLog()
     aistracker = ais.AISTracker()
     msgnumber = 1
     for line in open_file_generator(filepath):
@@ -141,7 +112,7 @@ def aistracker_from_json(filepath, debug=True):
             msgtime = linemsgdict['rxtime']
             msg = aistracker.process_message(payload, timestamp=msgtime)
             if debug:
-                messagedict[(msgnumber, payload)] = msg
+                messagelog.store(msgnumber, payload, msg)
             msgnumber += 1
         except (ais.UnknownMessageType, ais.InvalidMMSI,
                 json.decoder.JSONDecodeError, KeyError,
@@ -150,7 +121,7 @@ def aistracker_from_json(filepath, debug=True):
             continue
     if aistracker.messagesprocessed == 0:
         raise NoSuitableMessagesFound('No AIS messages detected in this file')
-    return (aistracker, messagedict)
+    return (aistracker, messagelog)
 
 
 def aistracker_from_file(filepath, debug=False):
@@ -158,12 +129,12 @@ def aistracker_from_file(filepath, debug=False):
     open a file, read all nmea sentences and return an ais.AISTracker object
 
     Note:
-        if debug is set then individual messages are saved into the messagedict
+        if debug is set then individual messages are saved into the messagelog
 
     Args:
         filepath(str): full path to nmea file
         debug(bool): save all message payloads and decoded attributes into
-                     messagedict
+                     messagelog
 
     Raises:
         NoSuitableMessagesFound: if there are no AIS messages in the file
@@ -172,10 +143,9 @@ def aistracker_from_file(filepath, debug=False):
         aistracker(ais.AISTracker): object that keeps track of all the
                                     ships we have seen
         nmeatracker(nmea.NMEAtracker): object that organises the nmea sentences
-        messagedict(dict): keys are tuples of message number and nmea payload
-                           values are the corresponding AISMessage objects
+        messagelog(allmessages.AISMessageLog): object with all the AIS messages
     """
-    messagedict = {}
+    messagelog = allmessages.AISMessageLog()
     aistracker = ais.AISTracker()
     nmeatracker = nmea.NMEAtracker()
     msgnumber = 1
@@ -185,7 +155,7 @@ def aistracker_from_file(filepath, debug=False):
             if payload:
                 msg = aistracker.process_message(payload)
                 if debug:
-                    messagedict[(msgnumber, payload)] = msg
+                    messagelog.store(msgnumber, payload, msg)
                 msgnumber += 1
         except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                 ais.UnknownMessageType, ais.InvalidMMSI,
@@ -194,7 +164,7 @@ def aistracker_from_file(filepath, debug=False):
             continue
     if aistracker.messagesprocessed == 0:
         raise NoSuitableMessagesFound('No AIS messages detected in this file')
-    return (aistracker, nmeatracker, messagedict)
+    return (aistracker, nmeatracker, messagelog)
 
 
 def read_from_file(filepath, outpath, debug=False,
@@ -226,7 +196,7 @@ def read_from_file(filepath, outpath, debug=False,
     AISLOGGER.info('processed output will be saved in %s', outpath)
     AISLOGGER.info('reading nmea sentences from - %s', filepath)
     try:
-        aistracker, nmeatracker, messagedict = aistracker_from_file(
+        aistracker, nmeatracker, messagelog = aistracker_from_file(
             filepath, debug=debug)
     except (FileNotFoundError, NoSuitableMessagesFound) as err:
         AISLOGGER.info(str(err))
@@ -266,7 +236,7 @@ def read_from_file(filepath, outpath, debug=False,
         aistracker.create_kml_map(os.path.join(outpath, 'map.kmz'),
                                   kmzoutput=True)
     if debug:
-        jsonlineslist, messagecsvlist = debug_output(messagedict)
+        jsonlineslist, messagecsvlist = messagelog.debug_output()
         ais.write_json_lines(jsonlineslist,
                              os.path.join(outpath,
                                           'ais-messages.jsonl'))

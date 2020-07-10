@@ -6,6 +6,8 @@ helper module to get all the AIS pyaisnmea.messages together in one module
 # pylint: disable=import-error
 # pylint: disable=no-name-in-module
 
+import collections
+
 import pyaisnmea.messages
 import pyaisnmea.messages.aismessage
 import pyaisnmea.messages.t123
@@ -65,3 +67,76 @@ MSGTYPES = {
     25: pyaisnmea.messages.t25.Type25SingleSlotBinaryMessage,
     26: pyaisnmea.messages.t26.Type26MultipleSlotBinaryMessage,
     27: pyaisnmea.messages.t27.Type27LongRangeAISPositionReport}
+
+
+class AISMessageLog():
+    """
+    class to store individual AISMessage objects where they can be easily
+    retrieved and sorted
+
+    Attributes:
+        messagelog(dict): keys are tuples of message number and nmea payload
+                          values are the corresponding AISMessage objects
+    """
+
+    csvheaders = ['NMEA Payload', 'MMSI', 'Message Type Number',
+                  'Received Time', 'Detailed Description']
+
+    def __init__(self):
+        self.messagedict = {}
+        self.messagesbymmsi = collections.defaultdict(list)
+        self.mesagesbytype = collections.defaultdict(list)
+
+    def store(self, msgno, payload, msgobj):
+        """
+        store a message in the messagedict
+
+        Args:
+            msgno(int): number of the order in which the message was received
+            payload(str): the NMEA payload as a string
+            msgobj(pyaisnmea.messages.aismessage.AISMessage): the AIS message
+        """
+        self.messagedict[(msgno, payload)] = msgobj
+        self.messagesbymmsi[msgobj.mmsi].append((msgno, payload))
+        self.mesagesbytype[msgobj.msgtype].append((msgno, payload))
+
+    def clear(self):
+        """
+        clear all saved data from this object
+        """
+        self.messagedict.clear()
+        self.messagesbymmsi.clear()
+        self.mesagesbytype.clear()
+
+    def debug_output(self, mmsi=None):
+        """
+        prepare output to jsonlines and csv
+
+        Args:
+            mmsi(str): the mmsi of a AIS station we want the messages of
+                       all messages are returned if mmsi is None
+
+        Returns:
+            jsonlines(list): list of dicts, each dict is an AIS message
+            csvlist(list): list of lists, each list is an AIS message
+        """
+        csvlist = []
+        jsonlines = []
+        csvlist.append(self.csvheaders)
+        if mmsi:
+            messages = self.messagesbymmsi[mmsi]
+        else:
+            messages = self.messagedict
+        for msg in messages:
+            payload = msg[1]
+            message = {}
+            message['payload'] = payload
+            message.update(self.messagedict[msg].__dict__)
+            message.pop('msgbinary', None)
+            jsonlines.append(message)
+            singlemsg = [payload, self.messagedict[msg].mmsi,
+                         self.messagedict[msg].msgtype,
+                         self.messagedict[msg].rxtime,
+                         self.messagedict[msg].__str__()]
+            csvlist.append(singlemsg)
+        return (jsonlines, csvlist)
