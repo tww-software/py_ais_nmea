@@ -35,7 +35,7 @@ class TabControl(tkinter.ttk.Notebook):
     organise the main tabs
 
     Note:
-        tabs are numbered left to right
+        tabs go from left to right
 
     Args:
         window(tkinter.Tk): the main window this spawns from

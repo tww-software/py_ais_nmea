@@ -76,12 +76,20 @@ def create_summary_text(summary):
     return textsummary
 
 
-def export_overview(aistracker, nmeatracker, aismsglog, outputdir):
+def export_overview(
+        aistracker, nmeatracker, aismsglog, outputdir, printsummary=False):
     """
     export the most popular file formats
     KMZ - map
     JSON & CSV - vessel details
-    JSONLINES and CSV - message debug
+    JSONLINES and CSV - AIS message debug - ALL AIS MESSAGES
+
+    Args:
+        aistracker(ais.AISTracker): object tracking all AIS stations
+        nmeatracker(nmea.NMEAtracker): object to process NMEA sentences
+        aismsglog(allmessages.AISMessageLog): object to log all AIS messages
+        outputdir(str): directory path to export files to
+        printsummary(bool): whether to print a summary to the terminal
     """
     stnstats = aistracker.tracker_stats()
     sentencestats = nmeatracker.nmea_stats()
@@ -89,7 +97,8 @@ def export_overview(aistracker, nmeatracker, aismsglog, outputdir):
                                    'NMEA Stats': sentencestats})
     with open(os.path.join(outputdir, 'summary.txt'), 'w') as textsummary:
         textsummary.write(summary)
-    print(summary)
+    if printsummary:
+        print(summary)
     joutdict = {}
     joutdict['NMEA Stats'] = sentencestats
     joutdict['AIS Stats'] = stnstats
@@ -112,6 +121,11 @@ def export_overview(aistracker, nmeatracker, aismsglog, outputdir):
 def export_everything(aistracker, aismsglog, outputdir):
     """
     export everything we have on each AIS Station
+
+    Args:
+        aistracker(ais.AISTracker): object tracking all AIS stations
+        aismsglog(allmessages.AISMessageLog): object to log all AIS messages
+        outputdir(str): directory path to export files to
     """
     AISLOGGER.info('outputting data for all AIS stations')
     mmsicatagories = aistracker.sort_mmsi_by_catagory()

@@ -197,6 +197,9 @@ class ExportTab(tkinter.ttk.Frame):
         KMZ - map
         JSON & CSV - vessel details
         JSONLINES and CSV - message debug
+
+        Args:
+            outpath(str): path to export to if called from another function
         """
         if not outpath:
             outpath = tkinter.filedialog.askdirectory()
