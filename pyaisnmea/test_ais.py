@@ -15,6 +15,7 @@ import xml.etree.ElementTree
 
 import pyaisnmea.ais as ais
 import pyaisnmea.binary as binary
+import pyaisnmea.export as export
 import pyaisnmea.geojson as geojson
 import pyaisnmea.icons as icons
 import pyaisnmea.kml as kml
@@ -1094,7 +1095,7 @@ class TextSummaryFormattingTests(unittest.TestCase):
       
    
 """
-        testresult = ais.create_summary_text(testdict)
+        testresult = export.create_summary_text(testdict)
         self.assertEqual(testresult, expectedstr)
 
 

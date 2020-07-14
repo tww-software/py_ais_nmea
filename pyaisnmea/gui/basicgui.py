@@ -325,10 +325,7 @@ class BasicGUI(tkinter.Tk):
         self.tabcontrol.statstab.starttime.configure(
             text=datetime.datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S'))
         if self.netsettings['KML File Path'] != '':
-            if self.kmzlivemap.get() == 1:
-                kmzoutput = True
-            else:
-                kmzoutput = False
+            kmzoutput = bool(self.kmzlivemap.get() == 1)
             self.livemap = livekmlmap.LiveKMLMap(
                 self.netsettings['KML File Path'], kmzoutput=kmzoutput)
             self.livemap.create_netlink_file()

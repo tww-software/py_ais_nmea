@@ -4,7 +4,7 @@ tab that displays overall stats about the stations received
 
 import tkinter
 
-import pyaisnmea.ais as ais
+import pyaisnmea.export as export
 
 
 class StatsTab(tkinter.ttk.Frame):
@@ -90,10 +90,10 @@ class StatsTab(tkinter.ttk.Frame):
         stats = self.tabs.window.aistracker.tracker_stats()
         self.msgstatstxt.insert(
             tkinter.INSERT,
-            ais.create_summary_text(stats['Message Stats']))
+            export.create_summary_text(stats['Message Stats']))
         self.shiptypestxt.insert(
             tkinter.INSERT,
-            ais.create_summary_text(stats['Ship Types']))
+            export.create_summary_text(stats['Ship Types']))
         self.flagstxt.insert(
             tkinter.INSERT,
-            ais.create_summary_text(stats['Country Flags']))
+            export.create_summary_text(stats['Country Flags']))

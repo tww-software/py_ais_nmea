@@ -11,9 +11,6 @@ import pyaisnmea.livekmlmap as livekmlmap
 import pyaisnmea.version as version
 
 
-AISLOGGER = logging.getLogger(__name__)
-
-
 def cli_arg_parser():
     """
     get the cli arguments and run the program
@@ -22,9 +19,10 @@ def cli_arg_parser():
         parser(argparse.ArgumentParser): the command line options parser
     """
     desc = 'tool to decode AIS traffic and generate meaningful data'
-    versiontxt = 'version = {}'.format(version.VERSION)
+    versiontxt = 'pyaisnmea version = {}'.format(version.VERSION)
     parser = argparse.ArgumentParser(description=desc, epilog=versiontxt)
     parser.add_argument('-v', action='store_true', help='verbose output')
+    parser.add_argument('--version', action='version', version=versiontxt)
     subparsers = parser.add_subparsers(dest='subcommand')
     subparsers.add_parser('gui', help=('open the GUI'))
     livemapparser = subparsers.add_parser(
@@ -43,20 +41,10 @@ def cli_arg_parser():
                                        help=('read AIS traffic '
                                              'from a capture file'))
     fileparser.add_argument(help='input file path', dest='inputfile')
-    fileparser.add_argument(help='output directory path', dest='outputdir')
-    outputformats = fileparser.add_argument_group('output formats')
-    outputformats.add_argument('-j', action='store_true', help='json output')
-    outputformats.add_argument('-g', action='store_true',
-                               help='geojson output')
-    outputformats.add_argument('--kmz', action='store_true', help='kmz output')
-    outputformats.add_argument('--kml', action='store_true', help='kml output')
-    outputformats.add_argument('-c', action='store_true', help='csv output')
-    outputformats.add_argument('-t', action='store_true', help='tsv output')
-    outputformats.add_argument('-d', action='store_true',
-                               help=('read AIS traffic from a capture '
-                                     'file then decode and output all '
-                                     'AIS messages into a csv and json lines '
-                                     'file'))
+    ehelp = ('Everything - '
+             'output individual KMZ, CSV and JSON Lines for each AIS Station')
+    fileparser.add_argument(dest='outputdir', help='output directory path')
+    fileparser.add_argument('-e', action='store_true', help=ehelp)
     return parser
 
 
@@ -78,12 +66,7 @@ def main():
         aisgui.mainloop()
     elif cliargs.subcommand == 'file':
         capturefile.read_from_file(
-            cliargs.inputfile, cliargs.outputdir, cliargs.d,
-            jsonoutput=cliargs.j,
-            geojsonoutput=cliargs.g, csvoutput=cliargs.c,
-            tsvoutput=cliargs.t,
-            kmloutput=cliargs.kml, kmzoutput=cliargs.kmz,
-            verbosejson=cliargs.v)
+            cliargs.inputfile, cliargs.outputdir, everything=cliargs.e)
     elif cliargs.subcommand == 'livemap':
         if cliargs.a:
             kmzoutput = True

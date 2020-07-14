@@ -6,13 +6,14 @@ import logging
 import os
 import tkinter
 
-import pyaisnmea.ais as ais
+import pyaisnmea.export as export
 
 
 AISLOGGER = logging.getLogger(__name__)
 
 EXPORTHELP = {
     'OVERVIEW': 'export CSV, JSON, KMZ and DEBUG files to a directory',
+    'EVERYTHING': 'export OVERVIEW and details for every AIS Station',
     'CSV': ('Comma Separated Values file containing similar data'
             ' to the Ships tab'),
     'TSV':  ('Tab Separated Values file containing similar data'
@@ -50,9 +51,9 @@ class ExportTab(tkinter.ttk.Frame):
         populate the export options drop down menu with file export options
         and add an export button next to it
         """
-        self.exportoptions['values'] = ('OVERVIEW', 'CSV', 'TSV', 'KML',
-                                        'KMZ', 'JSON', 'VERBOSE JSON',
-                                        'GEOJSON', 'DEBUG')
+        self.exportoptions['values'] = (
+            'OVERVIEW', 'EVERYTHING', 'CSV', 'TSV', 'KML', 'KMZ', 'JSON',
+            'VERBOSE JSON', 'GEOJSON', 'DEBUG')
         self.exportoptions.set('KMZ')
         self.exportoptions.grid(column=1, row=1)
         exportbutton = tkinter.Button(self, text='Export',
@@ -69,6 +70,7 @@ class ExportTab(tkinter.ttk.Frame):
                 'WARNING', 'Cannot export files whilst server is running')
         else:
             commands = {'OVERVIEW': self.export_overview,
+                        'EVERYTHING': self.export_everything,
                         'CSV': self.export_csv,
                         'TSV': self.export_tsv,
                         'KML': self.export_kml,
@@ -108,7 +110,7 @@ class ExportTab(tkinter.ttk.Frame):
             filetypes=(("comma seperated values", "*.csv"),
                        ("All Files", "*.*")))
         tabledata = self.tabs.window.aistracker.create_table_data()
-        ais.write_csv_file(tabledata, outputfile)
+        export.write_csv_file(tabledata, outputfile)
 
     def export_tsv(self):
         """
@@ -120,7 +122,7 @@ class ExportTab(tkinter.ttk.Frame):
             filetypes=(("tab seperated values", "*.tsv"),
                        ("All Files", "*.*")))
         tabledata = self.tabs.window.aistracker.create_table_data()
-        ais.write_csv_file(tabledata, outputfile, dialect='excel-tab')
+        export.write_csv_file(tabledata, outputfile, dialect='excel-tab')
 
     def export_kml(self):
         """
@@ -158,7 +160,7 @@ class ExportTab(tkinter.ttk.Frame):
         joutdict['AIS Stats'] = self.tabs.window.aistracker.tracker_stats()
         joutdict['AIS Stations'] = self.tabs.window.aistracker. \
             all_station_info(verbose=verbosejson)
-        ais.write_json_file(joutdict, outputfile)
+        export.write_json_file(joutdict, outputfile)
 
     def export_verbose_json(self):
         """
@@ -177,39 +179,40 @@ class ExportTab(tkinter.ttk.Frame):
                        ("All Files", "*.*")))
         self.tabs.window.aistracker.create_geojson_map(outputfile)
 
-    def export_debug(self, outpath=None):
+    def export_debug(self):
         """
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
         """
-        if not outpath:
-            outpath = tkinter.filedialog.askdirectory()
+        outpath = tkinter.filedialog.askdirectory()
         jsonlines, messagecsvlist = self.tabs.window.messagelog.debug_output()
-        ais.write_json_lines(jsonlines,
-                             os.path.join(outpath,
-                                          'ais-messages.jsonl'))
-        ais.write_csv_file(messagecsvlist,
-                           os.path.join(outpath, 'ais-messages.csv'))
+        export.write_json_lines(
+            jsonlines, os.path.join(outpath, 'ais-messages.jsonl'))
+        export.write_csv_file(
+            messagecsvlist, os.path.join(outpath, 'ais-messages.csv'))
 
-    def export_overview(self):
+    def export_overview(self, outpath=None):
         """
         export the most popular file formats
         KMZ - map
         JSON & CSV - vessel details
         JSONLINES and CSV - message debug
         """
+        if not outpath:
+            outpath = tkinter.filedialog.askdirectory()
+        export.export_overview(
+            self.tabs.window.aistracker,
+            self.tabs.window.nmeatracker,
+            self.tabs.window.messagelog,
+            outpath)
+
+    def export_everything(self):
+        """
+        export overview and files for each individual station
+        """
         outpath = tkinter.filedialog.askdirectory()
-        outputdata = self.tabs.window.aistracker.create_table_data()
-        self.tabs.window.aistracker.create_kml_map(
-            os.path.join(outpath, 'map.kmz'),
-            kmzoutput=True)
-        ais.write_csv_file(outputdata,
-                           os.path.join(outpath, 'vessel-data.csv'))
-        joutdict = {}
-        joutdict['NMEA Stats'] = self.tabs.window.nmeatracker.nmea_stats()
-        joutdict['AIS Stats'] = self.tabs.window.aistracker.tracker_stats()
-        joutdict['AIS Stations'] = self.tabs.window.aistracker. \
-            all_station_info(verbose=False)
-        ais.write_json_file(joutdict,
-                            os.path.join(outpath, 'vessel-data.json'))
-        self.export_debug(outpath)
+        self.export_overview(outpath=outpath)
+        export.export_everything(
+            self.tabs.window.aistracker,
+            self.tabs.window.messagelog,
+            outpath)

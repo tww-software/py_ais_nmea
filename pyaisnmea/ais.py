@@ -1,18 +1,16 @@
 """
 code relating to the identification and tracking of vessels
-also the output of the acquired data into csv json kml etc
 
 contains the main class that represents each AIS station
 """
 
 import collections
-import csv
 import datetime
-import json
 import os
 import re
 
 import pyaisnmea.binary as binary
+import pyaisnmea.export as export
 import pyaisnmea.geojson as geojson
 import pyaisnmea.icons as icons
 import pyaisnmea.kml as kml
@@ -296,7 +294,7 @@ class AISStation():
                 except KeyError:
                     posrepline.append('')
             positionlines.append(posrepline)
-        write_csv_file(positionlines, outputfile, dialect=dialect)
+        export.write_csv_file(positionlines, outputfile, dialect=dialect)
 
     def create_kml_map(self, outputfile, kmzoutput=True):
         """
@@ -763,7 +761,7 @@ class AISTracker():
 
         Note:
             this is a list of lists meant for output to a csv file
-            use the function write_csv_file to do this
+            use the function export.write_csv_file to do this
 
         Args:
             mmsilist(list): list of MMSIs as strings if this is specified
@@ -857,65 +855,3 @@ class NoSuitablePositionReport(Exception):
     raise if we cannot get a position
     """
     pass
-
-
-def write_json_file(jsonstations, outpath):
-    """
-    write jsonstations to a json file
-
-    Args:
-        jsonstations(dict): data to be written to json file
-        outpath(str): full path to write to
-    """
-    with open(outpath, 'w') as jsonfile:
-        json.dump(jsonstations, jsonfile, indent=2)
-
-
-def write_json_lines(datalist, outpath):
-    """
-    take a list of dictionaries and write them out to a JSON lines file
-
-    Note:
-        JSON lines is a text file where each new line is a separate JSON string
-
-    Args:
-        datalist(list): a list of dictionaries to write out
-        outpath(str): the full filepath to write to
-    """
-    with open(outpath, 'w') as jsonlines:
-        for jdict in datalist:
-            jsonlines.write(json.dumps(jdict) + '\n')
-
-
-def write_csv_file(lines, outpath, dialect='excel'):
-    """
-    write out the details to a csv file
-
-    Note:
-        default dialect is 'excel' to create a CSV file
-        we change this to 'excel-tab' for TSV output
-
-    Args:
-        lines(list): list of lines to write out to the csv, each line is a list
-        outpath(str): full path to write the csv file to
-        dialect(str): type of seperated values file we are creating
-    """
-    with open(outpath, 'w') as outfile:
-        csvwriter = csv.writer(outfile, dialect=dialect)
-        csvwriter.writerows(lines)
-
-
-def create_summary_text(summary):
-    """
-    format a dictionary so it can be printed to screen or written to a plain
-    text file
-
-    Args:
-        summary(dict): the data to format
-
-    Returns:
-        textsummary(str): the summary dict formatted as a string
-    """
-    summaryjson = json.dumps(summary, indent=3)
-    textsummary = re.sub('[{},"]', '', summaryjson)
-    return textsummary

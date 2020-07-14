@@ -6,7 +6,7 @@ import logging
 import os
 import tkinter
 
-import pyaisnmea.ais as ais
+import pyaisnmea.export as export
 
 
 AISLOGGER = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ class StationInfoTab(tkinter.ttk.Frame):
         self.stntxt.bind('<Control-a>', self.select_all)
         self.stntxt.bind('<Control-A>', self.select_all)
 
-    def copy(self, event):
+    def copy(self, event=None):
         """
         put highlighted text onto the clipboard when ctrl+c is used
 
@@ -68,7 +68,7 @@ class StationInfoTab(tkinter.ttk.Frame):
         except tkinter.TclError:
             pass
 
-    def select_all(self, event):
+    def select_all(self, event=None):
         """
         select all the text in the textbox when ctrl+a is used
 
@@ -99,7 +99,7 @@ class StationInfoTab(tkinter.ttk.Frame):
         if dropdowntext != '':
             try:
                 lookupmmsi = self.stnlookup[dropdowntext]
-                stninfo = ais.create_summary_text(
+                stninfo = export.create_summary_text(
                     self.tabs.window.aistracker.stations[lookupmmsi]
                     .get_station_info())
                 self.stntxt.insert(tkinter.INSERT, stninfo)
@@ -148,7 +148,7 @@ class StationInfoTab(tkinter.ttk.Frame):
                 lookupmmsi = self.stnlookup[dropdowntext]
                 stninfo = self.tabs.window.aistracker.stations[lookupmmsi]. \
                     get_station_info(verbose=True)
-                ais.write_json_file(stninfo, outputfile)
+                export.write_json_file(stninfo, outputfile)
                 tkinter.messagebox.showinfo(
                     'Export Files', 'Export Successful')
             except Exception as err:
@@ -196,12 +196,12 @@ class StationInfoTab(tkinter.ttk.Frame):
                 jsonlines, messagecsvlist = \
                     self.tabs.window.messagelog.debug_output(
                         mmsi=lookupmmsi)
-                ais.write_json_lines(
+                export.write_json_lines(
                     jsonlines,
                     os.path.join(
                         outpath,
                         dropdowntext + '-ais-messages.jsonl'))
-                ais.write_csv_file(
+                export.write_csv_file(
                     messagecsvlist,
                     os.path.join(
                         outpath,

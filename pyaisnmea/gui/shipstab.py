@@ -27,7 +27,7 @@ class ShipsTableTab(tkinter.ttk.Frame):
         self.tree.configure(yscrollcommand=verticalscrollbar.set,
                             xscrollcommand=horizontalscrollbar.set)
 
-    def on_tree_item_doubleclick(self, event):
+    def on_tree_item_doubleclick(self, event=None):
         """
         if the user double clicks on a row in the tree
         grab the MMSI of that row and switch to the station information tab

@@ -1,7 +1,7 @@
 """
 module to deal with getting data from a capture file
 
-capture files should be plain text files with each NMEA 0183 sentence
+nmea capture text files should be plain text files with each NMEA 0183 sentence
 on it's own line
 """
 
@@ -12,6 +12,7 @@ import sys
 
 import pyaisnmea.allmessages as allmessages
 import pyaisnmea.ais as ais
+import pyaisnmea.export as export
 import pyaisnmea.binary as binary
 import pyaisnmea.kml as kml
 import pyaisnmea.nmea as nmea
@@ -167,10 +168,7 @@ def aistracker_from_file(filepath, debug=False):
     return (aistracker, nmeatracker, messagelog)
 
 
-def read_from_file(filepath, outpath, debug=False,
-                   jsonoutput=True, geojsonoutput=True, csvoutput=True,
-                   tsvoutput=False,
-                   kmloutput=False, kmzoutput=True, verbosejson=False):
+def read_from_file(filepath, outpath, everything=False):
     """
     read AIS NMEA sentences from a text file and save to various output formats
 
@@ -181,14 +179,6 @@ def read_from_file(filepath, outpath, debug=False,
     Args:
         filepath(str): full path to the input file containing NMEA sentences
         outpath(str): path to save to excluding file extensions
-        debug(bool): create a json lines file and a csv file containing
-                     all the individual messages
-                     decoded with the original payloads
-        jsonoutput(bool): save output to json file
-        geojsonoutput(bool): save output to geojson file
-        csvoutput(bool): save output to csv file
-        kmloutput(bool): save output to kml file
-        kmzoutput(bool): save output to kmz file
     """
     if not os.path.exists(outpath):
         AISLOGGER.info('output path does not exist creating directories')
@@ -197,49 +187,11 @@ def read_from_file(filepath, outpath, debug=False,
     AISLOGGER.info('reading nmea sentences from - %s', filepath)
     try:
         aistracker, nmeatracker, messagelog = aistracker_from_file(
-            filepath, debug=debug)
+            filepath, debug=True)
     except (FileNotFoundError, NoSuitableMessagesFound) as err:
         AISLOGGER.info(str(err))
         sys.exit(1)
-    stnstats = aistracker.tracker_stats()
-    sentencestats = nmeatracker.nmea_stats()
-    AISLOGGER.debug('saving summary to summary.txt')
-    summary = ais.create_summary_text({'AIS Stats': stnstats,
-                                       'NMEA Stats': sentencestats,
-                                       'Capture File': filepath})
-    with open(os.path.join(outpath, 'summary.txt'), 'w') as textsummary:
-        textsummary.write(summary)
-    print(summary)
-    if jsonoutput:
-        joutdict = {}
-        joutdict['NMEA Stats'] = sentencestats
-        joutdict['AIS Stats'] = stnstats
-        joutdict['AIS Stations'] = aistracker.all_station_info(
-            verbose=verbosejson)
-        ais.write_json_file(joutdict,
-                            os.path.join(outpath, 'vessel-data.json'))
-    if geojsonoutput:
-        aistracker.create_geojson_map(os.path.join(outpath, 'map.geojson'))
-    if csvoutput or tsvoutput:
-        outputdata = aistracker.create_table_data()
-        if csvoutput:
-            ais.write_csv_file(outputdata,
-                               os.path.join(outpath, 'vessel-data.csv'))
-        if tsvoutput:
-            ais.write_csv_file(outputdata,
-                               os.path.join(outpath, 'vessel-data.tsv'),
-                               dialect='excel-tab')
-    if kmloutput:
-        aistracker.create_kml_map(os.path.join(outpath, 'map.kml'),
-                                  kmzoutput=False)
-    if kmzoutput:
-        aistracker.create_kml_map(os.path.join(outpath, 'map.kmz'),
-                                  kmzoutput=True)
-    if debug:
-        jsonlineslist, messagecsvlist = messagelog.debug_output()
-        ais.write_json_lines(jsonlineslist,
-                             os.path.join(outpath,
-                                          'ais-messages.jsonl'))
-        ais.write_csv_file(messagecsvlist,
-                           os.path.join(outpath, 'ais-messages.csv'))
+    export.export_overview(aistracker, nmeatracker, messagelog, outpath)
+    if everything:
+        export.export_everything(aistracker, messagelog, outpath)
     AISLOGGER.info('Finished')

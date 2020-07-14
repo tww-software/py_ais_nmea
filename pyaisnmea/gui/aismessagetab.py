@@ -1,10 +1,10 @@
 """
-tab to display a table of all the AIS messages we have recieved
+tab to display a table of all the AIS messages we have received
 """
 
 import tkinter
 
-import pyaisnmea.ais as ais
+import pyaisnmea.export as export
 
 
 class TextBoxTab(tkinter.ttk.Frame):
@@ -129,7 +129,7 @@ class AISMessageTab(tkinter.ttk.Frame):
         clickedmsgno = self.tree.item(item)['values'][0]
         clickednmea = self.tree.item(item)['values'][1]
         messagewindow = MessageWindow(self.tabs.window)
-        msgsummary = ais.create_summary_text(
+        msgsummary = export.create_summary_text(
             self.tabs.window.messagelog.messagedict[
                 (clickedmsgno, clickednmea)].__dict__)
         messagewindow.msgdetailsbox.append_text(msgsummary)
