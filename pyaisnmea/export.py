@@ -129,10 +129,15 @@ def export_everything(aistracker, aismsglog, outputdir):
     """
     AISLOGGER.info('outputting data for all AIS stations')
     mmsicatagories = aistracker.sort_mmsi_by_catagory()
+    aisstndir = os.path.join(outputdir, 'AIS Stations')
+    try:
+        os.mkdir(aisstndir)
+    except FileExistsError:
+        pass
     for catagory in mmsicatagories['Types']:
         AISLOGGER.info('processing %s', catagory)
         try:
-            os.mkdir(os.path.join(outputdir, catagory))
+            os.mkdir(os.path.join(aisstndir, catagory))
         except FileExistsError:
             pass
         for mmsi in mmsicatagories['Types'][catagory]:
@@ -143,7 +148,7 @@ def export_everything(aistracker, aismsglog, outputdir):
             else:
                 foldername = mmsi
             AISLOGGER.info('    processing %s', foldername)
-            mmsipath = os.path.join(outputdir, catagory, foldername)
+            mmsipath = os.path.join(aisstndir, catagory, foldername)
             try:
                 os.mkdir(mmsipath)
             except FileExistsError:
