@@ -77,6 +77,10 @@ class AISMessageLog():
     Attributes:
         messagelog(dict): keys are tuples of message number and nmea payload
                           values are the corresponding AISMessage objects
+        messagesbymmsi(collections.defaultdict): store list of messages for
+                                                 each mmsi
+        messagesbytype(collections.defaultdict): store list of messages for
+                                                 each message type
     """
 
     csvheaders = ['NMEA Payload', 'MMSI', 'Message Type Number',

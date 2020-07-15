@@ -121,11 +121,15 @@ class StationInfoTab(tkinter.ttk.Frame):
                     defaultextension=".kmz",
                     filetypes=(("keyhole markup language KMZ", "*.kmz"),
                                ("All Files", "*.*")))
-                lookupmmsi = self.stnlookup[dropdowntext]
-                self.tabs.window.aistracker.stations[lookupmmsi]. \
-                    create_kml_map(outputfile, kmzoutput=True)
-                tkinter.messagebox.showinfo(
-                    'Export Files', 'Export Successful')
+                if outputfile:
+                    lookupmmsi = self.stnlookup[dropdowntext]
+                    self.tabs.window.aistracker.stations[lookupmmsi]. \
+                        create_kml_map(outputfile, kmzoutput=True)
+                    tkinter.messagebox.showinfo(
+                        'Export Files', 'Export Successful')
+                else:
+                    tkinter.messagebox.showerror(
+                        'Export Files', 'User cancelled export.')
             except Exception as err:
                 AISLOGGER.exception('export error')
                 tkinter.messagebox.showerror(type(err).__name__, str(err))
@@ -145,12 +149,16 @@ class StationInfoTab(tkinter.ttk.Frame):
                     defaultextension=".json",
                     filetypes=(("javascript object notation", "*.json"),
                                ("All Files", "*.*")))
-                lookupmmsi = self.stnlookup[dropdowntext]
-                stninfo = self.tabs.window.aistracker.stations[lookupmmsi]. \
-                    get_station_info(verbose=True)
-                export.write_json_file(stninfo, outputfile)
-                tkinter.messagebox.showinfo(
-                    'Export Files', 'Export Successful')
+                if outputfile:
+                    lookupmmsi = self.stnlookup[dropdowntext]
+                    stninfo = self.tabs.window.aistracker. \
+                        stations[lookupmmsi].get_station_info(verbose=True)
+                    export.write_json_file(stninfo, outputfile)
+                    tkinter.messagebox.showinfo(
+                        'Export Files', 'Export Successful')
+                else:
+                    tkinter.messagebox.showerror(
+                        'Export Files', 'User cancelled export.')
             except Exception as err:
                 AISLOGGER.exception('export error')
                 tkinter.messagebox.showerror(type(err).__name__, str(err))
@@ -170,11 +178,15 @@ class StationInfoTab(tkinter.ttk.Frame):
                     defaultextension=".csv",
                     filetypes=(("comma seperated values", "*.csv"),
                                ("All Files", "*.*")))
-                lookupmmsi = self.stnlookup[dropdowntext]
-                stninfo = self.tabs.window.aistracker.stations[lookupmmsi]
-                stninfo.create_positions_csv(outputfile)
-                tkinter.messagebox.showinfo(
-                    'Export Files', 'Export Successful')
+                if outputfile:
+                    lookupmmsi = self.stnlookup[dropdowntext]
+                    stninfo = self.tabs.window.aistracker.stations[lookupmmsi]
+                    stninfo.create_positions_csv(outputfile)
+                    tkinter.messagebox.showinfo(
+                        'Export Files', 'Export Successful')
+                else:
+                    tkinter.messagebox.showerror(
+                        'Export Files', 'User cancelled export.')
             except Exception as err:
                 AISLOGGER.exception('export error')
                 tkinter.messagebox.showerror(type(err).__name__, str(err))
@@ -192,22 +204,26 @@ class StationInfoTab(tkinter.ttk.Frame):
         if dropdowntext != '':
             try:
                 outpath = tkinter.filedialog.askdirectory()
-                lookupmmsi = self.stnlookup[dropdowntext]
-                jsonlines, messagecsvlist = \
-                    self.tabs.window.messagelog.debug_output(
-                        mmsi=lookupmmsi)
-                export.write_json_lines(
-                    jsonlines,
-                    os.path.join(
-                        outpath,
-                        dropdowntext + '-ais-messages.jsonl'))
-                export.write_csv_file(
-                    messagecsvlist,
-                    os.path.join(
-                        outpath,
-                        dropdowntext + '-ais-messages.csv'))
-                tkinter.messagebox.showinfo(
-                    'Export Files', 'Export Successful')
+                if outpath:
+                    lookupmmsi = self.stnlookup[dropdowntext]
+                    jsonlines, messagecsvlist = \
+                        self.tabs.window.messagelog.debug_output(
+                            mmsi=lookupmmsi)
+                    export.write_json_lines(
+                        jsonlines,
+                        os.path.join(
+                            outpath,
+                            dropdowntext + '-ais-messages.jsonl'))
+                    export.write_csv_file(
+                        messagecsvlist,
+                        os.path.join(
+                            outpath,
+                            dropdowntext + '-ais-messages.csv'))
+                    tkinter.messagebox.showinfo(
+                        'Export Files', 'Export Successful')
+                else:
+                    tkinter.messagebox.showerror(
+                        'Export Files', 'User cancelled export.')
             except Exception as err:
                 AISLOGGER.exception('export error')
                 tkinter.messagebox.showerror(type(err).__name__, str(err))

@@ -23,6 +23,16 @@ class LiveKMLMap():
     Args:
         outputpath(str): path to directory to write files to
         kmzoutput(bool): if true then full colour icons are used
+
+    Attributes:
+        kmlnetlink(str): the KML for a netlink file
+        kmzoutput(bool): output KMZ file?
+        mpq(multiprocessing.Queue): queue to get sentences from
+        serverprocess(None): placeholder for a multiprocessing.Process object
+        netlinkpath(str): path to write the KML netlink file
+        kmlpath(str): path to write the actual KML map data to
+        logpath(str): path to write the received NMEA sentences to
+        aistracker(ais.AISTracker): AIS tracker object to handle the stations
     """
 
     kmlnetlink = """<?xml version="1.0" encoding="UTF-8"?>

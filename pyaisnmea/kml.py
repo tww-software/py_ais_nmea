@@ -18,6 +18,16 @@ DATETIMEREGEX = re.compile(
 class KMLOutputParser():
     """
     Class to parse KML into an output file.
+
+    Attributes:
+        kmldoc(list): list of strings to make up the doc.kml
+        kmlfilepath(str): path to output KML file
+        kmlheader(str): first part of a KML file
+        placemarktemplate(str): template for a KML placemark (pin on map)
+        lineplacemarktemplate(str): template for KML linestring (line on map)
+        styletemplate(str): template for custom icons on placemarks
+        greenarrowtemplate(str): template for green (heading) arrows
+        orangearrowtemplate(str): template for orange (CoG) arrows
     """
     def __init__(self, kmlfilepath):
         self.kmldoc = []
@@ -100,6 +110,10 @@ class KMLOutputParser():
 
         Args:
             placemarkdict(dict): dictionary of information for a placemark
+
+        Returns:
+            description(str): the dictionary items formatted as HTML string
+                              suitable to be in a KML placemark description
         """
         starttag = "<![CDATA["
         newlinetag = "<br  />\n"
@@ -129,6 +143,9 @@ class KMLOutputParser():
         """
         Write the first part of the KML output file.
         This only needs to be called once at the start of the kml file.
+
+        Args:
+            kmz(bool): is this for a KMZ file or not?
         """
         self.kmldoc.append(self.kmlheader)
         if kmz:
@@ -237,6 +254,9 @@ class InvalidDateTimeString(Exception):
 def make_kmz(kmzoutputfilename):
     """
     make a kmz file out of the doc.kml and symbols directory
+
+    Args:
+        kmzoutputfilename(str): full path to the .kmz file to output
     """
     docpath = os.path.join(os.path.dirname(kmzoutputfilename), 'doc.kml')
     iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),

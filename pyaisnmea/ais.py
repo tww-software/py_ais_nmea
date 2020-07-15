@@ -241,6 +241,10 @@ class AISStation():
         return the most relevant information about this AIS station as a
         dictionary
 
+        Args:
+            verbose(bool): output positions and binary messages
+            messagetally(bool): output a tally of the messages types
+
         Returns:
             stninfo(dict):
         """

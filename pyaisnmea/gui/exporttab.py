@@ -28,6 +28,13 @@ EXPORTHELP = {
               'output of all AIS decoded messages')}
 
 
+class ExportAborted(Exception):
+    """
+    raise if we cancel an export operation
+    """
+    pass
+
+
 class ExportTab(tkinter.ttk.Frame):
     """
     the tab in the main window that contains the export file options
@@ -68,6 +75,9 @@ class ExportTab(tkinter.ttk.Frame):
         if self.tabs.window.serverrunning:
             tkinter.messagebox.showwarning(
                 'WARNING', 'Cannot export files whilst server is running')
+        elif self.tabs.window.aistracker.messagesprocessed == 0:
+            tkinter.messagebox.showwarning(
+                'WARNING', 'Nothing to export.')
         else:
             commands = {'OVERVIEW': self.export_overview,
                         'EVERYTHING': self.export_everything,
@@ -104,63 +114,95 @@ class ExportTab(tkinter.ttk.Frame):
         """
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
+
+        Raises:
+            ExportAborted: if the user clicks cancel
         """
         outputfile = tkinter.filedialog.asksaveasfilename(
             defaultextension=".csv",
             filetypes=(("comma seperated values", "*.csv"),
                        ("All Files", "*.*")))
-        tabledata = self.tabs.window.aistracker.create_table_data()
-        export.write_csv_file(tabledata, outputfile)
+        if outputfile:
+            tabledata = self.tabs.window.aistracker.create_table_data()
+            export.write_csv_file(tabledata, outputfile)
+        else:
+            raise ExportAborted('Export cancelled by user.')
 
     def export_tsv(self):
         """
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
+
+        Raises:
+            ExportAborted: if the user clicks cancel
         """
         outputfile = tkinter.filedialog.asksaveasfilename(
             defaultextension=".tsv",
             filetypes=(("tab seperated values", "*.tsv"),
                        ("All Files", "*.*")))
-        tabledata = self.tabs.window.aistracker.create_table_data()
-        export.write_csv_file(tabledata, outputfile, dialect='excel-tab')
+        if outputfile:
+            tabledata = self.tabs.window.aistracker.create_table_data()
+            export.write_csv_file(tabledata, outputfile, dialect='excel-tab')
+        else:
+            raise ExportAborted('Export cancelled by user.')
 
     def export_kml(self):
         """
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
+
+        Raises:
+            ExportAborted: if the user clicks cancel
         """
         outputfile = tkinter.filedialog.asksaveasfilename(
             defaultextension=".kml",
             filetypes=(("keyhole markup language", "*.kml"),
                        ("All Files", "*.*")))
-        self.tabs.window.aistracker.create_kml_map(outputfile, kmzoutput=False)
+        if outputfile:
+            self.tabs.window.aistracker.create_kml_map(
+                outputfile, kmzoutput=False)
+        else:
+            raise ExportAborted('Export cancelled by user.')
 
     def export_kmz(self):
         """
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
+
+        Raises:
+            ExportAborted: if the user clicks cancel
         """
         outputfile = tkinter.filedialog.asksaveasfilename(
             defaultextension=".kmz",
             filetypes=(("keyhole markup language KMZ", "*.kmz"),
                        ("All Files", "*.*")))
-        self.tabs.window.aistracker.create_kml_map(outputfile, kmzoutput=True)
+        if outputfile:
+            self.tabs.window.aistracker.create_kml_map(
+                outputfile, kmzoutput=True)
+        else:
+            raise ExportAborted('Export cancelled by user.')
 
     def export_json(self, verbosejson=False):
         """
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
+
+        Raises:
+            ExportAborted: if the user clicks cancel
         """
         outputfile = tkinter.filedialog.asksaveasfilename(
             defaultextension=".json",
             filetypes=(("javascript object notation", "*.json"),
                        ("All Files", "*.*")))
-        joutdict = {}
-        joutdict['NMEA Stats'] = self.tabs.window.nmeatracker.nmea_stats()
-        joutdict['AIS Stats'] = self.tabs.window.aistracker.tracker_stats()
-        joutdict['AIS Stations'] = self.tabs.window.aistracker. \
-            all_station_info(verbose=verbosejson)
-        export.write_json_file(joutdict, outputfile)
+        if outputfile:
+            joutdict = {}
+            joutdict['NMEA Stats'] = self.tabs.window.nmeatracker.nmea_stats()
+            joutdict['AIS Stats'] = self.tabs.window.aistracker.tracker_stats()
+            joutdict['AIS Stations'] = self.tabs.window.aistracker. \
+                all_station_info(verbose=verbosejson)
+            export.write_json_file(joutdict, outputfile)
+        else:
+            raise ExportAborted('Export cancelled by user.')
 
     def export_verbose_json(self):
         """
@@ -172,24 +214,37 @@ class ExportTab(tkinter.ttk.Frame):
         """
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
+
+        Raises:
+            ExportAborted: if the user clicks cancel
         """
         outputfile = tkinter.filedialog.asksaveasfilename(
             defaultextension=".geojson",
             filetypes=(("geo json", "*.geojson"),
                        ("All Files", "*.*")))
-        self.tabs.window.aistracker.create_geojson_map(outputfile)
+        if outputfile:
+            self.tabs.window.aistracker.create_geojson_map(outputfile)
+        else:
+            raise ExportAborted('Export cancelled by user.')
 
     def export_debug(self):
         """
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
+
+        Raises:
+            ExportAborted: if the user clicks cancel
         """
         outpath = tkinter.filedialog.askdirectory()
-        jsonlines, messagecsvlist = self.tabs.window.messagelog.debug_output()
-        export.write_json_lines(
-            jsonlines, os.path.join(outpath, 'ais-messages.jsonl'))
-        export.write_csv_file(
-            messagecsvlist, os.path.join(outpath, 'ais-messages.csv'))
+        if outpath:
+            jsonlines, messagecsvlist = \
+                self.tabs.window.messagelog.debug_output()
+            export.write_json_lines(
+                jsonlines, os.path.join(outpath, 'ais-messages.jsonl'))
+            export.write_csv_file(
+                messagecsvlist, os.path.join(outpath, 'ais-messages.csv'))
+        else:
+            raise ExportAborted('Export cancelled by user.')
 
     def export_overview(self, outpath=None):
         """
@@ -200,22 +255,49 @@ class ExportTab(tkinter.ttk.Frame):
 
         Args:
             outpath(str): path to export to if called from another function
+
+        Raises:
+            ExportAborted: if the user clicks cancel
         """
         if not outpath:
             outpath = tkinter.filedialog.askdirectory()
-        export.export_overview(
-            self.tabs.window.aistracker,
-            self.tabs.window.nmeatracker,
-            self.tabs.window.messagelog,
-            outpath)
+            if outpath:
+                export.export_overview(
+                    self.tabs.window.aistracker,
+                    self.tabs.window.nmeatracker,
+                    self.tabs.window.messagelog,
+                    outpath)
+            else:
+                raise ExportAborted('Export cancelled by user.')
 
     def export_everything(self):
         """
         export overview and files for each individual station
+
+        Raises:
+            ExportAborted: if the user clicks cancel
         """
-        outpath = tkinter.filedialog.askdirectory()
-        self.export_overview(outpath=outpath)
-        export.export_everything(
-            self.tabs.window.aistracker,
-            self.tabs.window.messagelog,
-            outpath)
+        previoustext = self.tabs.window.statuslabel['text']
+        res = tkinter.messagebox.askyesno(
+            'Export Everything',
+            'Exporting data on all AIS stations, this may take some time.')
+        if res:
+            outpath = tkinter.filedialog.askdirectory()
+            if outpath:
+                self.tabs.window.statuslabel.config(
+                    text='Exporting all AIS station data to - {}'.format(
+                        outpath),
+                    fg='black', bg='gold')
+                self.update_idletasks()
+                self.export_overview(outpath=outpath)
+                export.export_everything(
+                    self.tabs.window.aistracker,
+                    self.tabs.window.messagelog,
+                    outpath)
+                self.tabs.window.statuslabel.config(
+                    text=previoustext, bg='light grey')
+            else:
+                raise ExportAborted(
+                    'Export of all AIS data cancelled by user.')
+        else:
+            raise ExportAborted('Export of all AIS data cancelled by user.')

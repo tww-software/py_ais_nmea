@@ -117,6 +117,11 @@ class NMEAtracker():
     Attributes:
         multiparts(dict): dictionary to track ais messages spread over multiple
                           sentences
+        sentencecount(int): the number of sentences that have been processed
+        reassembled(int): the number of multipart messages that have been
+                          assembled
+        channelcounter(collections.Counter): count sentences recieved on each
+                                             channel
     """
 
     def __init__(self):
