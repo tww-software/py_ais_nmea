@@ -15,7 +15,7 @@ python3 setup.py install
 To run the unit tests.
 
 ```
-python -m unittest pyaisnmea.test_ais
+python3 -m unittest pyaisnmea.test_ais
 ```
 
 ## GUI
@@ -81,6 +81,7 @@ This tab allows you to export all the data the AIS decoder currently has.
 The export options are:
 
 * OVERVIEW     - export CSV, JSON, KMZ and DEBUG files to a directory
+* EVERYTHING   - export overview and data for each AIS station in its own directory
 * CSV          - Comma Separated Values file containing similar data to the Ships tab
 * TSV          - Tab Separated Values file containing similar data to the Ships tab
 * KML          - plain KML file with no custom icons (default icons will be used)
@@ -101,8 +102,9 @@ about that message.
 ### Station Info Tab
 Display detailed information about an AIS Station and its last known location.
 
-KMZ maps of the vessels location and JSON data of all known positions can be
-exported from here using the buttons at the bottom of the tab.
+KMZ maps of the vessels location and CSV/JSON data of all known positions can be
+exported from here using the buttons at the bottom of the tab. All AIS messages for this
+particular station can also be exported (format is CSV and JSONL, same as the DEBUG export).
 
 ## Command Line
 
@@ -119,6 +121,10 @@ python3 -m pyaisnmea <subcommand> -h
 ```
 
 subcommands are gui, file or livemap
+
+* gui - open the GUI
+* file - process a NMEA text file
+* livemap - listen for NMEA sentences from the network and plot a live KML map
 
 ## Licence
 
@@ -143,3 +149,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Useful Resources
+
+These are some useful resources that i found helpful whilst creating this software.
+
+[Maritech Solutions AIS VDM & VDO Message Decoder ](https://www.maritec.co.za/tools/aisvdmvdodecoding/)
+[AIVDM/AIVDO protocol decoding](https://gpsd.gitlab.io/gpsd/AIVDM.html)
