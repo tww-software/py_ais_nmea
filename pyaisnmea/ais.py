@@ -309,6 +309,8 @@ class AISStation():
             kmzoutput(bool): whether to create a kmz with custom icons (True)
                              or a basic kml file (False)
         """
+        greenarrows = set()
+        orangearrows = set()
         if kmzoutput:
             docpath = os.path.join(os.path.dirname(outputfile), 'doc.kml')
         else:
@@ -344,6 +346,7 @@ class AISStation():
             try:
                 heading = pos['True Heading']
                 if heading != HEADINGUNAVAILABLE and kmzoutput:
+                    greenarrows.add(heading)
                     hdesc = 'TRUE HEADING - {}'.format(heading)
                     kmlmap.add_kml_placemark('TH', hdesc,
                                              str(pos['Longitude']),
@@ -355,6 +358,7 @@ class AISStation():
             try:
                 cog = int(pos['CoG'])
                 if cog != COGUNAVAILABLE and kmzoutput:
+                    orangearrows.add(cog)
                     hdesc = 'COURSE OVER GROUND - {}'.format(cog)
                     kmlmap.add_kml_placemark('CoG', hdesc,
                                              str(pos['Longitude']),
@@ -378,7 +382,8 @@ class AISStation():
         kmlmap.close_kml_file()
         kmlmap.write_kml_doc_file()
         if kmzoutput:
-            kml.make_kmz(outputfile)
+            stntypes = [icons.ICONS[self.stntype]]
+            kml.make_kmz(outputfile, stntypes, greenarrows, orangearrows)
 
     def __str__(self):
         strtext = ('AIS Station - MMSI: {}, Name: {}, Class: {},'

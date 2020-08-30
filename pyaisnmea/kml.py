@@ -251,12 +251,14 @@ class InvalidDateTimeString(Exception):
     pass
 
 
-def make_kmz(kmzoutputfilename):
+def make_kmz(kmzoutputfilename, iconslist=set(icons.ICONS.values()),
+             greenarrows=range(0, 360), orangearrows=range(0, 360)):
     """
     make a kmz file out of the doc.kml and symbols directory
 
     Args:
         kmzoutputfilename(str): full path to the .kmz file to output
+        iconslist(list): list of icons required
     """
     docpath = os.path.join(os.path.dirname(kmzoutputfilename), 'doc.kml')
     iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -270,15 +272,15 @@ def make_kmz(kmzoutputfilename):
         try:
             kmz.debug = 3
             kmz.write(docpath, 'doc.kml')
-            for icon in os.listdir(iconspath):
+            for icon in iconslist:
                 kmz.write(os.path.join(iconspath, icon),
                           os.path.join('icons', icon))
-            for arrow in os.listdir(greenarrowspath):
-                kmz.write(os.path.join(greenarrowspath, arrow),
-                          os.path.join('green_arrows', arrow))
-            for arrow in os.listdir(orangearrowspath):
-                kmz.write(os.path.join(orangearrowspath, arrow),
-                          os.path.join('orange_arrows', arrow))
+            for arrow in greenarrows:
+                kmz.write(os.path.join(greenarrowspath, str(arrow) + '.png'),
+                          os.path.join('green_arrows', str(arrow) + '.png'))
+            for arrow in orangearrows:
+                kmz.write(os.path.join(orangearrowspath, str(arrow) + '.png'),
+                          os.path.join('orange_arrows', str(arrow) + '.png'))
             os.remove(docpath)
         except Exception as err:
             print('zip error')
