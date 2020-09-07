@@ -289,7 +289,11 @@ class ExportTab(tkinter.ttk.Frame):
                         outpath),
                     fg='black', bg='gold')
                 self.update_idletasks()
-                self.export_overview(outpath=outpath)
+                export.export_overview(
+                    self.tabs.window.aistracker,
+                    self.tabs.window.nmeatracker,
+                    self.tabs.window.messagelog,
+                    outpath)
                 export.export_everything(
                     self.tabs.window.aistracker,
                     self.tabs.window.messagelog,
