@@ -45,6 +45,11 @@ def cli_arg_parser():
              'output individual KMZ, CSV and JSON Lines for each AIS Station')
     fileparser.add_argument(dest='outputdir', help='output directory path')
     fileparser.add_argument('-e', action='store_true', help=ehelp)
+    filetype = fileparser.add_mutually_exclusive_group()
+    filetype.add_argument('-t', action='store_true', help='import text file')
+    filetype.add_argument('-c', action='store_true', help='import CSV file')
+    filetype.add_argument(
+        '-j', action='store_true', help='import JSON lines file')
     return parser
 
 
@@ -65,8 +70,18 @@ def main():
         aisgui = basicgui.BasicGUI()
         aisgui.mainloop()
     elif cliargs.subcommand == 'file':
-        capturefile.read_from_file(
-            cliargs.inputfile, cliargs.outputdir, everything=cliargs.e)
+        if cliargs.t:
+            capturefile.read_from_file(
+                cliargs.inputfile, cliargs.outputdir, everything=cliargs.e, filetype='text')
+        elif cliargs.c:
+            capturefile.read_from_file(
+                cliargs.inputfile, cliargs.outputdir, everything=cliargs.e, filetype='csv')
+        elif cliargs.j:
+            capturefile.read_from_file(
+                cliargs.inputfile, cliargs.outputdir, everything=cliargs.e, filetype='jsonlines')
+        else:
+            capturefile.read_from_file(
+                cliargs.inputfile, cliargs.outputdir, everything=cliargs.e)
     elif cliargs.subcommand == 'livemap':
         if cliargs.a:
             kmzoutput = True

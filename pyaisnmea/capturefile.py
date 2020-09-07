@@ -168,7 +168,7 @@ def aistracker_from_file(filepath, debug=False):
     return (aistracker, nmeatracker, messagelog)
 
 
-def read_from_file(filepath, outpath, everything=False):
+def read_from_file(filepath, outpath, everything=False, filetype='text'):
     """
     read AIS NMEA sentences from a text file and save to various output formats
 
@@ -181,6 +181,8 @@ def read_from_file(filepath, outpath, everything=False):
         filepath(str): full path to the input file containing NMEA sentences
         outpath(str): path to save to excluding file extensions
         everything(bool): whether to output files for every individual station
+        filetype(str): what type of file are we reading from
+                       options are text, csv or jsonlines
     """
     if not os.path.exists(outpath):
         AISLOGGER.info('output path does not exist creating directories')
@@ -188,8 +190,22 @@ def read_from_file(filepath, outpath, everything=False):
     AISLOGGER.info('processed output will be saved in %s', outpath)
     AISLOGGER.info('reading nmea sentences from - %s', filepath)
     try:
-        aistracker, nmeatracker, messagelog = aistracker_from_file(
-            filepath, debug=True)
+        if filetype == 'text':
+            AISLOGGER.info('importing as text file')
+            aistracker, nmeatracker, messagelog = aistracker_from_file(
+                filepath, debug=True)
+        elif filetype == 'csv':
+            AISLOGGER.info('importing as CSV file')
+            aistracker, messagelog = aistracker_from_csv(
+                filepath, debug=True)
+        elif filetype == 'jsonlines':
+            AISLOGGER.info('importing as JSON lines file')
+            aistracker, messagelog = aistracker_from_json(
+                filepath, debug=True)
+        if filetype == 'csv' or filetype == 'jsonlines':
+            nmeatracker = nmea.NMEAtracker()
+            nmeatracker.sentencecount = 'N/A'
+            nmeatracker.reassembled = 'N/A'
     except (FileNotFoundError, NoSuitableMessagesFound) as err:
         AISLOGGER.info(str(err))
         sys.exit(1)
