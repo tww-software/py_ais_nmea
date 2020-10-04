@@ -316,7 +316,7 @@ class AISStation():
         else:
             docpath = os.path.join(outputfile)
         kmlmap = kml.KMLOutputParser(docpath)
-        kmlmap.create_kml_header(kmz=kmzoutput)
+        kmlmap.create_kml_header(kmz=kmzoutput, iconsused=self.stntype)
         stninfo = self.get_station_info(messagetally=False)
         if self.name != '':
             displayname = self.mmsi + ' - ' + self.name

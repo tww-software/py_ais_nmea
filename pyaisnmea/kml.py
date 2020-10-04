@@ -139,19 +139,30 @@ class KMLOutputParser():
         description = ''.join(descriptionlist)
         return description
 
-    def create_kml_header(self, kmz=True):
+    def create_kml_header(self, kmz=True, iconsused='all'):
         """
         Write the first part of the KML output file.
         This only needs to be called once at the start of the kml file.
 
         Args:
             kmz(bool): is this for a KMZ file or not?
+            iconsused(str): do we use 'all' the icons (default)
+                            or specify a single icon?
         """
         self.kmldoc.append(self.kmlheader)
         if kmz:
-            for icontype in icons.ICONS:
-                iconkml = self.styletemplate % (icontype,
-                                                icons.ICONS[icontype])
+            if iconsused == 'all':
+                for icontype in icons.ICONS:
+                    iconkml = self.styletemplate % (icontype,
+                                                    icons.ICONS[icontype])
+                    self.kmldoc.append(iconkml)
+            else:
+                try:
+                    iconkml = self.styletemplate % (
+                        iconsused, icons.ICONS[iconsused])
+                except KeyError:
+                    iconkml = self.styletemplate % (
+                        iconsused, icons.ICONS['Unknown'])
                 self.kmldoc.append(iconkml)
             for heading in range(0, 360):
                 thiconkml = self.greenarrowtemplate % (
