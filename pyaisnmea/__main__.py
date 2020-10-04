@@ -72,13 +72,16 @@ def main():
     elif cliargs.subcommand == 'file':
         if cliargs.t:
             capturefile.read_from_file(
-                cliargs.inputfile, cliargs.outputdir, everything=cliargs.e, filetype='text')
+                cliargs.inputfile, cliargs.outputdir,
+                everything=cliargs.e, filetype='text')
         elif cliargs.c:
             capturefile.read_from_file(
-                cliargs.inputfile, cliargs.outputdir, everything=cliargs.e, filetype='csv')
+                cliargs.inputfile, cliargs.outputdir,
+                everything=cliargs.e, filetype='csv')
         elif cliargs.j:
             capturefile.read_from_file(
-                cliargs.inputfile, cliargs.outputdir, everything=cliargs.e, filetype='jsonlines')
+                cliargs.inputfile, cliargs.outputdir,
+                everything=cliargs.e, filetype='jsonlines')
         else:
             capturefile.read_from_file(
                 cliargs.inputfile, cliargs.outputdir, everything=cliargs.e)
