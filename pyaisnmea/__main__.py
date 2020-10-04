@@ -70,15 +70,17 @@ def main():
         aisgui = basicgui.BasicGUI()
         aisgui.mainloop()
     elif cliargs.subcommand == 'file':
-        if cliargs.t:
+        if (cliargs.t or
+                cliargs.inputfile.endswith('.txt') or
+                cliargs.inputfile.endswith('.nmea')):
             capturefile.read_from_file(
                 cliargs.inputfile, cliargs.outputdir,
                 everything=cliargs.e, filetype='text')
-        elif cliargs.c:
+        elif cliargs.c or cliargs.inputfile.endswith('.csv'):
             capturefile.read_from_file(
                 cliargs.inputfile, cliargs.outputdir,
                 everything=cliargs.e, filetype='csv')
-        elif cliargs.j:
+        elif cliargs.j or cliargs.inputfile.endswith('.jsonl'):
             capturefile.read_from_file(
                 cliargs.inputfile, cliargs.outputdir,
                 everything=cliargs.e, filetype='jsonlines')
