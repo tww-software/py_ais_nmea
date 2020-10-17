@@ -359,6 +359,7 @@ class BasicGUI(tkinter.Tk):
                 self.netsettings['Server IP'],
                 self.netsettings['Server Port']),
             fg='black', bg='green2')
+        self.tabcontrol.shipstab.create_ship_table()
 
     def stop_server(self):
         """
@@ -489,7 +490,7 @@ class BasicGUI(tkinter.Tk):
             currenttime = datetime.datetime.utcnow().strftime(
                 '%Y/%m/%d %H:%M:%S')
             if currenttime.endswith('5'):
-                self.tabcontrol.shipstab.create_ship_table()
+                self.tabcontrol.shipstab.create_ship_table(new=False)
                 self.tabcontrol.statstab.write_stats_verbose()
                 self.tabcontrol.stninfotab.stn_options()
                 self.tabcontrol.stninfotab.show_stn_info()

@@ -29,6 +29,11 @@ TIMEUNAVAILABLE = '0/00/00 24:60:60'
 TIMEREGEX = re.compile(r'(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])')
 
 
+NAVHEADERS = ['MMSI', 'Name', 'Callsign', 'Type', 'Flag',
+              'Latitude', 'Longitude', 'CoG', 'Speed (knots)',
+              'Navigation Status', 'Turn Rate',
+              'Time', 'Destination', 'ETA']
+
 class AISStation():
     """
     represents a single AIS station
@@ -737,13 +742,8 @@ class AISTracker():
                             in the table
         """
         csvtable = []
-        csvheader = ['MMSI', 'Name', 'Callsign', 'Type', 'Flag',
-                     'Latitude', 'Longitude', 'CoG', 'Speed (knots)',
-                     'Navigation Status', 'Turn Rate',
-                     'Time', 'Destination', 'ETA']
         lastposheader = ['Latitude', 'Longitude', 'CoG', 'Speed (knots)',
                          'Navigation Status', 'Turn Rate', 'Time']
-        csvtable.append(csvheader)
         if mmsilist:
             stations = mmsilist
         else:
@@ -756,7 +756,7 @@ class AISTracker():
                     stninfo[item] = (stninfo['Last Known Position'][item])
                 except (NoSuitablePositionReport, TypeError, KeyError):
                     stninfo[item] = ''
-            for item in csvheader:
+            for item in NAVHEADERS:
                 try:
                     line.append(stninfo[item])
                 except KeyError:

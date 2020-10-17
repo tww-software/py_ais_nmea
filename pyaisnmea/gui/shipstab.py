@@ -3,7 +3,7 @@ tab to display a table of all the ships and AIS stations we can see
 """
 
 import tkinter
-
+import pyaisnmea.ais as ais
 
 class ShipsTableTab(tkinter.ttk.Frame):
     """
@@ -43,21 +43,24 @@ class ShipsTableTab(tkinter.ttk.Frame):
         self.tabs.stninfotab.show_stn_info()
         self.tabs.select(self.tabs.stninfotab)
 
-    def create_ship_table(self):
+    def create_ship_table(self, new=True):
         """
         draw a large table in shipstab of all the AIS stations we have
         """
-        self.tree.delete(*self.tree.get_children())
-        tabledata = self.tabs.window.aistracker.create_nav_table()
-        headers = tabledata.pop(0)
-        self.tree["columns"] = headers
-        for column in headers:
-            self.tree.column(column, width=200, minwidth=70,
-                             stretch=tkinter.YES)
-            self.tree.heading(column, text=column, anchor=tkinter.W)
-        counter = 0
+        if new:
+            self.tree.delete(*self.tree.get_children())
+            self.tree["columns"] = ais.NAVHEADERS
+            for column in ais.NAVHEADERS:
+                self.tree.column(column, width=200, minwidth=70,
+                                 stretch=tkinter.YES)
+                self.tree.heading(column, text=column, anchor=tkinter.W)
+                        
+        tabledata = self.tabs.window.aistracker.create_nav_table()      
         for line in tabledata:
-            self.tree.insert('', counter, values=line)
-            counter += 1
-        self.tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
-        self.tree['show'] = 'headings'
+            try:
+                self.tree.insert('', 'end', values=line, iid=str(line[0]))
+            except tkinter.TclError as err:
+                self.tree.item(item=str(line[0]), values=line)            
+        if new:
+            self.tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
+            self.tree['show'] = 'headings'
