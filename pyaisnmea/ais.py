@@ -34,6 +34,7 @@ NAVHEADERS = ['MMSI', 'Name', 'Callsign', 'Type', 'Flag',
               'Navigation Status', 'Turn Rate',
               'Time', 'Destination', 'ETA']
 
+
 class AISStation():
     """
     represents a single AIS station
@@ -416,6 +417,9 @@ class AISTracker():
                                            recieved
         messagesprocessed(int): total count of messages recieved
         timings(list): timings received from AIS base stations
+        timingsource(str): the mmsi of an AIS base station used to provide
+                           message timings, type 4 messages from this will be
+                           used as a timestamp reference, default of None
     """
 
     def __init__(self):
@@ -423,6 +427,7 @@ class AISTracker():
         self.messages = collections.Counter()
         self.messagesprocessed = 0
         self.timings = []
+        self.timingsource = None
 
     def __len__(self):
         return len(self.stations)
@@ -440,7 +445,9 @@ class AISTracker():
 
         Args:
             data(str): full message payload from 1 or more NMEA sentences
-            timestamp(str): time this message was recieved
+            timestamp(str): time this message was recieved, if provided this
+                            will take precedence over timings received from AIS
+                            base stations
 
         Raises:
             UnknownMessageType: if the message type is not in the
@@ -470,11 +477,11 @@ class AISTracker():
             if timestamp not in self.timings:
                 self.timings.append(timestamp)
         else:
-            if msgtype in (4, 11):
-                if msgobj.timestamp != TIMEUNAVAILABLE:
-                    if (msgobj.timestamp not in self.timings and
-                            kml.DATETIMEREGEX.match(msgobj.timestamp)):
-                        self.timings.append(msgobj.timestamp + ' (estimated)')
+            if msgtype in (4, 11) and msgobj.mmsi == self.timingsource:
+                if (msgobj.timestamp != TIMEUNAVAILABLE and
+                        msgobj.timestamp not in self.timings and
+                        kml.DATETIMEREGEX.match(msgobj.timestamp)):
+                    self.timings.append(msgobj.timestamp + ' (estimated)')
             try:
                 timestamp = self.timings[len(self.timings) - 1]
             except IndexError:
@@ -552,6 +559,8 @@ class AISTracker():
             stats['Times']['Started'] = self.timings[0]
             stats['Times']['Finished'] = self.timings[
                 len(self.timings) - 1]
+            stats['Times']['Base Station Timing Reference MMSI'] = \
+                self.timingsource
         except IndexError:
             stats['Times'] = 'No time data available.'
         return stats
@@ -764,7 +773,8 @@ class AISTracker():
             csvtable.append(line)
         return csvtable
 
-    def create_table_data(self, mmsilist=None):
+    def create_table_data(self, mmsilist=None, csvheader=None,
+                          posheaders=None):
         """
         creates a table of data we have on all vessels
 
@@ -775,22 +785,30 @@ class AISTracker():
         Args:
             mmsilist(list): list of MMSIs as strings if this is specified
                             we will only display info on these MMSIs
+            csvheader(list): specify the header fields to be displayed for
+                             the outputted table, this is for custom tables,
+                             if in doubt leave this as None for default headers
+            posheaders(list): headers that appear in the station position
+                              reports this is for custom tables, if in doubt
+                              leave this as None for default headers
 
         Returns:
             csvtable(list): (lists of lists) each list is a line
                             in the csv file
         """
         csvtable = []
-        csvheader = ['MMSI', 'Class', 'Type', 'Flag', 'Name', 'Callsign',
-                     'IMO number', 'RAIM in use', 'EPFD Fix type',
-                     'Position Accuracy', 'Total Messages',
-                     'First Known Latitude',
-                     'First Known Longitude', 'First Known Navigation Status',
-                     'First Known Time', 'Last Known Latitude',
-                     'Last Known Longitude', 'Last Known Navigation Status',
-                     'Last Known Time', 'Destination', 'ETA']
-        posheaders = ['Latitude', 'Longitude',
-                      'Navigation Status', 'Time']
+        if not csvheader:
+            csvheader = [
+                'MMSI', 'Class', 'Type', 'Flag', 'Name', 'Callsign',
+                'IMO number', 'RAIM in use', 'EPFD Fix type',
+                'Position Accuracy', 'Total Messages',
+                'First Known Latitude',
+                'First Known Longitude', 'First Known Navigation Status',
+                'First Known Time', 'Last Known Latitude',
+                'Last Known Longitude', 'Last Known Navigation Status',
+                'Last Known Time', 'Destination', 'ETA']
+        if not posheaders:
+            posheaders = ['Latitude', 'Longitude', 'Navigation Status', 'Time']
         csvtable.append(csvheader)
         if mmsilist:
             stations = mmsilist
@@ -845,22 +863,60 @@ class AISTracker():
         return reprstr
 
 
+class BaseStationTracker(AISTracker):
+    """
+    class to process AIS Base Stations to use for timing data
+    """
+
+    def process_message(self, data):
+        """
+        determine what type of AIS message it is
+
+        Args:
+            data(str): full message payload from 1 or more NMEA sentences
+
+        Raises:
+            InvalidMMSI: if the mmsi = 000000000
+
+        Returns:
+            msgobj(messages.aismessage.AISMessage): the ais message type object
+        """
+        msgbinary = binary.ais_sentence_payload_binary(data)
+        msgtype = binary.decode_sixbit_integer(msgbinary[0:6])
+        if msgtype in (4, 11):
+            msgobj = allmessages.MSGTYPES[msgtype](msgbinary)
+            if msgobj.mmsi == '000000000':
+                raise InvalidMMSI('Invalid MMSI - 000000000')
+            if msgobj.mmsi not in self.stations:
+                self.stations[msgobj.mmsi] = AISStation(msgobj.mmsi)
+            if self.stations[msgobj.mmsi].stnclass == 'Unknown':
+                self.stations[msgobj.mmsi].determine_station_class(msgobj)
+            msgobj.rxtime = msgobj.timestamp
+            self.stations[msgobj.mmsi].find_position_information(msgobj)
+            self.messagesprocessed += 1
+            self.messages[allmessages.MSGDESCRIPTIONS[msgtype]] += 1
+
+    def __str__(self):
+        strtext = ('AIS Base Station Tracker - tracking {} Base Stations'
+                   ' , processed {} messages,').format(
+                       str(self.__len__()),
+                       str(self.messagesprocessed))
+        return strtext
+
+
 class UnknownMessageType(Exception):
     """
     raise when an unknown AIS message type is encountered
     """
-    pass
 
 
 class InvalidMMSI(Exception):
     """
     raise when an incorrect MMSI is encountered
     """
-    pass
 
 
 class NoSuitablePositionReport(Exception):
     """
     raise if we cannot get a position
     """
-    pass

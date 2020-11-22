@@ -43,14 +43,12 @@ class NMEAInvalidSentence(Exception):
     """
     raise when the nmea sentence isn't valid
     """
-    pass
 
 
 class NMEACheckSumFailed(Exception):
     """
     raise when the nmea checksum doesn't match the calculated value
     """
-    pass
 
 
 class NMEA0183Sentence():
@@ -105,9 +103,8 @@ class NMEA0183Sentence():
         """
         if calculate_nmea_checksum(self.sentencestr):
             return True
-        else:
-            raise NMEACheckSumFailed('checksum calculated does not match ' +
-                                     self.checksum)
+        raise NMEACheckSumFailed('checksum calculated does not match ' +
+                                 self.checksum)
 
 
 class NMEAtracker():

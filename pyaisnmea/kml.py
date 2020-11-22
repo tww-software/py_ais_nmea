@@ -259,7 +259,6 @@ class InvalidDateTimeString(Exception):
     """
     raise if timestamp is the wrong format
     """
-    pass
 
 
 def make_kmz(kmzoutputfilename, iconslist=set(icons.ICONS.values()),
@@ -339,5 +338,4 @@ def convert_timestamp_to_kmltimestamp(timestamp):
         except ValueError as err:
             raise InvalidDateTimeString('wrong') from err
         return kmltimestamp
-    else:
-        raise InvalidDateTimeString('timestamp must be %Y/%m/%d %H:%M:%S')
+    raise InvalidDateTimeString('timestamp must be %Y/%m/%d %H:%M:%S')

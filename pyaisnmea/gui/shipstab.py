@@ -5,6 +5,7 @@ tab to display a table of all the ships and AIS stations we can see
 import tkinter
 import pyaisnmea.ais as ais
 
+
 class ShipsTableTab(tkinter.ttk.Frame):
     """
     tab to display a table of all the AIS Stations we have
@@ -54,13 +55,12 @@ class ShipsTableTab(tkinter.ttk.Frame):
                 self.tree.column(column, width=200, minwidth=70,
                                  stretch=tkinter.YES)
                 self.tree.heading(column, text=column, anchor=tkinter.W)
-                        
-        tabledata = self.tabs.window.aistracker.create_nav_table()      
+        tabledata = self.tabs.window.aistracker.create_nav_table()
         for line in tabledata:
             try:
                 self.tree.insert('', 'end', values=line, iid=str(line[0]))
-            except tkinter.TclError as err:
-                self.tree.item(item=str(line[0]), values=line)            
+            except tkinter.TclError:
+                self.tree.item(item=str(line[0]), values=line)
         if new:
             self.tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
             self.tree['show'] = 'headings'

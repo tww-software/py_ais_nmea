@@ -3,6 +3,11 @@ module to deal with getting data from a capture file
 
 nmea capture text files should be plain text files with each NMEA 0183 sentence
 on it's own line
+
+jsonlines are files previously exported from pyaisnmea and consist of AIS
+message data as seperate JSON statements each on a new line
+
+csv are comma seperated values files exported from pyaisnmea
 """
 
 import json
@@ -25,7 +30,6 @@ class NoSuitableMessagesFound(Exception):
     """
     raise if we cannot find any messages in a file
     """
-    pass
 
 
 def open_file_generator(filepath):
@@ -40,7 +44,7 @@ def open_file_generator(filepath):
     """
     with open(filepath, 'r') as infile:
         for line in infile:
-            if line == '\n' or line == '\r\n':
+            if line in ('\n', '\r\n'):
                 continue
             yield line
 
@@ -125,7 +129,7 @@ def aistracker_from_json(filepath, debug=True):
     return (aistracker, messagelog)
 
 
-def aistracker_from_file(filepath, debug=False):
+def aistracker_from_file(filepath, debug=False, timingsource=None):
     """
     open a file, read all nmea sentences and return an ais.AISTracker object
 
@@ -136,6 +140,11 @@ def aistracker_from_file(filepath, debug=False):
         filepath(str): full path to nmea file
         debug(bool): save all message payloads and decoded attributes into
                      messagelog
+        timingsource(str): MMSI (as string) of the base station you wish to use
+                           as a time reference, type 4 base station reports
+                           from this base station will be used for times.
+                           default is None and all base stations will be used
+                           for times.
 
     Raises:
         NoSuitableMessagesFound: if there are no AIS messages in the file
@@ -148,6 +157,7 @@ def aistracker_from_file(filepath, debug=False):
     """
     messagelog = allmessages.AISMessageLog()
     aistracker = ais.AISTracker()
+    aistracker.timingsource = timingsource
     nmeatracker = nmea.NMEAtracker()
     msgnumber = 1
     for line in open_file_generator(filepath):
@@ -166,6 +176,85 @@ def aistracker_from_file(filepath, debug=False):
     if aistracker.messagesprocessed == 0:
         raise NoSuitableMessagesFound('No AIS messages detected in this file')
     return (aistracker, nmeatracker, messagelog)
+
+
+def extract_time_data_from_file(filepath):
+    """
+    find the base stations and timing data from NMEA text files
+
+    Args:
+        filepath(str): path to the nmea0183 text file
+
+    Returns:
+        timingchoices(dict): keys are numbers, values are MMSIs of base stns
+        basestntable(list): list of lists, each list is a row for an AIS
+                            base stn with its MMSI, flag, total messages, first
+                            and last known timestamps
+
+    Raises:
+        NoSuitableMessagesFound: if there are no type 4 messages in the file
+                                 there is no usable timestamps
+    """
+    nmeatracker = nmea.NMEAtracker()
+    basestntracker = ais.BaseStationTracker()
+    for line in open_file_generator(filepath):
+        try:
+            payload = nmeatracker.process_sentence(line)
+            if payload:
+                basestntracker.process_message(payload)
+        except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
+                ais.UnknownMessageType, ais.InvalidMMSI,
+                binary.NoBinaryData, IndexError) as err:
+            AISLOGGER.debug(str(err))
+            continue
+    if basestntracker.messagesprocessed == 0:
+        raise NoSuitableMessagesFound('No AIS Base Stations detected')
+    basestnmainheader = ['MMSI', 'Flag', 'Total Messages',
+                         'First Known Time', 'Last Known Time']
+    basestnposheader = ['Time']
+    basestntable = basestntracker.create_table_data(
+        csvheader=basestnmainheader, posheaders=basestnposheader)
+    basestntable[0].insert(0, 'Choice')
+    timingchoices = {}
+    stncount = 1
+    for stn in basestntracker.stations:
+        timingchoices[str(stncount)] = stn
+        basestntable[stncount].insert(0, stncount)
+        stncount += 1
+    return timingchoices, basestntable
+
+
+def print_table(tablelist):
+    """
+    neatly print a table to the terminal
+
+    Note: finds out the maximun length of each column then adds whitespace
+          padding to each of the fields
+
+    Args:
+        tablelist(list): a list of lists each list is a row on the table
+
+    Returns:
+        tablelist(list): input but with padding so all entries are the same
+                         width as the widest entry
+    """
+    columnlengths = [0 for x in tablelist[0]]
+    for row in tablelist:
+        colno = 0
+        for column in row:
+            columnlength = len(str(column))
+            if columnlength > columnlengths[colno]:
+                columnlengths[colno] = columnlength
+            colno += 1
+    for row in tablelist:
+        colno = 0
+        for column in row:
+            columnlength = len(str(column))
+            padding = columnlengths[row.index(column)] - columnlength
+            row[row.index(column)] = str(column) + ' ' * padding
+    for line in tablelist:
+        print('  '.join([str(x) for x in line]))
+    return tablelist
 
 
 def read_from_file(filepath, outpath, everything=False, filetype='text'):
@@ -191,9 +280,30 @@ def read_from_file(filepath, outpath, everything=False, filetype='text'):
     AISLOGGER.info('reading nmea sentences from - %s', filepath)
     try:
         if filetype == 'text':
-            AISLOGGER.info('importing as text file')
+            try:
+                AISLOGGER.info('importing as text file')
+                basestnchoices, basestntable = extract_time_data_from_file(
+                    filepath)
+                AISLOGGER.info('choose timing source')
+                choiceconfirmed = False
+                while not choiceconfirmed:
+                    print_table(basestntable)
+                    choice = input('enter timing source choice number: ')
+                    try:
+                        basestntimingsource = basestnchoices[choice.rstrip()]
+                    except KeyError:
+                        AISLOGGER.error('enter a choice no!')
+                        continue
+                    AISLOGGER.info('use %s as a time reference',
+                                   basestntimingsource)
+                    yesno = input('Y/N: ')
+                    if yesno.rstrip() in ('Y', 'y', 'yes', 'YES'):
+                        choiceconfirmed = True
+            except NoSuitableMessagesFound as err:
+                basestntimingsource = None
+                AISLOGGER.error(str(err))
             aistracker, nmeatracker, messagelog = aistracker_from_file(
-                filepath, debug=True)
+                filepath, debug=True, timingsource=basestntimingsource)
         elif filetype == 'csv':
             AISLOGGER.info('importing as CSV file')
             aistracker, messagelog = aistracker_from_csv(
@@ -202,7 +312,7 @@ def read_from_file(filepath, outpath, everything=False, filetype='text'):
             AISLOGGER.info('importing as JSON lines file')
             aistracker, messagelog = aistracker_from_json(
                 filepath, debug=True)
-        if filetype == 'csv' or filetype == 'jsonlines':
+        if filetype in ('csv', 'jsonlines'):
             nmeatracker = nmea.NMEAtracker()
             nmeatracker.sentencecount = 'N/A'
             nmeatracker.reassembled = 'N/A'

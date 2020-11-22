@@ -33,17 +33,17 @@ import pyaisnmea.messages.t12 as t12
 import pyaisnmea.messages.t13 as t13
 import pyaisnmea.messages.t14 as t14
 import pyaisnmea.messages.t15 as t15
-import pyaisnmea.messages.t16 as t16
+# import pyaisnmea.messages.t16 as t16
 import pyaisnmea.messages.t17 as t17
 import pyaisnmea.messages.t18 as t18
 import pyaisnmea.messages.t19 as t19
 import pyaisnmea.messages.t20 as t20
 import pyaisnmea.messages.t21 as t21
-import pyaisnmea.messages.t22 as t22
-import pyaisnmea.messages.t23 as t23
-import pyaisnmea.messages.t24 as t24
-import pyaisnmea.messages.t25 as t25
-import pyaisnmea.messages.t26 as t26
+# import pyaisnmea.messages.t22 as t22
+# import pyaisnmea.messages.t23 as t23
+# import pyaisnmea.messages.t24 as t24
+# import pyaisnmea.messages.t25 as t25
+# import pyaisnmea.messages.t26 as t26
 import pyaisnmea.messages.t27 as t27
 
 
@@ -717,6 +717,7 @@ class AISTrackerTimingTests(unittest.TestCase):
         Tests giving invalid times to the aistracker so it won't be
         able to find a start and finish time.
         """
+        self.aistracker.timingsource = '002320814'
         expected = 'No time data available.'
         timings = [
             '402=acP000HttwhRddNPs;G00l1G',
@@ -731,15 +732,17 @@ class AISTrackerTimingTests(unittest.TestCase):
     def test_valid_times_from_base_station(self):
         """
         Tests the aistracker figuring out the start and finish time from
-        base station reports that have been recieved.
+        base station reports that have been received.
         """
+        self.aistracker.timingsource = '002320800'
         expected = {
-            "Started": "2018/09/09 14:07:14 (estimated)",
+            "Base Station Timing Reference MMSI": "002320800",
+            "Started": "2018/09/09 14:00:36 (estimated)",
             "Finished": "2018/09/09 14:20:06 (estimated)"}
         timings = [
-            '402=aeQv:Df7>whRv`NPsHg005hL',
+            '402=a`1v:Df0TOi>SHNu0wA020S:',
             '402=a`1v:Df:@Oi>SjNu0si02H9i',
-            '4>jHCviv:Df@WOfG8fNQ6io008GL',
+            '402=a`1v:DfBJOi>SRNu0tQ02H?`',
             '402=a`1v:DfD6Oi>SpNu0t102@3r']
         for data in timings:
             self.aistracker.process_message(data)
@@ -800,7 +803,7 @@ class KMLTimingTests(unittest.TestCase):
     def test_unsuitable_timestamp_regex_fail(self):
         """
         test a timestamp that doesn't match the regex
-        
+
         Note:
             change this when i come up with a better regex for datetimes
         """
@@ -811,7 +814,7 @@ class KMLTimingTests(unittest.TestCase):
     def test_unsuitable_timestamp_regex_fail_month(self):
         """
         test a timestamp with an invalid month
-        
+
         Note:
             change this when i come up with a better regex for datetimes
         """
@@ -822,7 +825,7 @@ class KMLTimingTests(unittest.TestCase):
     def test_unsuitable_timestamp_regex_fail_day(self):
         """
         test a timestamp with an invalid day
-        
+
         Note:
             change this when i come up with a better regex for datetimes
         """
@@ -833,7 +836,7 @@ class KMLTimingTests(unittest.TestCase):
     def test_unsuitable_timestamp_regex_fail_hour(self):
         """
         test a timestamp with an invalid hour
-        
+
         Note:
             change this when i come up with a better regex for datetimes
         """
@@ -844,7 +847,7 @@ class KMLTimingTests(unittest.TestCase):
     def test_unsuitable_timestamp_regex_fail_minutes(self):
         """
         test a timestamp with an invalid minutes field
-        
+
         Note:
             change this when i come up with a better regex for datetimes
         """
@@ -855,7 +858,7 @@ class KMLTimingTests(unittest.TestCase):
     def test_unsuitable_timestamp_regex_fail_seconds(self):
         """
         test a timestamp with an invalid seconds field
-        
+
         Note:
             change this when i come up with a better regex for datetimes
         """
@@ -1217,7 +1220,7 @@ class KMLTests(unittest.TestCase):
             'mmsi': '992351030', 'type': 'Navigation Aid',
             'subtype': 'Cardinal Mark S', 'name': 'LUNE DEEP BUOY',
             'flag': 'United Kingdom', 'Sent Messages': {
-            'Type 21 - Aid to Navigation Report': 15}}
+                'Type 21 - Aid to Navigation Report': 15}}
         testhtml = self.parser.format_kml_placemark_description(testdict)
         expectedhtml = """<![CDATA[MMSI - 992351030<br  />
 TYPE - Navigation Aid<br  />
@@ -1238,7 +1241,7 @@ TYPE 21 - AID TO NAVIGATION REPORT - 15<br  />
         clean = kml.remove_invalid_chars(teststr)
         expected = '&quot;&lt;hello world&gt;&quot; &amp;    test'
         self.assertEqual(clean, expected)
- 
+
 
 if __name__ == '__main__':
     unittest.main()
