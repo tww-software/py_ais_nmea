@@ -140,11 +140,11 @@ def aistracker_from_file(filepath, debug=False, timingsource=None):
         filepath(str): full path to nmea file
         debug(bool): save all message payloads and decoded attributes into
                      messagelog
-        timingsource(str): MMSI (as string) of the base station you wish to use
+        timingsource(list): MMSIs of the base stations you wish to use
                            as a time reference, type 4 base station reports
                            from this base station will be used for times.
                            default is None and all base stations will be used
-                           for times.
+                           for times. list of strings
 
     Raises:
         NoSuitableMessagesFound: if there are no AIS messages in the file
@@ -278,6 +278,7 @@ def read_from_file(filepath, outpath, everything=False, filetype='text'):
         os.makedirs(outpath)
     AISLOGGER.info('processed output will be saved in %s', outpath)
     AISLOGGER.info('reading nmea sentences from - %s', filepath)
+    timesources = []
     try:
         if filetype == 'text':
             try:
@@ -290,15 +291,22 @@ def read_from_file(filepath, outpath, everything=False, filetype='text'):
                     print_table(basestntable)
                     choice = input('enter timing source choice number: ')
                     try:
-                        basestntimingsource = basestnchoices[choice.rstrip()]
+                        basestnmmsi = basestnchoices[choice.rstrip()]
+                        if basestnmmsi not in timesources:
+                            timesources.append(basestnmmsi)
                     except KeyError:
                         AISLOGGER.error('enter a choice no!')
                         continue
                     AISLOGGER.info('use %s as a time reference',
-                                   basestntimingsource)
+                                   basestnmmsi)
                     yesno = input('Y/N: ')
                     if yesno.rstrip() in ('Y', 'y', 'yes', 'YES'):
-                        choiceconfirmed = True
+                        AISLOGGER.info(
+                            'timing sources to be used - %s', timesources)
+                        yesno2 = input('add another timing source? Y/N: ')
+                        if yesno2.rstrip() in ('N', 'n', 'no', 'NO'):
+                            basestntimingsource = timesources
+                            choiceconfirmed = True
             except NoSuitableMessagesFound as err:
                 basestntimingsource = None
                 AISLOGGER.error(str(err))

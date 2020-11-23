@@ -417,9 +417,9 @@ class AISTracker():
                                            recieved
         messagesprocessed(int): total count of messages recieved
         timings(list): timings received from AIS base stations
-        timingsource(str): the mmsi of an AIS base station used to provide
+        timingsource(list): the mmsis of AIS base stations used to provide
                            message timings, type 4 messages from this will be
-                           used as a timestamp reference, default of None
+                           used as a timestamp reference
     """
 
     def __init__(self):
@@ -427,7 +427,7 @@ class AISTracker():
         self.messages = collections.Counter()
         self.messagesprocessed = 0
         self.timings = []
-        self.timingsource = None
+        self.timingsource = []
 
     def __len__(self):
         return len(self.stations)
@@ -477,7 +477,7 @@ class AISTracker():
             if timestamp not in self.timings:
                 self.timings.append(timestamp)
         else:
-            if msgtype in (4, 11) and msgobj.mmsi == self.timingsource:
+            if msgtype in (4, 11) and msgobj.mmsi in self.timingsource:
                 if (msgobj.timestamp != TIMEUNAVAILABLE and
                         msgobj.timestamp not in self.timings and
                         kml.DATETIMEREGEX.match(msgobj.timestamp)):
@@ -559,7 +559,7 @@ class AISTracker():
             stats['Times']['Started'] = self.timings[0]
             stats['Times']['Finished'] = self.timings[
                 len(self.timings) - 1]
-            stats['Times']['Base Station Timing Reference MMSI'] = \
+            stats['Times']['Base Station Timing Reference MMSIs'] = \
                 self.timingsource
         except IndexError:
             stats['Times'] = 'No time data available.'
