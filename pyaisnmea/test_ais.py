@@ -717,7 +717,7 @@ class AISTrackerTimingTests(unittest.TestCase):
         Tests giving invalid times to the aistracker so it won't be
         able to find a start and finish time.
         """
-        self.aistracker.timingsource = '002320814'
+        self.aistracker.timingsource = ['002320814']
         expected = 'No time data available.'
         timings = [
             '402=acP000HttwhRddNPs;G00l1G',
@@ -734,9 +734,9 @@ class AISTrackerTimingTests(unittest.TestCase):
         Tests the aistracker figuring out the start and finish time from
         base station reports that have been received.
         """
-        self.aistracker.timingsource = '002320800'
+        self.aistracker.timingsource = ['002320800']
         expected = {
-            "Base Station Timing Reference MMSI": "002320800",
+            "Base Station Timing Reference MMSIs": ["002320800"],
             "Started": "2018/09/09 14:00:36 (estimated)",
             "Finished": "2018/09/09 14:20:06 (estimated)"}
         timings = [

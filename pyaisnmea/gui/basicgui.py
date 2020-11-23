@@ -26,6 +26,8 @@ import pyaisnmea.gui.guihelp as guihelp
 import pyaisnmea.gui.shipstab as shipstab
 import pyaisnmea.gui.statstab as statstab
 import pyaisnmea.gui.stationinfotab as stationinfotab
+import pyaisnmea.gui.basestntimeswindow as basestntimeswindow
+import pyaisnmea.gui.networksettingswindow as networksettingswindow
 
 
 AISLOGGER = logging.getLogger(__name__)
@@ -55,238 +57,6 @@ class TabControl(tkinter.ttk.Notebook):
         self.add(self.messagetab, text='Message Log')
         self.stninfotab = stationinfotab.StationInfoTab(self)
         self.add(self.stninfotab, text='Station Information')
-
-
-class NetworkSettingsWindow(tkinter.Toplevel):
-    """
-    window to configure network settings
-
-    Args:
-        window(tkinter.Tk): the main window this spawns from
-    """
-
-    def __init__(self, window):
-        tkinter.Toplevel.__init__(self, window)
-        self.window = window
-        self.network_settings_group()
-        self.nmea_settings_group()
-        self.kml_settings_group()
-
-    def network_settings_group(self):
-        """
-        group all the network settings within a tkinter LabelFrame
-        """
-        netgroup = tkinter.LabelFrame(
-            self, text="Network settings", padx=10, pady=10)
-        netgroup.pack(fill="both", expand="yes")
-        serverhostlabel = tkinter.Label(netgroup, text='Server IP')
-        serverhostlabel.pack()
-        self.serverhost = tkinter.Entry(netgroup)
-        self.serverhost.insert(0, self.window.netsettings['Server IP'])
-        self.serverhost.pack()
-        serverportlabel = tkinter.Label(netgroup, text='Server Port')
-        serverportlabel.pack()
-        self.serverport = tkinter.Entry(netgroup)
-        self.serverport.insert(0, self.window.netsettings['Server Port'])
-        self.serverport.pack()
-        self.chk = tkinter.Checkbutton(
-            netgroup, text='forward NMEA Sentences to a remote host',
-            var=self.window.forwardsentences)
-        self.chk.pack()
-        remotehostlabel = tkinter.Label(netgroup, text='Remote Server IP')
-        remotehostlabel.pack()
-        self.remotehost = tkinter.Entry(netgroup)
-        self.remotehost.insert(0, self.window.netsettings['Remote Server IP'])
-        self.remotehost.pack()
-        remoteportlabel = tkinter.Label(netgroup, text='Remote Server Port')
-        remoteportlabel.pack()
-        self.remoteport = tkinter.Entry(netgroup)
-        self.remoteport.insert(
-            0, self.window.netsettings['Remote Server Port'])
-        self.remoteport.pack()
-
-    def nmea_settings_group(self):
-        """
-        group all the nmea settings within a tkinter LabelFrame
-        """
-        nmeagroup = tkinter.LabelFrame(
-            self, text="NMEA logging settings", padx=20, pady=20)
-        nmeagroup.pack(fill="both", expand="yes")
-        loglabel = tkinter.Label(nmeagroup, text='Log NMEA Sentences')
-        loglabel.pack()
-        self.logpath = tkinter.Entry(nmeagroup)
-        self.logpath.insert(0, self.window.netsettings['Log File Path'])
-        self.logpath.pack()
-        logpathbutton = tkinter.Button(
-            nmeagroup, text='Choose Log Path', command=self.set_log_path)
-        logpathbutton.pack()
-
-    def kml_settings_group(self):
-        """
-        group all the kml settings within a tkinter LabelFrame
-        """
-        kmlgroup = tkinter.LabelFrame(
-            self, text="Live KML map settings", padx=20, pady=20)
-        kmlgroup.pack(fill="both", expand="yes")
-        kmllabel = tkinter.Label(kmlgroup, text='Ouput Live KML Map')
-        kmllabel.pack()
-        self.kmlpath = tkinter.Entry(kmlgroup)
-        self.kmlpath.insert(0, self.window.netsettings['KML File Path'])
-        self.kmlpath.pack()
-        kmlpathbutton = tkinter.Button(
-            kmlgroup, text='Choose KML Path', command=self.set_kml_path)
-        kmlpathbutton.pack()
-        self.kmzchk = tkinter.Checkbutton(
-            kmlgroup, text='KMZ map (full colour icons)',
-            var=self.window.kmzlivemap)
-        self.kmzchk.pack()
-
-        savesettingsbutton = tkinter.Button(
-            self, text='Save Settings', command=self.save_settings)
-        savesettingsbutton.pack()
-        self.transient(self.window)
-
-    def set_log_path(self):
-        """
-        open a dialogue box to choose where we save NMEA sentences to
-        """
-        outputfile = tkinter.filedialog.asksaveasfilename(
-            defaultextension=".txt",
-            filetypes=(("nmea text file", "*.txt"),
-                       ("All Files", "*.*")))
-        self.logpath.insert(0, outputfile)
-
-    def set_kml_path(self):
-        """
-        open a dialogue box to choose where we save KMl data to
-        """
-        outputdir = tkinter.filedialog.askdirectory()
-        self.kmlpath.insert(0, outputdir)
-
-    def save_settings(self):
-        """
-        get the settings from the form
-        """
-        if self.window.serverrunning:
-            tkinter.messagebox.showwarning(
-                'Network Settings',
-                'cannot change settings whilst server is running')
-        else:
-            self.window.netsettings['Server IP'] = self.serverhost.get()
-            self.window.netsettings['Server Port'] = int(self.serverport.get())
-            self.window.netsettings['Remote Server IP'] = self.remotehost.get()
-            self.window.netsettings['Remote Server Port'] = int(
-                self.remoteport.get())
-            self.window.netsettings['Log File Path'] = self.logpath.get()
-            self.window.netsettings['KML File Path'] = self.kmlpath.get()
-            tkinter.messagebox.showinfo(
-                'Network Settings', 'Network Settings Saved', parent=self)
-        self.destroy()
-
-
-class BaseStationTimesWindow(tkinter.Toplevel):
-    """
-    window to configure timing sources for NMEA0183 text files
-
-    Note:
-        this is a modal window, that takes over from the main window and only
-        releases execution to the main window once it is closed
-        transient - keeps this window on top of the main one
-        grab_set - stops commands on the main window
-        wait_window - commands on the main window paused until this ones closes
-
-    Args:
-        window(tkinter.Tk): the main window this spawns from
-        basestntable(list):list of lists - a table of all the AIS base stations
-    """
-
-    def __init__(self, window, basestntable):
-        tkinter.Toplevel.__init__(self, window)
-        self.window = window
-        self.basestntable = basestntable
-        self.tree = tkinter.ttk.Treeview(self)
-        verticalscrollbar = tkinter.ttk.Scrollbar(
-            self, orient=tkinter.VERTICAL, command=self.tree.yview)
-        verticalscrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
-        horizontalscrollbar = tkinter.ttk.Scrollbar(
-            self, orient=tkinter.HORIZONTAL, command=self.tree.xview)
-        horizontalscrollbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)
-        self.tree.bind("<Double-1>", self.on_tree_item_doubleclick)
-        self.tree.configure(yscrollcommand=verticalscrollbar.set,
-                            xscrollcommand=horizontalscrollbar.set)
-        self.create_basestn_table()
-        self.basestnlistbox = tkinter.Listbox(self)
-        self.configure_basestn_listbox()
-        savesettingsbutton = tkinter.Button(
-            self, text='Save Settings', command=self.save_settings)
-        savesettingsbutton.pack()
-        self.transient(self.window)
-        self.grab_set()
-        self.window.wait_window(self)
-
-    def save_settings(self):
-        """
-        get the settings from the form
-        """
-        listboxvalues = self.basestnlistbox.get(0, tkinter.END)
-        self.window.timingsources = listboxvalues
-        self.destroy()
-
-    def on_tree_item_doubleclick(self, event=None):
-        """
-        if the user double clicks on a row in the tree
-        grab the base station MMSI of that row
-        then add the base stations MMSI to the listbox
-        """
-        item = self.tree.identify('item', event.x, event.y)
-        clickedmmsi = str(self.tree.item(item)['values'][1])
-        if len(clickedmmsi) == 7:
-            clickedmmsi = '00' + clickedmmsi
-        if clickedmmsi not in self.basestnlistbox.get(0, tkinter.END):
-            self.basestnlistbox.insert(0, clickedmmsi)
-
-    def on_listbox_item_doubleclick(self, event=None):
-        """
-        remove a base station MMSI from the listbox if a user double clicks it
-        """
-        currentselection = self.basestnlistbox.curselection()
-        listboxitem = self.basestnlistbox.get(currentselection)
-        mmsiindex = self.basestnlistbox.get(0, tkinter.END).index(listboxitem)
-        self.basestnlistbox.delete(mmsiindex)
-
-    def create_basestn_table(self, new=True):
-        """
-        draw a table of all the AIS Base stations we have
-        """
-        treelabel = tkinter.Label(self, text='AIS Base Stations Available')
-        treelabel.pack()
-        if new:
-            self.tree.delete(*self.tree.get_children())
-            self.tree["columns"] = self.basestntable[0]
-            for column in self.basestntable[0]:
-                self.tree.column(column, width=200, minwidth=70,
-                                 stretch=tkinter.YES)
-                self.tree.heading(column, text=column, anchor=tkinter.W)
-        for line in self.basestntable:
-            try:
-                self.tree.insert('', 'end', values=line, iid=str(line[0]))
-            except tkinter.TclError:
-                self.tree.item(item=str(line[0]), values=line)
-        if new:
-            self.tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
-            self.tree['show'] = 'headings'
-
-    def configure_basestn_listbox(self):
-        """
-        create a listbox to store the MMSIs of base stations we will use as
-        timing sources
-        """
-        listboxlabel = tkinter.Label(self, text='Timing Sources')
-        listboxlabel.pack()
-        self.basestnlistbox.pack(
-            side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
-        self.basestnlistbox.bind(
-            '<Double-1>', self.on_listbox_item_doubleclick)
 
 
 class BasicGUI(tkinter.Tk):
@@ -409,7 +179,7 @@ class BasicGUI(tkinter.Tk):
         """
         open the network settings window
         """
-        NetworkSettingsWindow(self)
+        networksettingswindow.NetworkSettingsWindow(self)
 
     def about(self):
         """
@@ -517,7 +287,8 @@ class BasicGUI(tkinter.Tk):
                     try:
                         _, basestntable = \
                             capturefile.extract_time_data_from_file(inputfile)
-                        BaseStationTimesWindow(self, basestntable)
+                        basestntimeswindow.BaseStationTimesWindow(
+                            self, basestntable)
                         self.aistracker, self.nmeatracker, self.messagelog = \
                             capturefile.aistracker_from_file(
                                 inputfile, debug=True,
