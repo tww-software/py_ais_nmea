@@ -19,6 +19,7 @@ import pyaisnmea.capturefile as capturefile
 import pyaisnmea.livekmlmap as livekmlmap
 import pyaisnmea.nmea as nmea
 import pyaisnmea.network as network
+import pyaisnmea.version as version
 
 import pyaisnmea.gui.aismessagetab as aismessagetab
 import pyaisnmea.gui.exporttab as exporttab
@@ -96,7 +97,7 @@ class BasicGUI(tkinter.Tk):
         self.aistracker = ais.AISTracker()
         self.messagelog = allmessages.AISMessageLog()
         self.protocol("WM_DELETE_WINDOW", self.quit)
-        self.title('AIS NMEA 0183 Decoder')
+        self.title('PY AIS NMEA - ' + version.VERSION)
         self.statuslabel = tkinter.Label(self, text='', bg='light grey')
         self.statuslabel.pack(fill=tkinter.X)
         self.tabcontrol = TabControl(self)
