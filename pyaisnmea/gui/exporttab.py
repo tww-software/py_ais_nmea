@@ -47,9 +47,9 @@ class ExportTab(tkinter.ttk.Frame):
         tkinter.ttk.Frame.__init__(self, tabcontrol)
         self.tabs = tabcontrol
         self.exportoptions = tkinter.ttk.Combobox(self, state='readonly')
-        self.export_options()
+        self.orderby = tkinter.ttk.Combobox(self, state='readonly')
         self.exporthelplabel = tkinter.Label(self)
-        self.exporthelplabel.grid(column=3, row=1)
+        self.export_options()
         self.exportoptions.bind("<<ComboboxSelected>>", self.show_export_help)
         self.show_export_help()
 
@@ -63,9 +63,16 @@ class ExportTab(tkinter.ttk.Frame):
             'VERBOSE JSON', 'GEOJSON', 'DEBUG')
         self.exportoptions.set('KMZ')
         self.exportoptions.grid(column=1, row=1)
+        self.exporthelplabel.grid(column=2, row=1)
+        self.orderby['values'] = ('Flags', 'Class', 'Types')
+        self.orderby.set('Types')
+        self.orderby.grid(column=1, row=2)
+        orderbylabel = tkinter.Label(self)
+        orderbylabel.configure(text='Output Order (for KMZ,KML and EVERYTHING')
+        orderbylabel.grid(column=2, row=2)
         exportbutton = tkinter.Button(self, text='Export',
                                       command=self.export_files)
-        exportbutton.grid(column=2, row=1)
+        exportbutton.grid(column=1, row=3)
 
     def export_files(self):
         """
@@ -146,7 +153,7 @@ class ExportTab(tkinter.ttk.Frame):
         else:
             raise ExportAborted('Export cancelled by user.')
 
-    def export_kml(self):
+    def export_kml(self, kmz=False):
         """
         pop open a file browser to allow the user to choose where to save the
         file and then save file to that location
@@ -154,33 +161,22 @@ class ExportTab(tkinter.ttk.Frame):
         Raises:
             ExportAborted: if the user clicks cancel
         """
+        orderby = self.orderby.get()
         outputfile = tkinter.filedialog.asksaveasfilename(
             defaultextension=".kml",
             filetypes=(("keyhole markup language", "*.kml"),
                        ("All Files", "*.*")))
         if outputfile:
             self.tabs.window.aistracker.create_kml_map(
-                outputfile, kmzoutput=False)
+                outputfile, kmzoutput=kmz, orderby=orderby)
         else:
             raise ExportAborted('Export cancelled by user.')
 
     def export_kmz(self):
         """
-        pop open a file browser to allow the user to choose where to save the
-        file and then save file to that location
-
-        Raises:
-            ExportAborted: if the user clicks cancel
+        calls export_kml with kmz as True
         """
-        outputfile = tkinter.filedialog.asksaveasfilename(
-            defaultextension=".kmz",
-            filetypes=(("keyhole markup language KMZ", "*.kmz"),
-                       ("All Files", "*.*")))
-        if outputfile:
-            self.tabs.window.aistracker.create_kml_map(
-                outputfile, kmzoutput=True)
-        else:
-            raise ExportAborted('Export cancelled by user.')
+        self.export_kml(kmz=True)
 
     def export_json(self, verbosejson=False):
         """
@@ -259,6 +255,7 @@ class ExportTab(tkinter.ttk.Frame):
         Raises:
             ExportAborted: if the user clicks cancel
         """
+        orderby = self.orderby.get()
         if not outpath:
             outpath = tkinter.filedialog.askdirectory()
             if outpath:
@@ -266,7 +263,7 @@ class ExportTab(tkinter.ttk.Frame):
                     self.tabs.window.aistracker,
                     self.tabs.window.nmeatracker,
                     self.tabs.window.messagelog,
-                    outpath)
+                    outpath, orderby=orderby)
             else:
                 raise ExportAborted('Export cancelled by user.')
 
@@ -277,6 +274,7 @@ class ExportTab(tkinter.ttk.Frame):
         Raises:
             ExportAborted: if the user clicks cancel
         """
+        orderby = self.orderby.get()
         previoustext = self.tabs.window.statuslabel['text']
         res = tkinter.messagebox.askyesno(
             'Export Everything',
@@ -293,11 +291,11 @@ class ExportTab(tkinter.ttk.Frame):
                     self.tabs.window.aistracker,
                     self.tabs.window.nmeatracker,
                     self.tabs.window.messagelog,
-                    outpath)
+                    outpath, orderby=orderby)
                 export.export_everything(
                     self.tabs.window.aistracker,
                     self.tabs.window.messagelog,
-                    outpath)
+                    outpath, orderby=orderby)
                 self.tabs.window.statuslabel.config(
                     text=previoustext, bg='light grey')
             else:

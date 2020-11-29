@@ -77,7 +77,8 @@ def create_summary_text(summary):
 
 
 def export_overview(
-        aistracker, nmeatracker, aismsglog, outputdir, printsummary=False):
+        aistracker, nmeatracker, aismsglog, outputdir, printsummary=False,
+        orderby='Types'):
     """
     export the most popular file formats
     KMZ - map
@@ -90,6 +91,8 @@ def export_overview(
         aismsglog(allmessages.AISMessageLog): object to log all AIS messages
         outputdir(str): directory path to export files to
         printsummary(bool): whether to print a summary to the terminal
+        orderby(str): order the stations by 'Types', 'Flags' or 'Class'
+                          default is 'Types'
     """
     stnstats = aistracker.tracker_stats()
     sentencestats = nmeatracker.nmea_stats()
@@ -110,7 +113,7 @@ def export_overview(
     write_csv_file(
         outputdata, os.path.join(outputdir, 'vessel-data.csv'))
     aistracker.create_kml_map(
-        os.path.join(outputdir, 'map.kmz'), kmzoutput=True)
+        os.path.join(outputdir, 'map.kmz'), kmzoutput=True, orderby=orderby)
     jsonlineslist, messagecsvlist = aismsglog.debug_output()
     write_json_lines(
         jsonlineslist, os.path.join(outputdir, 'ais-messages.jsonl'))
@@ -118,7 +121,7 @@ def export_overview(
         messagecsvlist, os.path.join(outputdir, 'ais-messages.csv'))
 
 
-def export_everything(aistracker, aismsglog, outputdir):
+def export_everything(aistracker, aismsglog, outputdir, orderby='Types'):
     """
     export everything we have on each AIS Station
 
@@ -126,6 +129,8 @@ def export_everything(aistracker, aismsglog, outputdir):
         aistracker(ais.AISTracker): object tracking all AIS stations
         aismsglog(allmessages.AISMessageLog): object to log all AIS messages
         outputdir(str): directory path to export files to
+        orderby(str): order the stations by 'Types', 'Flags' or 'Class'
+                          default is 'Types'
     """
     AISLOGGER.info('outputting data for all AIS stations')
     mmsicatagories = aistracker.sort_mmsi_by_catagory()
@@ -134,13 +139,13 @@ def export_everything(aistracker, aismsglog, outputdir):
         os.mkdir(aisstndir)
     except FileExistsError:
         pass
-    for catagory in mmsicatagories['Types']:
+    for catagory in mmsicatagories[orderby]:
         AISLOGGER.info('processing %s', catagory)
         try:
             os.mkdir(os.path.join(aisstndir, catagory))
         except FileExistsError:
             pass
-        for mmsi in mmsicatagories['Types'][catagory]:
+        for mmsi in mmsicatagories[orderby][catagory]:
             stnobj = aistracker.stations[mmsi]
             if stnobj.name != '':
                 foldername = '{} - {}'.format(
