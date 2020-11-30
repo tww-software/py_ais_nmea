@@ -6,6 +6,13 @@ as timing references for NMEA0183 text files
 import tkinter
 
 
+TIMEHELP = """
+Choose AIS Base Stations to use as a timing reference. Double click rows in the
+AIS Base Stations table (top box) to add to the timing sources (bottom box).
+To remove a AIS Base station as a timing source, double click its MMSI in the
+timing sources box.
+"""
+
 class BaseStationTimesWindow(tkinter.Toplevel):
     """
     window to configure timing sources for NMEA0183 text files
@@ -24,15 +31,20 @@ class BaseStationTimesWindow(tkinter.Toplevel):
 
     def __init__(self, window, basestntable):
         tkinter.Toplevel.__init__(self, window)
+        basestnframe = tkinter.Frame(self)
+        treelabel = tkinter.Label(
+            basestnframe, text='AIS Base Stations Available')
+        treelabel.pack(side=tkinter.TOP)
         self.window = window
         self.basestntable = basestntable
-        self.tree = tkinter.ttk.Treeview(self)
+        self.tree = tkinter.ttk.Treeview(basestnframe)
         verticalscrollbar = tkinter.ttk.Scrollbar(
-            self, orient=tkinter.VERTICAL, command=self.tree.yview)
+            basestnframe, orient=tkinter.VERTICAL, command=self.tree.yview)
         verticalscrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
         horizontalscrollbar = tkinter.ttk.Scrollbar(
-            self, orient=tkinter.HORIZONTAL, command=self.tree.xview)
+            basestnframe, orient=tkinter.HORIZONTAL, command=self.tree.xview)
         horizontalscrollbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+        basestnframe.pack(side=tkinter.TOP)
         self.tree.bind("<Double-1>", self.on_tree_item_doubleclick)
         self.tree.configure(yscrollcommand=verticalscrollbar.set,
                             xscrollcommand=horizontalscrollbar.set)
@@ -42,6 +54,8 @@ class BaseStationTimesWindow(tkinter.Toplevel):
         savesettingsbutton = tkinter.Button(
             self, text='Save Settings', command=self.save_settings)
         savesettingsbutton.pack()
+        helplabel = tkinter.Label(self, text=TIMEHELP)
+        helplabel.pack(side=tkinter.TOP)
         self.transient(self.window)
         self.grab_set()
         self.window.wait_window(self)
@@ -80,12 +94,11 @@ class BaseStationTimesWindow(tkinter.Toplevel):
         """
         draw a table of all the AIS Base stations we have
         """
-        treelabel = tkinter.Label(self, text='AIS Base Stations Available')
-        treelabel.pack()
         if new:
             self.tree.delete(*self.tree.get_children())
             self.tree["columns"] = self.basestntable[0]
-            for column in self.basestntable[0]:
+            columnnames = self.basestntable.pop(0)
+            for column in columnnames:
                 self.tree.column(column, width=200, minwidth=70,
                                  stretch=tkinter.YES)
                 self.tree.heading(column, text=column, anchor=tkinter.W)
