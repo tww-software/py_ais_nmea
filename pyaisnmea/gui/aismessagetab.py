@@ -77,12 +77,32 @@ class MessageWindow(tkinter.Toplevel):
         window(tkinter.Tk): the main window this spawns from
     """
 
-    def __init__(self, window):
+    def __init__(self, window, mmsi=None):
         tkinter.Toplevel.__init__(self, window)
         self.window = window
+        self.mmsi = str(mmsi)
         self.transient(self.window)
         self.msgdetailsbox = TextBoxTab(self)
-        self.msgdetailsbox.pack()
+        self.msgdetailsbox.pack(side=tkinter.TOP)
+        if mmsi:
+            lookupbutton = tkinter.Button(
+                self, text='Lookup Station', command=self.lookup_stn)
+            lookupbutton.pack(side=tkinter.BOTTOM)
+
+    def lookup_stn(self):
+        """
+        find the station that sent the message and display its info in the
+        AIS Stations tab on the main GUI window
+        """
+        if len(self.mmsi) == 7:
+            self.mmsi = '00' + self.mmsi
+        elif len(self.mmsi) == 8:
+            self.mmsi = '0' + self.mmsi
+        stnobj = self.window.tabs.window.aistracker.stations[self.mmsi]
+        lookup = '{}  {}'.format(self.mmsi, stnobj.name)
+        self.window.tabs.stninfotab.stnoptions.set(lookup)
+        self.window.tabs.stninfotab.show_stn_info()
+        self.window.tabs.select(self.window.tabs.stninfotab)
 
 
 class AISMessageTab(tkinter.ttk.Frame):
@@ -128,7 +148,8 @@ class AISMessageTab(tkinter.ttk.Frame):
         item = self.tree.identify('item', event.x, event.y)
         clickedmsgno = self.tree.item(item)['values'][0]
         clickednmea = self.tree.item(item)['values'][1]
-        messagewindow = MessageWindow(self.tabs.window)
+        clickedmmsi = self.tree.item(item)['values'][3]
+        messagewindow = MessageWindow(self, mmsi=clickedmmsi)
         msgsummary = export.create_summary_text(
             self.tabs.window.messagelog.messagedict[
                 (clickedmsgno, clickednmea)].__dict__)
