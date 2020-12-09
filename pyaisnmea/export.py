@@ -78,7 +78,7 @@ def create_summary_text(summary):
 
 def export_overview(
         aistracker, nmeatracker, aismsglog, outputdir, printsummary=False,
-        orderby='Types'):
+        orderby='Types', region='A'):
     """
     export the most popular file formats
     KMZ - map
@@ -93,6 +93,7 @@ def export_overview(
         printsummary(bool): whether to print a summary to the terminal
         orderby(str): order the stations by 'Types', 'Flags' or 'Class'
                           default is 'Types'
+        region(str): IALA region, default is A
     """
     stnstats = aistracker.tracker_stats()
     sentencestats = nmeatracker.nmea_stats()
@@ -113,7 +114,8 @@ def export_overview(
     write_csv_file(
         outputdata, os.path.join(outputdir, 'vessel-data.csv'))
     aistracker.create_kml_map(
-        os.path.join(outputdir, 'map.kmz'), kmzoutput=True, orderby=orderby)
+        os.path.join(outputdir, 'map.kmz'), kmzoutput=True,
+        orderby=orderby, region=region)
     jsonlineslist, messagecsvlist = aismsglog.debug_output()
     write_json_lines(
         jsonlineslist, os.path.join(outputdir, 'ais-messages.jsonl'))
@@ -121,7 +123,8 @@ def export_overview(
         messagecsvlist, os.path.join(outputdir, 'ais-messages.csv'))
 
 
-def export_everything(aistracker, aismsglog, outputdir, orderby='Types'):
+def export_everything(
+        aistracker, aismsglog, outputdir, orderby='Types', region='A'):
     """
     export everything we have on each AIS Station
 
@@ -131,6 +134,7 @@ def export_everything(aistracker, aismsglog, outputdir, orderby='Types'):
         outputdir(str): directory path to export files to
         orderby(str): order the stations by 'Types', 'Flags' or 'Class'
                           default is 'Types'
+        region(str): IALA region, default is A
     """
     AISLOGGER.info('outputting data for all AIS stations')
     mmsicatagories = aistracker.sort_mmsi_by_catagory()
@@ -159,7 +163,8 @@ def export_everything(aistracker, aismsglog, outputdir, orderby='Types'):
             except FileExistsError:
                 pass
             stnobj.create_kml_map(
-                os.path.join(mmsipath, 'map.kmz'), kmzoutput=True)
+                os.path.join(mmsipath, 'map.kmz'), kmzoutput=True,
+                region=region)
             stninfo = stnobj.get_station_info(verbose=True, messagetally=True)
             write_json_file(
                 stninfo, os.path.join(mmsipath, 'vessel-data.json'))

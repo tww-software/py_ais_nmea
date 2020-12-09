@@ -49,9 +49,21 @@ class ExportTab(tkinter.ttk.Frame):
         self.exportoptions = tkinter.ttk.Combobox(self, state='readonly')
         self.orderby = tkinter.ttk.Combobox(self, state='readonly')
         self.exporthelplabel = tkinter.Label(self)
+        self.region = tkinter.StringVar()
+        self.regionlabel = tkinter.Label(self)
         self.export_options()
         self.exportoptions.bind("<<ComboboxSelected>>", self.show_export_help)
         self.show_export_help()
+
+    def region_selected_help(self):
+        currentregion = self.region.get()
+        atext = 'Europe, Africa, Asia, Oceania, Greenland.'
+        btext = ('North & South America, Japan, South Korea, '
+                 'the Philippines, Taiwan, Hawaii, Easter Island.')
+        if currentregion == 'A':
+            self.regionlabel.config(text=atext)
+        elif currentregion == 'B':
+            self.regionlabel.config(text=btext)
 
     def export_options(self):
         """
@@ -68,11 +80,23 @@ class ExportTab(tkinter.ttk.Frame):
         self.orderby.set('Types')
         self.orderby.grid(column=1, row=2)
         orderbylabel = tkinter.Label(self)
-        orderbylabel.configure(text='Output Order (for KMZ,KML and EVERYTHING')
+        orderbylabel.configure(
+            text='Output Order (for KMZ,KML and EVERYTHING)')
         orderbylabel.grid(column=2, row=2)
+        radioa = tkinter.Radiobutton(
+            self, text="IALA Region A", variable=self.region, value='A',
+            command=self.region_selected_help)
+        radiob = tkinter.Radiobutton(
+            self, text="IALA Region B", variable=self.region, value='B',
+            command=self.region_selected_help)
+        radioa.grid(column=1, row=3)
+        radiob.grid(column=2, row=3)
+        radioa.select()
+        self.region_selected_help()
+        self.regionlabel.grid(column=4, row=3)
         exportbutton = tkinter.Button(self, text='Export',
                                       command=self.export_files)
-        exportbutton.grid(column=1, row=3)
+        exportbutton.grid(column=1, row=4)
 
     def export_files(self):
         """
@@ -162,13 +186,21 @@ class ExportTab(tkinter.ttk.Frame):
             ExportAborted: if the user clicks cancel
         """
         orderby = self.orderby.get()
-        outputfile = tkinter.filedialog.asksaveasfilename(
-            defaultextension=".kml",
-            filetypes=(("keyhole markup language", "*.kml"),
-                       ("All Files", "*.*")))
+        currentregion = self.region.get()
+        if kmz:
+            outputfile = tkinter.filedialog.asksaveasfilename(
+                defaultextension=".kmz",
+                filetypes=(("keyhole markup language", "*.kmz"),
+                           ("All Files", "*.*")))
+        else:
+            outputfile = tkinter.filedialog.asksaveasfilename(
+                defaultextension=".kml",
+                filetypes=(("keyhole markup language", "*.kml"),
+                           ("All Files", "*.*")))
         if outputfile:
             self.tabs.window.aistracker.create_kml_map(
-                outputfile, kmzoutput=kmz, orderby=orderby)
+                outputfile, kmzoutput=kmz, orderby=orderby,
+                region=currentregion)
         else:
             raise ExportAborted('Export cancelled by user.')
 
@@ -256,6 +288,7 @@ class ExportTab(tkinter.ttk.Frame):
             ExportAborted: if the user clicks cancel
         """
         orderby = self.orderby.get()
+        currentregion = self.region.get()
         if not outpath:
             outpath = tkinter.filedialog.askdirectory()
             if outpath:
@@ -263,7 +296,7 @@ class ExportTab(tkinter.ttk.Frame):
                     self.tabs.window.aistracker,
                     self.tabs.window.nmeatracker,
                     self.tabs.window.messagelog,
-                    outpath, orderby=orderby)
+                    outpath, orderby=orderby, region=currentregion)
             else:
                 raise ExportAborted('Export cancelled by user.')
 
@@ -275,6 +308,7 @@ class ExportTab(tkinter.ttk.Frame):
             ExportAborted: if the user clicks cancel
         """
         orderby = self.orderby.get()
+        currentregion = self.region.get()
         previoustext = self.tabs.window.statuslabel['text']
         res = tkinter.messagebox.askyesno(
             'Export Everything',
@@ -291,11 +325,11 @@ class ExportTab(tkinter.ttk.Frame):
                     self.tabs.window.aistracker,
                     self.tabs.window.nmeatracker,
                     self.tabs.window.messagelog,
-                    outpath, orderby=orderby)
+                    outpath, orderby=orderby, region=currentregion)
                 export.export_everything(
                     self.tabs.window.aistracker,
                     self.tabs.window.messagelog,
-                    outpath, orderby=orderby)
+                    outpath, orderby=orderby, region=currentregion)
                 self.tabs.window.statuslabel.config(
                     text=previoustext, bg='light grey')
             else:

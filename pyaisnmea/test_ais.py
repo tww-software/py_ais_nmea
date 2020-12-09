@@ -8,6 +8,7 @@ Unit tests for the AIS Decoder
 # pylint: disable=invalid-name
 
 
+import copy
 import datetime
 import os
 import unittest
@@ -987,6 +988,24 @@ class IconTests(unittest.TestCase):
                                            icons.ICONS[vesselname])):
                 exists += 1
         self.assertEqual(len(icons.ICONS), exists)
+
+    def test_region_switchA(self):
+        """
+        test switching IALA regions to A
+        """
+        regionaicons = copy.deepcopy(icons.ICONS)
+        regionaicons.update(icons.REGIONA)
+        icons.switch_IALA_region('A')
+        self.assertDictEqual(regionaicons, icons.ICONS)
+
+    def test_region_switchB(self):
+        """
+        test switching IALA regions to B
+        """
+        regionbicons = copy.deepcopy(icons.ICONS)
+        regionbicons.update(icons.REGIONB)
+        icons.switch_IALA_region('B')
+        self.assertDictEqual(regionbicons, icons.ICONS)
 
     def test_green_arrows(self):
         """

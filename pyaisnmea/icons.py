@@ -60,10 +60,6 @@ ICONS = {'Base Station': 'basestn.png',
          'Special Mark': 'specialmark.png',
          'Safe Water': 'safewater.png',
          'Isolated danger': 'isolateddanger.png',
-         'Preferred Channel Starboard hand': 'preferredchannelstarboard.png',
-         'Starboard hand Mark': 'starboard.png',
-         'Preferred Channel Port hand': 'preferredchannelport.png',
-         'Port hand Mark': 'port.png',
          'Cardinal Mark W': 'cardinalmarkw.png',
          'Cardinal Mark E': 'cardinalmarke.png',
          'Cardinal Mark N': 'cardinalmarkn.png',
@@ -76,10 +72,6 @@ ICONS = {'Base Station': 'basestn.png',
          'Beacon, Cardinal E': 'cardinalmarke.png',
          'Beacon, Cardinal S': 'cardinalmarks.png',
          'Beacon, Cardinal W': 'cardinalmarkw.png',
-         'Beacon, Port hand': 'port.png',
-         'Beacon, Starboard hand': 'starboard.png',
-         'Beacon, Preferred Channel port hand': 'port.png',
-         'Beacon, Preferred Channel starboard hand': 'starboard.png',
          'Beacon, Isolated danger': 'isolateddanger.png',
          'Beacon, Safe water': 'safewater.png',
          'Beacon, Special mark': 'specialmark.png',
@@ -119,3 +111,57 @@ ICONS = {'Base Station': 'basestn.png',
          'EPIRB (Emergency Position Indicating Radio Beacon)': 'epirb.png',
          'Portable VHF Transceiver': 'portablevhf.png',
          'Reference point': 'referencepoint.png'}
+
+
+REGIONA = {
+    'Preferred Channel Port hand': 'preferredchannelport.png',
+    'Port hand Mark': 'port.png',
+    'Beacon, Port hand': 'port.png',
+    'Beacon, Preferred Channel port hand': 'port.png',
+    'Preferred Channel Starboard hand': 'preferredchannelstarboard.png',
+    'Starboard hand Mark': 'starboard.png',
+    'Beacon, Starboard hand': 'starboard.png',
+    'Beacon, Preferred Channel starboard hand': 'starboard.png'}
+
+
+REGIONB = {
+    'Preferred Channel Port hand': 'preferredchannelportB.png',
+    'Port hand Mark': 'portB.png',
+    'Beacon, Port hand': 'portB.png',
+    'Beacon, Preferred Channel port hand': 'portB.png',
+    'Preferred Channel Starboard hand': 'preferredchannelstarboardB.png',
+    'Starboard hand Mark': 'starboardB.png',
+    'Beacon, Starboard hand': 'starboardB.png',
+    'Beacon, Preferred Channel starboard hand': 'starboardB.png'}
+
+
+def switch_IALA_region(region):
+    """
+    switch between IALA region A and B
+
+    Note:
+        Region A = Rest of the world
+        Region B = North and South America (excluding Greenland),
+                   Japan, Korea and the Philippines
+
+    Args:
+        region(str): IALA region either A or B
+    """
+    if region in ('A', 'a'):
+        ICONS.update(REGIONA)
+    elif region in ('B', 'b'):
+        ICONS.update(REGIONB)
+
+
+def all_icons():
+    """
+    return a set of all icons available
+
+    Returns:
+        allicons(set): set of all icon filenames including
+                       ones for both regions
+    """
+    allicons = set(ICONS.values())
+    allicons.update(REGIONA.values())
+    allicons.update(REGIONB.values())
+    return allicons

@@ -306,7 +306,7 @@ class AISStation():
             positionlines.append(posrepline)
         export.write_csv_file(positionlines, outputfile, dialect=dialect)
 
-    def create_kml_map(self, outputfile, kmzoutput=True):
+    def create_kml_map(self, outputfile, kmzoutput=True, region='A'):
         """
         create a KML map of this stations positions
 
@@ -314,6 +314,7 @@ class AISStation():
             outputfile(str): full path to output to
             kmzoutput(bool): whether to create a kmz with custom icons (True)
                              or a basic kml file (False)
+            region(str): IALA region, default is A
         """
         greenarrows = set()
         orangearrows = set()
@@ -322,7 +323,8 @@ class AISStation():
         else:
             docpath = os.path.join(outputfile)
         kmlmap = kml.KMLOutputParser(docpath)
-        kmlmap.create_kml_header(kmz=kmzoutput, iconsused=self.stntype)
+        kmlmap.create_kml_header(
+            kmz=kmzoutput, iconsused=self.stntype, ialaregion=region)
         stninfo = self.get_station_info(messagetally=False)
         if self.name != '':
             displayname = self.mmsi + ' - ' + self.name
@@ -607,7 +609,7 @@ class AISTracker():
 
     def create_kml_map(
             self, outputfile, kmzoutput=True, linestring=True, livemap=False,
-            livemaptimeout=480, orderby='Types'):
+            livemaptimeout=480, orderby='Types', region='A'):
         """
         create a KML map of all the vessels we have on record
 
@@ -624,13 +626,14 @@ class AISTracker():
                                  APPLIES TO LIVE MAP ONLY
             orderby(str): order the stations by 'Types', 'Flags' or 'Class'
                           default is 'Types'
+            region(str): IALA region, default is A
         """
         if kmzoutput and not livemap:
             docpath = os.path.join(os.path.dirname(outputfile), 'doc.kml')
         else:
             docpath = os.path.join(outputfile)
         kmlmap = kml.KMLOutputParser(docpath)
-        kmlmap.create_kml_header(kmz=kmzoutput)
+        kmlmap.create_kml_header(kmz=kmzoutput, ialaregion=region)
         organisedstns = self.sort_mmsi_by_catagory()
         for catagory in organisedstns[orderby]:
             kmlmap.open_folder(catagory)

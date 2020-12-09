@@ -139,7 +139,7 @@ class KMLOutputParser():
         description = ''.join(descriptionlist)
         return description
 
-    def create_kml_header(self, kmz=True, iconsused='all'):
+    def create_kml_header(self, kmz=True, iconsused='all', ialaregion='A'):
         """
         Write the first part of the KML output file.
         This only needs to be called once at the start of the kml file.
@@ -148,9 +148,11 @@ class KMLOutputParser():
             kmz(bool): is this for a KMZ file or not?
             iconsused(str): do we use 'all' the icons (default)
                             or specify a single icon?
+            ialaregion(str): which IALA region are we in A or B, default is A
         """
         self.kmldoc.append(self.kmlheader)
         if kmz:
+            icons.switch_IALA_region(ialaregion)
             if iconsused == 'all':
                 for icontype in icons.ICONS:
                     iconkml = self.styletemplate % (icontype,
@@ -261,7 +263,7 @@ class InvalidDateTimeString(Exception):
     """
 
 
-def make_kmz(kmzoutputfilename, iconslist=set(icons.ICONS.values()),
+def make_kmz(kmzoutputfilename, iconslist=None,
              greenarrows=range(0, 360), orangearrows=range(0, 360)):
     """
     make a kmz file out of the doc.kml and symbols directory
@@ -269,7 +271,11 @@ def make_kmz(kmzoutputfilename, iconslist=set(icons.ICONS.values()),
     Args:
         kmzoutputfilename(str): full path to the .kmz file to output
         iconslist(list): list of icons required
+        greenarrows(list): list of headings required
+        orangearrows(list): list of CoG required
     """
+    if iconslist is None:
+        iconslist = icons.all_icons()
     docpath = os.path.join(os.path.dirname(kmzoutputfilename), 'doc.kml')
     iconspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                              'static', 'icons')
@@ -292,7 +298,7 @@ def make_kmz(kmzoutputfilename, iconslist=set(icons.ICONS.values()),
                 kmz.write(os.path.join(orangearrowspath, str(arrow) + '.png'),
                           os.path.join('orange_arrows', str(arrow) + '.png'))
             os.remove(docpath)
-        except Exception as err:
+        except (NotImplementedError, RuntimeError, zipfile.BadZipFile) as err:
             print('zip error')
             print(str(err))
 
