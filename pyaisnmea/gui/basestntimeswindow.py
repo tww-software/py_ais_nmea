@@ -13,6 +13,7 @@ To remove a AIS Base station as a timing source, double click its MMSI in the
 timing sources box.
 """
 
+
 class BaseStationTimesWindow(tkinter.Toplevel):
     """
     window to configure timing sources for NMEA0183 text files
@@ -90,26 +91,24 @@ class BaseStationTimesWindow(tkinter.Toplevel):
         mmsiindex = self.basestnlistbox.get(0, tkinter.END).index(listboxitem)
         self.basestnlistbox.delete(mmsiindex)
 
-    def create_basestn_table(self, new=True):
+    def create_basestn_table(self):
         """
         draw a table of all the AIS Base stations we have
         """
-        if new:
-            self.tree.delete(*self.tree.get_children())
-            self.tree["columns"] = self.basestntable[0]
-            columnnames = self.basestntable.pop(0)
-            for column in columnnames:
-                self.tree.column(column, width=200, minwidth=70,
-                                 stretch=tkinter.YES)
-                self.tree.heading(column, text=column, anchor=tkinter.W)
+        self.tree.delete(*self.tree.get_children())
+        self.tree["columns"] = self.basestntable[0]
+        columnnames = self.basestntable.pop(0)
+        for column in columnnames:
+            self.tree.column(column, width=200, minwidth=70,
+                             stretch=tkinter.YES)
+            self.tree.heading(column, text=column, anchor=tkinter.W)
         for line in self.basestntable:
             try:
                 self.tree.insert('', 'end', values=line, iid=str(line[0]))
             except tkinter.TclError:
                 self.tree.item(item=str(line[0]), values=line)
-        if new:
-            self.tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
-            self.tree['show'] = 'headings'
+        self.tree.pack(side=tkinter.TOP, fill='both', expand=tkinter.TRUE)
+        self.tree['show'] = 'headings'
 
     def configure_basestn_listbox(self):
         """
