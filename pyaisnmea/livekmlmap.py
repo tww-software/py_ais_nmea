@@ -23,6 +23,9 @@ class LiveKMLMap():
     Args:
         outputpath(str): path to directory to write files to
         kmzoutput(bool): if true then full colour icons are used
+        orderby(str): order the stations by 'Types', 'Flags' or 'Class'
+                      default is 'Types'
+        region(str): IALA region, default is A
 
     Attributes:
         kmlnetlink(str): the KML for a netlink file
@@ -49,8 +52,11 @@ class LiveKMLMap():
     </NetworkLink>
 </kml>"""
 
-    def __init__(self, outputpath, kmzoutput=False):
+    def __init__(self, outputpath, kmzoutput=False,
+                 orderby='Types', region='A'):
         self.kmzoutput = kmzoutput
+        self.orderby = orderby
+        self.region = region
         self.outputpath = outputpath
         self.mpq = multiprocessing.Queue()
         self.serverprocess = None
@@ -131,7 +137,8 @@ class LiveKMLMap():
                         if currenttime.endswith('5'):
                             self.aistracker.create_kml_map(
                                 self.kmlpath, kmzoutput=self.kmzoutput,
-                                linestring=False, livemap=True)
+                                linestring=False, livemap=True,
+                                orderby=self.orderby, region=self.region)
                             time.sleep(1)
                 except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
                         ais.UnknownMessageType, ais.InvalidMMSI) as err:

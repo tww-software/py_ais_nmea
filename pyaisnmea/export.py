@@ -92,8 +92,8 @@ def export_overview(
         outputdir(str): directory path to export files to
         printsummary(bool): whether to print a summary to the terminal
         orderby(str): order the stations by 'Types', 'Flags' or 'Class'
-                          default is 'Types'
-        region(str): IALA region, default is A
+                      default is 'Types'
+        region(str): IALA region 'A' or 'B', default is 'A'
     """
     stnstats = aistracker.tracker_stats()
     sentencestats = nmeatracker.nmea_stats()
@@ -134,7 +134,7 @@ def export_everything(
         outputdir(str): directory path to export files to
         orderby(str): order the stations by 'Types', 'Flags' or 'Class'
                           default is 'Types'
-        region(str): IALA region, default is A
+        region(str): IALA region 'A' or 'B', default is 'A'
     """
     AISLOGGER.info('outputting data for all AIS stations')
     mmsicatagories = aistracker.sort_mmsi_by_catagory()
