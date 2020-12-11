@@ -89,7 +89,25 @@ class NetworkSettingsWindow(tkinter.Toplevel):
             kmlgroup, text='KMZ map (full colour icons)',
             var=self.window.kmzlivemap)
         self.kmzchk.pack()
-
+        orderbylabel = tkinter.Label(kmlgroup)
+        orderbylabel.configure(
+            text='Order AIS Stations by...')
+        orderbylabel.pack()
+        self.orderby = tkinter.ttk.Combobox(kmlgroup, state='readonly')
+        self.region = tkinter.StringVar()
+        self.orderby['values'] = ('Flags', 'Class', 'Types')
+        self.orderby.set(self.window.netsettings['Order Stations By'])
+        self.orderby.pack()
+        radioa = tkinter.Radiobutton(
+            kmlgroup, text="IALA Region A", variable=self.region, value='A')
+        radiob = tkinter.Radiobutton(
+            kmlgroup, text="IALA Region B", variable=self.region, value='B')
+        radioa.pack()
+        radiob.pack()
+        if self.window.netsettings['IALA Region'] == 'A':
+            radioa.select()
+        elif self.window.netsettings['IALA Region'] == 'B':
+            radiob.select()
         savesettingsbutton = tkinter.Button(
             self, text='Save Settings', command=self.save_settings)
         savesettingsbutton.pack()
@@ -128,6 +146,8 @@ class NetworkSettingsWindow(tkinter.Toplevel):
                 self.remoteport.get())
             self.window.netsettings['Log File Path'] = self.logpath.get()
             self.window.netsettings['KML File Path'] = self.kmlpath.get()
+            self.window.netsettings['Order Stations By'] = self.orderby.get()
+            self.window.netsettings['IALA Region'] = self.region.get()
             tkinter.messagebox.showinfo(
                 'Network Settings', 'Network Settings Saved', parent=self)
         self.destroy()

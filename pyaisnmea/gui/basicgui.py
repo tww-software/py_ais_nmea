@@ -89,7 +89,9 @@ class BasicGUI(tkinter.Tk):
         'Remote Server IP': '127.0.0.1',
         'Remote Server Port': 10111,
         'Log File Path': '',
-        'KML File Path': ''}
+        'KML File Path': '',
+        'Order Stations By': 'Types',
+        'IALA Region': 'A'}
 
     def __init__(self):
         tkinter.Tk.__init__(self)
@@ -205,7 +207,9 @@ class BasicGUI(tkinter.Tk):
         if self.netsettings['KML File Path'] != '':
             kmzoutput = bool(self.kmzlivemap.get() == 1)
             self.livemap = livekmlmap.LiveKMLMap(
-                self.netsettings['KML File Path'], kmzoutput=kmzoutput)
+                self.netsettings['KML File Path'], kmzoutput=kmzoutput,
+                orderby=self.netsettings['Order Stations By'],
+                region=self.netsettings['IALA Region'])
             self.livemap.create_netlink_file()
         if self.forwardsentences.get() == 1:
             print('forwarding sentences')
