@@ -19,7 +19,13 @@ Sentences can be either read from a text file or direct from the network.
 
 To read NMEA sentences from a file:
 1. go to File > Open
-2. browse to the file to open and click 'Open'
+2. browse to the file to open and click 'Open', select what type of file
+   you want to import using the 'Files of type' dropdown
+3. if you have selected a plain NMEA0183 text file containing Type 4 messages,
+   a window will appear allowing you to choose an AIS Base Station (or multiple
+   AIS Base Stations to use as a timing reference
+
+JSON Lines and CSV files previously exported by PYAISNMEA can also be imported.
 
 To read NMEA sentences from the network:
 1. go to Network > Settings
@@ -112,6 +118,9 @@ The export options are:
 {}
 
 Data cannot be exported whilst the server is listening.
+
+For KML,KMZ and EVERYTHING output, you can choose to organise
+the output by Class, Types or Flags.
 """.format(EXPORTHELP)
 
 

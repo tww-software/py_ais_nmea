@@ -1,6 +1,6 @@
 # Py AIS NMEA
 
-A program to decode AIS NMEA 0183 sentences written in Python 3.
+A program to decode AIS NMEA 0183 sentences. It is written in Python 3.
 
 
 ## Installation
@@ -29,6 +29,7 @@ Sentences can be either read from a text file or direct from the network.
 ### To read NMEA sentences from a file:
 1. go to File > Open
 2. browse to the file to open and click 'Open'
+3. if you have selected a plain NMEA0183 text file containing Type 4 messages, a window will appear allowing you to choose an AIS Base Station to use as a timing reference
 
 A sample NMEA 0183 text file has been included for testing. It is called 'sample_nmea.txt'.
 This text file contains 10296 NMEA sentences and 10027 AIS messages of 12 different types.
@@ -56,7 +57,6 @@ location and filename.
 To display AIS locations onto a live kmz map, click 'Choose KMZ Path' and
 select an output directory.
 Open 'netlink.kml' in Google Earth to view AIS locations.
-This is an experimental feature.
 
 You must click 'Save Settings' for changes to take effect!
 
@@ -92,6 +92,8 @@ The export options are:
 * DEBUG        - outputs 2 files (CSV and JSON lines) output of all decoded messages
 
 Data cannot be exported whilst the server is listening.
+
+For KML,KMZ and EVERYTHING output, you can choose to organise the output by Class, Types or Flags.
 
 ### Message Log Tab
 A table of all the AIS messages.
@@ -152,7 +154,8 @@ SOFTWARE.
 
 ## Useful Resources
 
-These are some useful resources that i found helpful whilst creating this software.
+These are some useful resources that I found helpful whilst creating this software.
 
-[Maritech Solutions AIS VDM & VDO Message Decoder ](https://www.maritec.co.za/tools/aisvdmvdodecoding/)
-[AIVDM/AIVDO protocol decoding](https://gpsd.gitlab.io/gpsd/AIVDM.html)
+* [Maritech Solutions AIS VDM & VDO Message Decoder ](https://www.maritec.co.za/tools/aisvdmvdodecoding/)
+* [AIVDM/AIVDO protocol decoding](https://gpsd.gitlab.io/gpsd/AIVDM.html)
+* [AIS (Wikipedia)](https://en.wikipedia.org/wiki/Automatic_identification_system)

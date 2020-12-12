@@ -258,8 +258,8 @@ def print_table(tablelist):
 
 
 def read_from_file(
-    filepath, outpath, everything=False, filetype='text', orderby='Types',
-    region='A'):
+        filepath, outpath, everything=False, filetype='text', orderby='Types',
+        region='A'):
     """
     read AIS NMEA sentences from a text file and save to various output formats
 
@@ -274,7 +274,7 @@ def read_from_file(
         everything(bool): whether to output files for every individual station
         filetype(str): what type of file are we reading from
                        options are text, csv or jsonlines
-        orderby(str): order KML/KMZ output and Everything station folders by 
+        orderby(str): order KML/KMZ output and Everything station folders by
                       'Types', 'Flags' or 'Class', default is 'Types'
         region(str): IALA region 'A' or 'B', default is 'A'
     """
@@ -336,6 +336,6 @@ def read_from_file(
         aistracker, nmeatracker, messagelog, outpath, printsummary=True,
         orderby=orderby, region=region)
     if everything:
-        export.export_everything(aistracker, messagelog, outpath,
-        orderby=orderby, region=region)
+        export.export_everything(
+            aistracker, messagelog, outpath, orderby=orderby, region=region)
     AISLOGGER.info('Finished')
