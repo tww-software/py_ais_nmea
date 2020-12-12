@@ -394,7 +394,9 @@ class BasicGUI(tkinter.Tk):
                     self.aistracker.create_kml_map(
                         self.livemap.kmlpath, kmzoutput=self.livemap.kmzoutput,
                         linestring=False, livemap=True,
-                        livemaptimeout=480)
+                        livemaptimeout=480,
+                        orderby=self.netsettings['Order Stations By'],
+                        region=self.netsettings['IALA Region'])
                 time.sleep(1)
 
     def quit(self):
