@@ -16,6 +16,7 @@ import xml.etree.ElementTree
 
 import pyaisnmea.ais as ais
 import pyaisnmea.binary as binary
+import pyaisnmea.capturefile as capturefile
 import pyaisnmea.export as export
 import pyaisnmea.geojson as geojson
 import pyaisnmea.icons as icons
@@ -1119,6 +1120,26 @@ class TextSummaryFormattingTests(unittest.TestCase):
 """
         testresult = export.create_summary_text(testdict)
         self.assertEqual(testresult, expectedstr)
+
+    def test_table_print(self):
+        """
+        test the print table function, all columns should be padded with the
+        correct amount of whitespace
+        """
+        testlist = [
+            ['very large first column', 'smaller second', 'third'],
+            ['Row 1 Col 1', 'Row 1 Col 2', 'Row 1 Col 3'],
+            ['Row 2 Col 1', 'Row 2 Col 2', 'Row 2 Col 3'],
+            ['Row 3 Col 1', 'Row 3 Col 2', 'Row 3 Col 3'],
+            ['Row 4 Col 1',	'Row 4 Col 2', 'Row 4 Col 3']]
+        comparewith = [
+            ['very large first column', 'smaller second', 'third      '],
+            ['Row 1 Col 1            ', 'Row 1 Col 2   ', 'Row 1 Col 3'],
+            ['Row 2 Col 1            ', 'Row 2 Col 2   ', 'Row 2 Col 3'],
+            ['Row 3 Col 1            ', 'Row 3 Col 2   ', 'Row 3 Col 3'],
+            ['Row 4 Col 1            ',	'Row 4 Col 2   ', 'Row 4 Col 3']]
+        testresult = capturefile.print_table(testlist)
+        self.assertListEqual(testresult, comparewith)
 
 
 class TurnRateTests(unittest.TestCase):
