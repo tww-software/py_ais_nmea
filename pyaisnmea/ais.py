@@ -720,8 +720,6 @@ class AISTracker():
             currentproperties = {}
             currentproperties.update(
                 stn.get_station_info())
-            currentproperties['Icon'] = \
-                icons.ICONS[stn.stntype]
             try:
                 currentproperties['Heading'] = lastpos['True Heading']
             except KeyError:
