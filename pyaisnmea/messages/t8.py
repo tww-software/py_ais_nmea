@@ -65,6 +65,33 @@ class Type8BinaryBroadcastMessage(pyaisnmea.messages.aismessage.AISMessage):
     precipitation = {0: 'Reserved', 1: 'Rain', 2: 'Thunderstorm',
                      3: 'Freezing Rain', 4: 'Mixed/ice', 5: 'Snow',
                      6: 'Reserved', 7: 'N/A'}
+    signalstatus = {0: 'N/A', 1: 'Regular Service', 2: 'Irregular Service',
+                    3: 'Reserved'}
+    marinetrafficsignals = {
+        0: 'N/A',
+        1: ('IALA port traffic signal 1: Serious emergency – '
+            'all vessels to stop or divert according to instructions.'),
+        2: 'IALA port traffic signal 2: Vessels shall not proceed.',
+        3: 'IALA port traffic signal 3: Vessels may proceed. One way traffic.',
+        4: 'IALA port traffic signal 4: Vessels may proceed. Two way traffic.',
+        5: ('IALA port traffic signal 5: A vessel may proceed only when it'
+            ' has received specific orders to do so.'),
+        6: ('IALA port traffic signal 2a: Vessels shall not proceed, '
+            'except that vessels which navigate outside the main channel'
+            ' need not comply with the main message.'),
+        7: ('IALA port traffic signal 5a: A vessel may proceed only when it '
+            'has received specific orders to do so; except that vessels which'
+            ' navigate outside the main channel need '
+            'not comply with the main message.'),
+        8: 'Japan Traffic Signal - I = "in-bound" only acceptable.',
+        9: 'Japan Traffic Signal - O = "out-bound" only acceptable.',
+        10: 'Japan Traffic Signal - F = both "in- and out-bound" acceptable.',
+        11: 'Japan Traffic Signal - XI = Code will shift to "I" in due time.',
+        12: 'Japan Traffic Signal - XO = Code will shift to "O" in due time.',
+        13: ('Japan Traffic Signal - X = Vessels shall not proceed, '
+             'except a vessel which receives the direction '
+             'from the competent authority.'),
+        14: 'Reserved'}
 
     def __init__(self, msgbinary):
         super().__init__(msgbinary)
@@ -83,6 +110,8 @@ class Type8BinaryBroadcastMessage(pyaisnmea.messages.aismessage.AISMessage):
             self.inland_static_and_voyage_data()
         elif self.designatedareacode == 1 and self.functionid == 31:
             self.meteorological_and_hydrological_data()
+        elif self.designatedareacode == 1 and self.functionid == 19:
+            self.marine_traffic_signals()
 
     def inland_static_and_voyage_data(self):
         """
@@ -185,6 +214,31 @@ class Type8BinaryBroadcastMessage(pyaisnmea.messages.aismessage.AISMessage):
             self.msgbinary[339:348])
         self.msgdetails['Ice'] = self.ice[self.decode_sixbit_integer(
             self.msgbinary[348:350])]
+
+    def marine_traffic_signals(self):
+        """
+        traffic information for entrance to a harbour which
+        traffic flow is controlled
+        """
+        self.msgsubtype = "Marine Traffic Signals"
+        self.msgdetails['Message Linkage ID'] = self.decode_sixbit_integer(
+            self.msgbinary[56:66])
+        self.msgdetails['Signal Station Name'] = binary.decode_sixbit_ascii(
+            self.msgbinary[66:186]).rstrip()
+        self.msgdetails['Signal Status'] = \
+            self.signalstatus[self.decode_sixbit_integer(
+                self.msgbinary[235:237])]
+        self.msgdetails['Signal In Service'] = \
+            self.marinetrafficsignals[self.decode_sixbit_integer(
+                self.msgbinary[237:242])]
+        hour = self.decode_sixbit_integer(
+            self.msgbinary[242:247])
+        minute = self.decode_sixbit_integer(
+            self.msgbinary[247:253])
+        self.msgdetails['Time UTC'] = '{:02d}:{:02d}'.format(hour, minute)
+        self.msgdetails['Expected Next Signal'] = \
+            self.marinetrafficsignals[self.decode_sixbit_integer(
+                self.msgbinary[253:258])]
 
     def get_details(self):
         """

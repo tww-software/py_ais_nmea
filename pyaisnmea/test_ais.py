@@ -680,6 +680,16 @@ class Type8BinaryMessageTests(unittest.TestCase):
         self.assertEqual(msg.msgsubtype,
                          'Meteorological and Hydrological Data')
 
+    def test_marine_traffic_signals(self):
+        """
+        Test to see if a particular type 8 message is recognised
+        """
+        payload = ('8>jHDF00Dh0B8EP3<?CEB5P<978D0006J?wjapFA<N00')
+        msgbinary = binary.ais_sentence_payload_binary(payload)
+        msg = t8.Type8BinaryBroadcastMessage(msgbinary)
+        self.assertEqual(msg.msgsubtype,
+                         'Marine Traffic Signals')
+
 
 class Type6BinaryMessageTests(unittest.TestCase):
     """
