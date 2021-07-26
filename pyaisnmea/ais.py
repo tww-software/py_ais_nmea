@@ -648,50 +648,53 @@ class AISTracker():
                         timediff = currenttime - lastpostime
                         if timediff.seconds > livemaptimeout:
                             continue
-                except NoSuitablePositionReport:
-                    continue
-                stntype = stn.stntype
-                stninfo = stn.get_station_info()
-                desc = kmlmap.format_kml_placemark_description(stninfo)
-                if stn.name != '':
-                    displayname = stn.mmsi + ' - ' + stn.name
-                else:
-                    displayname = stn.mmsi
-                kmlmap.open_folder(displayname)
-                try:
-                    alt = str(lastpos['Altitude (m)'])
-                except KeyError:
-                    alt = '0'
-                try:
-                    heading = lastpos['True Heading']
-                    if heading != HEADINGUNAVAILABLE and kmzoutput:
-                        hdesc = 'TRUE HEADING - {}'.format(heading)
-                        kmlmap.add_kml_placemark(
-                            'TH', hdesc,
-                            str(lastpos['Longitude']),
-                            str(lastpos['Latitude']),
-                            str(heading) + 'TH', alt, kmzoutput)
-                except KeyError:
-                    pass
-                try:
-                    cog = int(lastpos['CoG'])
-                    if cog != COGUNAVAILABLE and kmzoutput:
-                        hdesc = 'COURSE OVER GROUND - {}'.format(cog)
-                        kmlmap.add_kml_placemark('CoG', hdesc,
+                        desc = lastpos['Time']
+                    else:
+                        stninfo = stn.get_station_info()
+                        desc = kmlmap.format_kml_placemark_description(stninfo)
+                    if stn.name != '':
+                        displayname = stn.mmsi + ' - ' + stn.name
+                    else:
+                        displayname = stn.mmsi
+                        kmlmap.open_folder(displayname)
+                        try:
+                            alt = str(lastpos['Altitude (m)'])
+                        except KeyError:
+                            alt = '0'
+                        try:
+                            heading = lastpos['True Heading']
+                            if heading != HEADINGUNAVAILABLE and kmzoutput:
+                                hdesc = 'HEADING - {}'.format(heading)
+                                kmlmap.add_kml_placemark(
+                                    hdesc, '',
+                                    str(lastpos['Longitude']),
+                                    str(lastpos['Latitude']),
+                                    str(heading) + 'TH', alt, kmzoutput)
+                        except KeyError:
+                            pass
+                        try:
+                            cog = int(lastpos['CoG'])
+                            if cog != COGUNAVAILABLE and kmzoutput:
+                                hdesc = 'CoG - {}'.format(cog)
+                                kmlmap.add_kml_placemark(
+                                    hdesc, '',
+                                    str(lastpos['Longitude']),
+                                    str(lastpos['Latitude']),
+                                    str(cog) + 'CoG',
+                                    alt, kmzoutput)
+                        except KeyError:
+                            pass
+                        if linestring:
+                            posreps = stn.posrep
+                            kmlmap.add_kml_placemark_linestring(
+                                stn.mmsi, posreps)
+                        kmlmap.add_kml_placemark(displayname, desc,
                                                  str(lastpos['Longitude']),
                                                  str(lastpos['Latitude']),
-                                                 str(cog) + 'CoG',
-                                                 alt, kmzoutput)
-                except KeyError:
-                    pass
-                if linestring:
-                    posreps = stn.posrep
-                    kmlmap.add_kml_placemark_linestring(stn.mmsi, posreps)
-                kmlmap.add_kml_placemark(displayname, desc,
-                                         str(lastpos['Longitude']),
-                                         str(lastpos['Latitude']),
-                                         stntype, alt, kmzoutput)
-                kmlmap.close_folder()
+                                                 stn.stntype, alt, kmzoutput)
+                        kmlmap.close_folder()
+                except NoSuitablePositionReport:
+                    continue
             kmlmap.close_folder()
         kmlmap.close_kml_file()
         kmlmap.write_kml_doc_file()
