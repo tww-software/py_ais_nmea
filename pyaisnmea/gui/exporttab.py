@@ -24,8 +24,8 @@ EXPORTHELP = {
     'VERBOSE JSON': ('JSON file containing stats and '
                      'all AIS station position reports'),
     'GEOJSON': 'GEOJSON map of all AIS Station positions',
-    'DEBUG': ('outputs 2 files (CSV and JSON lines) '
-              'output of all AIS decoded messages')}
+    'AIS MESSAGES (DEBUG)': ('outputs 2 files (CSV and JSON lines) '
+                             'output of all AIS decoded messages')}
 
 
 class ExportAborted(Exception):
@@ -47,12 +47,40 @@ class ExportTab(tkinter.ttk.Frame):
         tkinter.ttk.Frame.__init__(self, tabcontrol)
         self.tabs = tabcontrol
         self.exportoptions = tkinter.ttk.Combobox(self, state='readonly')
-        self.orderby = tkinter.ttk.Combobox(self, state='readonly')
         self.exporthelplabel = tkinter.Label(self)
+        self.exporthelplabel.pack()
         self.region = tkinter.StringVar()
-        self.regionlabel = tkinter.Label(self)
-        self.export_options()
+        self.exportoptions['values'] = (
+            'OVERVIEW', 'EVERYTHING', 'CSV', 'TSV', 'KML', 'KMZ', 'JSON',
+            'VERBOSE JSON', 'GEOJSON', 'AIS MESSAGES (DEBUG)')
+        self.exportoptions.set('KMZ')
+        self.exportoptions.pack()
+        self.orderbylabel = tkinter.LabelFrame(
+            self, text="Output Order (for KMZ,KML OVERVIEW and EVERYTHING)",
+            padx=10, pady=10)
+        self.orderby = tkinter.ttk.Combobox(
+            self.orderbylabel, state='readonly')
+        self.orderby['values'] = ('Flags', 'Class', 'Types')
+        self.orderby.set('Types')
+        self.orderby.pack()
         self.exportoptions.bind("<<ComboboxSelected>>", self.show_export_help)
+        self.ialagroup = tkinter.LabelFrame(
+            self, text="IALA Region", padx=10, pady=10)
+        radioa = tkinter.Radiobutton(
+            self.ialagroup, text="Region A", variable=self.region, value='A',
+            command=self.region_selected_help)
+        radiob = tkinter.Radiobutton(
+            self.ialagroup, text="Region B", variable=self.region, value='B',
+            command=self.region_selected_help)
+        self.regionlabel = tkinter.Label(self.ialagroup)
+        radioa.pack()
+        radiob.pack()
+        radioa.select()
+        self.region_selected_help()
+        self.regionlabel.pack()
+        exportbutton = tkinter.Button(self, text='Export',
+                                      command=self.export_files)
+        exportbutton.pack()
         self.show_export_help()
 
     def region_selected_help(self):
@@ -64,39 +92,6 @@ class ExportTab(tkinter.ttk.Frame):
             self.regionlabel.config(text=atext)
         elif currentregion == 'B':
             self.regionlabel.config(text=btext)
-
-    def export_options(self):
-        """
-        populate the export options drop down menu with file export options
-        and add an export button next to it
-        """
-        self.exportoptions['values'] = (
-            'OVERVIEW', 'EVERYTHING', 'CSV', 'TSV', 'KML', 'KMZ', 'JSON',
-            'VERBOSE JSON', 'GEOJSON', 'DEBUG')
-        self.exportoptions.set('KMZ')
-        self.exportoptions.grid(column=1, row=1)
-        self.exporthelplabel.grid(column=2, row=1)
-        self.orderby['values'] = ('Flags', 'Class', 'Types')
-        self.orderby.set('Types')
-        self.orderby.grid(column=1, row=2)
-        orderbylabel = tkinter.Label(self)
-        orderbylabel.configure(
-            text='Output Order (for KMZ,KML and EVERYTHING)')
-        orderbylabel.grid(column=2, row=2)
-        radioa = tkinter.Radiobutton(
-            self, text="IALA Region A", variable=self.region, value='A',
-            command=self.region_selected_help)
-        radiob = tkinter.Radiobutton(
-            self, text="IALA Region B", variable=self.region, value='B',
-            command=self.region_selected_help)
-        radioa.grid(column=1, row=3)
-        radiob.grid(column=2, row=3)
-        radioa.select()
-        self.region_selected_help()
-        self.regionlabel.grid(column=4, row=3)
-        exportbutton = tkinter.Button(self, text='Export',
-                                      command=self.export_files)
-        exportbutton.grid(column=1, row=4)
 
     def export_files(self):
         """
@@ -119,7 +114,7 @@ class ExportTab(tkinter.ttk.Frame):
                         'JSON': self.export_json,
                         'VERBOSE JSON': self.export_verbose_json,
                         'GEOJSON': self.export_geojson,
-                        'DEBUG': self.export_debug}
+                        'AIS MESSAGES (DEBUG)': self.export_debug}
             option = self.exportoptions.get()
             try:
                 commands[option]()
@@ -132,6 +127,7 @@ class ExportTab(tkinter.ttk.Frame):
     def show_export_help(self, event=None):
         """
         Display help text for each export option as the user selects each one
+        Hide/Display IALA region and ordering controls where relevant
 
         Args:
             event(tkinter.Event): event from the user changing the export
@@ -140,6 +136,16 @@ class ExportTab(tkinter.ttk.Frame):
         option = self.exportoptions.get()
         helptext = EXPORTHELP[option]
         self.exporthelplabel.configure(text=helptext)
+        IALAregionrequired = ('KMZ', 'OVERVIEW', 'EVERYTHING')
+        if option in IALAregionrequired:
+            self.ialagroup.pack()
+        else:
+            self.ialagroup.pack_forget()
+        orderbyrequired = ('KML', 'KMZ', 'OVERVIEW', 'EVERYTHING')
+        if option in orderbyrequired:
+            self.orderbylabel.pack()
+        else:
+            self.orderbylabel.pack_forget()
 
     def export_csv(self):
         """
