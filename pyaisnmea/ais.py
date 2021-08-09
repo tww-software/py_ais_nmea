@@ -628,6 +628,9 @@ class AISTracker():
                           default is 'Types'
             region(str): IALA region, default is A
         """
+        types = set()
+        headings = set()
+        cogs = set()
         if kmzoutput and not livemap:
             docpath = os.path.join(os.path.dirname(outputfile), 'doc.kml')
         else:
@@ -656,50 +659,54 @@ class AISTracker():
                         displayname = stn.mmsi + ' - ' + stn.name
                     else:
                         displayname = stn.mmsi
-                        kmlmap.open_folder(displayname)
-                        try:
-                            alt = str(lastpos['Altitude (m)'])
-                        except KeyError:
-                            alt = '0'
-                        try:
-                            heading = lastpos['True Heading']
-                            if heading != HEADINGUNAVAILABLE and kmzoutput:
-                                hdesc = 'HEADING - {}'.format(heading)
-                                kmlmap.add_kml_placemark(
-                                    hdesc, '',
-                                    str(lastpos['Longitude']),
-                                    str(lastpos['Latitude']),
-                                    str(heading) + 'TH', alt, kmzoutput)
-                        except KeyError:
-                            pass
-                        try:
-                            cog = int(lastpos['CoG'])
-                            if cog != COGUNAVAILABLE and kmzoutput:
-                                hdesc = 'CoG - {}'.format(cog)
-                                kmlmap.add_kml_placemark(
-                                    hdesc, '',
-                                    str(lastpos['Longitude']),
-                                    str(lastpos['Latitude']),
-                                    str(cog) + 'CoG',
-                                    alt, kmzoutput)
-                        except KeyError:
-                            pass
-                        if linestring:
-                            posreps = stn.posrep
-                            kmlmap.add_kml_placemark_linestring(
-                                stn.mmsi, posreps)
-                        kmlmap.add_kml_placemark(displayname, desc,
-                                                 str(lastpos['Longitude']),
-                                                 str(lastpos['Latitude']),
-                                                 stn.stntype, alt, kmzoutput)
-                        kmlmap.close_folder()
+                    kmlmap.open_folder(displayname)
+                    try:
+                        alt = str(lastpos['Altitude (m)'])
+                    except KeyError:
+                        alt = '0'
+                    try:
+                        heading = lastpos['True Heading']
+                        if heading != HEADINGUNAVAILABLE and kmzoutput:
+                            headings.add(heading)
+                            hdesc = 'HEADING - {}'.format(heading)
+                            kmlmap.add_kml_placemark(
+                                hdesc, '',
+                                str(lastpos['Longitude']),
+                                str(lastpos['Latitude']),
+                                str(heading) + 'TH', alt, kmzoutput)
+                    except KeyError:
+                        pass
+                    try:
+                        cog = int(lastpos['CoG'])
+                        if cog != COGUNAVAILABLE and kmzoutput:
+                            cogs.add(cog)
+                            hdesc = 'CoG - {}'.format(cog)
+                            kmlmap.add_kml_placemark(
+                                hdesc, '',
+                                str(lastpos['Longitude']),
+                                str(lastpos['Latitude']),
+                                str(cog) + 'CoG',
+                                alt, kmzoutput)
+                    except KeyError:
+                        pass
+                    if linestring:
+                        posreps = stn.posrep
+                        kmlmap.add_kml_placemark_linestring(
+                            stn.mmsi, posreps)
+                    kmlmap.add_kml_placemark(displayname, desc,
+                                             str(lastpos['Longitude']),
+                                             str(lastpos['Latitude']),
+                                             stn.stntype, alt, kmzoutput)
+                    kmlmap.close_folder()
+                    types.add(icons.ICONS[stn.stntype])
                 except NoSuitablePositionReport:
                     continue
             kmlmap.close_folder()
         kmlmap.close_kml_file()
         kmlmap.write_kml_doc_file()
         if kmzoutput and not livemap:
-            kml.make_kmz(outputfile)
+            kml.make_kmz(outputfile, iconslist=types, greenarrows=headings,
+                         orangearrows=cogs)
 
     def create_geojson_map(self, outputfile=None):
         """
