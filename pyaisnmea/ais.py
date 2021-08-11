@@ -316,6 +316,7 @@ class AISStation():
                              or a basic kml file (False)
             region(str): IALA region, default is A
         """
+        staticstations = ('Base Station', 'Navigation Aid')
         greenarrows = set()
         orangearrows = set()
         if kmzoutput:
@@ -331,61 +332,71 @@ class AISStation():
         else:
             displayname = self.mmsi
         kmlmap.open_folder(displayname)
-        posnumber = 1
-        for pos in self.posrep:
-            timematch = TIMEREGEX.search(pos['Time'])
-            if timematch:
-                posfoldername = str(posnumber) + ' - ' + timematch.group()
-                try:
-                    kmltimestamp = kml.convert_timestamp_to_kmltimestamp(
-                        pos['Time'])
-                except kml.InvalidDateTimeString:
-                    kmltimestamp = ''
-            else:
-                posfoldername = str(posnumber)
-                kmltimestamp = ''
-            kmlmap.open_folder(posfoldername)
-            stninfo['Last Known Position'] = pos
+        if self.stnclass in staticstations:
+            lastpos = self.get_latest_position()
+            stninfo = self.get_station_info(messagetally=True)
             desc = kmlmap.format_kml_placemark_description(stninfo)
-            try:
-                alt = str(pos['Altitude (m)'])
-            except KeyError:
-                alt = '0'
-            try:
-                heading = pos['True Heading']
-                if heading != HEADINGUNAVAILABLE and kmzoutput:
-                    greenarrows.add(heading)
-                    hdesc = 'TRUE HEADING - {}'.format(heading)
-                    kmlmap.add_kml_placemark('TH', hdesc,
+            kmlmap.add_kml_placemark(displayname, desc,
+                                     str(lastpos['Longitude']),
+                                     str(lastpos['Latitude']),
+                                     self.stntype, '0', kmzoutput)
+        else:
+            posnumber = 1
+            stninfo = self.get_station_info(messagetally=False)
+            for pos in self.posrep:
+                timematch = TIMEREGEX.search(pos['Time'])
+                if timematch:
+                    posfoldername = str(posnumber) + ' - ' + timematch.group()
+                    try:
+                        kmltimestamp = kml.convert_timestamp_to_kmltimestamp(
+                            pos['Time'])
+                    except kml.InvalidDateTimeString:
+                        kmltimestamp = ''
+                else:
+                    posfoldername = str(posnumber)
+                    kmltimestamp = ''
+                kmlmap.open_folder(posfoldername)
+                stninfo['Last Known Position'] = pos
+                desc = kmlmap.format_kml_placemark_description(stninfo)
+                try:
+                    alt = str(pos['Altitude (m)'])
+                except KeyError:
+                    alt = '0'
+                try:
+                    heading = pos['True Heading']
+                    if heading != HEADINGUNAVAILABLE and kmzoutput:
+                        greenarrows.add(heading)
+                        hdesc = 'HEADING - {}'.format(heading)
+                        kmlmap.add_kml_placemark(hdesc, '',
+                                                 str(pos['Longitude']),
+                                                 str(pos['Latitude']),
+                                                 str(heading) + 'TH',
+                                                 alt, kmzoutput, kmltimestamp)
+                except KeyError:
+                    pass
+                try:
+                    cog = int(pos['CoG'])
+                    if cog != COGUNAVAILABLE and kmzoutput:
+                        orangearrows.add(cog)
+                        hdesc = 'CoG - {}'.format(cog)
+                        kmlmap.add_kml_placemark(hdesc, '',
+                                                 str(pos['Longitude']),
+                                                 str(pos['Latitude']),
+                                                 str(cog) + 'CoG',
+                                                 alt, kmzoutput, kmltimestamp)
+                except KeyError:
+                    pass
+                try:
+                    kmlmap.add_kml_placemark(displayname, desc,
                                              str(pos['Longitude']),
                                              str(pos['Latitude']),
-                                             str(heading) + 'TH',
-                                             alt, kmzoutput, kmltimestamp)
-            except KeyError:
-                pass
-            try:
-                cog = int(pos['CoG'])
-                if cog != COGUNAVAILABLE and kmzoutput:
-                    orangearrows.add(cog)
-                    hdesc = 'COURSE OVER GROUND - {}'.format(cog)
-                    kmlmap.add_kml_placemark('CoG', hdesc,
-                                             str(pos['Longitude']),
-                                             str(pos['Latitude']),
-                                             str(cog) + 'CoG',
-                                             alt, kmzoutput, kmltimestamp)
-            except KeyError:
-                pass
-            try:
-                kmlmap.add_kml_placemark(displayname, desc,
-                                         str(pos['Longitude']),
-                                         str(pos['Latitude']),
-                                         self.stntype, alt, kmzoutput,
-                                         kmltimestamp)
-            except KeyError:
-                pass
-            kmlmap.close_folder()
-            posnumber += 1
-        kmlmap.add_kml_placemark_linestring(self.mmsi, self.posrep)
+                                             self.stntype, alt, kmzoutput,
+                                             kmltimestamp)
+                except KeyError:
+                    pass
+                kmlmap.close_folder()
+                posnumber += 1
+            kmlmap.add_kml_placemark_linestring(self.mmsi, self.posrep)
         kmlmap.close_folder()
         kmlmap.close_kml_file()
         kmlmap.write_kml_doc_file()
