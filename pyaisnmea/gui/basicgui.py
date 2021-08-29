@@ -117,6 +117,8 @@ class BasicGUI(tkinter.Tk):
         self.kmzlivemap.set(0)
         self.livemap = None
         self.timingsources = []
+        self.currentupdatethreadid = None
+        self.currentrefreshthreadid = None
 
     def clear_gui(self):
         """
@@ -236,6 +238,8 @@ class BasicGUI(tkinter.Tk):
             target=self.refreshgui, args=(self.stopevent,))
         self.refreshguithread.setDaemon(True)
         self.refreshguithread.start()
+        self.currentupdatethreadid = self.updateguithread.ident
+        self.currentrefreshthreadid = self.refreshguithread.ident
         self.statuslabel.config(
             text='AIS Server Listening on {} port {}'.format(
                 self.netsettings['Server IP'],
@@ -255,6 +259,8 @@ class BasicGUI(tkinter.Tk):
         self.serverprocess = None
         self.updateguithread = None
         self.refreshguithread = None
+        self.currentupdatethreadid = None
+        self.currentrefreshthreadid = None
         tkinter.messagebox.showinfo('Network', 'Server Stopped')
         self.statuslabel.config(text='', bg='light grey')
         self.stopevent.clear()
@@ -347,33 +353,34 @@ class BasicGUI(tkinter.Tk):
         """
         msgno = 1
         while not stopevent.is_set():
-            qdata = self.mpq.get()
-            if qdata:
-                try:
-                    payload = self.nmeatracker.process_sentence(qdata)
-                    if payload:
-                        currenttime = datetime.datetime.utcnow().strftime(
-                            '%Y/%m/%d %H:%M:%S')
-                        try:
-                            msg = self.aistracker.process_message(
-                                payload, timestamp=currenttime)
-                        except (IndexError, KeyError) as err:
-                            errmsg = '{} - error with - {}'.format(
-                                str(err), payload)
-                            AISLOGGER.error(errmsg)
-                        self.messagelog.store(msgno, payload, msg)
-                        latestmsg = [msgno, payload, msg.description,
-                                     msg.mmsi, currenttime]
-                        msgno += 1
-                        self.tabcontrol.messagetab.add_new_line(latestmsg)
-                        self.tabcontrol.statstab.write_stats()
-                except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
-                        ais.UnknownMessageType, ais.InvalidMMSI) as err:
-                    AISLOGGER.debug(str(err))
-                    continue
-                except IndexError:
-                    AISLOGGER.debug('no data on line')
-                    continue
+            if threading.get_ident() == self.currentupdatethreadid:
+                qdata = self.mpq.get()
+                if qdata:
+                    try:
+                        payload = self.nmeatracker.process_sentence(qdata)
+                        if payload:
+                            currenttime = datetime.datetime.utcnow().strftime(
+                                '%Y/%m/%d %H:%M:%S')
+                            try:
+                                msg = self.aistracker.process_message(
+                                    payload, timestamp=currenttime)
+                            except (IndexError, KeyError) as err:
+                                errmsg = '{} - error with - {}'.format(
+                                    str(err), payload)
+                                AISLOGGER.error(errmsg)
+                            self.messagelog.store(msgno, payload, msg)
+                            latestmsg = [msgno, payload, msg.description,
+                                         msg.mmsi, currenttime]
+                            msgno += 1
+                            self.tabcontrol.messagetab.add_new_line(latestmsg)
+                            self.tabcontrol.statstab.write_stats()
+                    except (nmea.NMEAInvalidSentence, nmea.NMEACheckSumFailed,
+                            ais.UnknownMessageType, ais.InvalidMMSI) as err:
+                        AISLOGGER.debug(str(err))
+                        continue
+                    except IndexError:
+                        AISLOGGER.debug('no data on line')
+                        continue
 
     def refreshgui(self, stopevent):
         """
@@ -383,21 +390,23 @@ class BasicGUI(tkinter.Tk):
             stopevent(threading.Event): a threading stop event
         """
         while not stopevent.is_set():
-            currenttime = datetime.datetime.utcnow().strftime(
-                '%Y/%m/%d %H:%M:%S')
-            if currenttime.endswith('5'):
-                self.tabcontrol.shipstab.create_ship_table(new=False)
-                self.tabcontrol.statstab.write_stats_verbose()
-                self.tabcontrol.stninfotab.stn_options()
-                self.tabcontrol.stninfotab.show_stn_info()
-                if self.livemap:
-                    self.aistracker.create_kml_map(
-                        self.livemap.kmlpath, kmzoutput=self.livemap.kmzoutput,
-                        linestring=False, livemap=True,
-                        livemaptimeout=480,
-                        orderby=self.netsettings['Order Stations By'],
-                        region=self.netsettings['IALA Region'])
-                time.sleep(1)
+            if threading.get_ident() == self.currentrefreshthreadid:
+                currenttime = datetime.datetime.utcnow().strftime(
+                    '%Y/%m/%d %H:%M:%S')
+                if currenttime.endswith('5'):
+                    self.tabcontrol.shipstab.create_ship_table(new=False)
+                    self.tabcontrol.statstab.write_stats_verbose()
+                    self.tabcontrol.stninfotab.stn_options()
+                    self.tabcontrol.stninfotab.show_stn_info()
+                    if self.livemap:
+                        self.aistracker.create_kml_map(
+                            self.livemap.kmlpath,
+                            kmzoutput=self.livemap.kmzoutput,
+                            linestring=False, livemap=True,
+                            livemaptimeout=480,
+                            orderby=self.netsettings['Order Stations By'],
+                            region=self.netsettings['IALA Region'])
+                    time.sleep(1)
 
     def quit(self):
         """
