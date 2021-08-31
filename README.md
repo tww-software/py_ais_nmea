@@ -132,7 +132,7 @@ subcommands are gui, file or livemap
 
 MIT License
 
-Copyright (c) 2020 Thomas W Whittam
+Copyright (c) 2021 Thomas W Whittam
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
