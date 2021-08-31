@@ -18,7 +18,6 @@ class StatsTab(tkinter.ttk.Frame):
     def __init__(self, tabcontrol):
         tkinter.ttk.Frame.__init__(self, tabcontrol)
         self.tabs = tabcontrol
-
         statscounters = tkinter.Frame(self)
         aismsgtotallabel = tkinter.Label(
             statscounters, text='Total AIS messages')
@@ -49,7 +48,6 @@ class StatsTab(tkinter.ttk.Frame):
         self.latesttime = tkinter.Label(statscounters, text='')
         self.latesttime.grid(column=1, row=5)
         statscounters.pack(side='top')
-
         statsboxes = tkinter.PanedWindow(self)
         self.msgstatstxt = tkinter.scrolledtext.ScrolledText(statsboxes)
         self.msgstatstxt.configure()
@@ -61,6 +59,8 @@ class StatsTab(tkinter.ttk.Frame):
         self.flagstxt.configure()
         statsboxes.add(self.flagstxt)
         statsboxes.pack(fill=tkinter.BOTH, expand=1)
+        for pane in statsboxes.panes():
+            statsboxes.paneconfigure(pane, minsize=250) 
 
     def write_stats(self):
         """
